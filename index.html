@@ -444,12 +444,25 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
   </div>
 </section>
 
-<script>
-/* ========= LOGIC KHUYẾN MÃI (nhúng từ Code.gs) ========= */
-<?!= promoSource ?>
-</script>
+<!-- Logic khuyến mãi: Apps Script nhúng sẵn ở đây; khi host ngoài sẽ tải từ server -->
+<script type="text/plain" id="promo-src"><?!= promoSource ?></script>
 
 <script>
+/* =====================================================================
+ * ĐƯỜNG LINK WEB APP APPS SCRIPT (chỉ cần khi host trên GitHub Pages)
+ * Dán link dạng https://script.google.com/macros/s/xxxxx/exec vào đây.
+ * Khi mở trực tiếp bằng link Apps Script thì dòng này không cần sửa.
+ * ===================================================================== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbxAyzMMLgMnJuk_2DacvaAfN-auCbudAmTnS97yXki6qCGn9D8jwBGc53c8XCfoQx107w/exec';
+
+const IN_GAS = typeof google !== 'undefined' && !!google.script;
+var computePromotion_ = null;
+function loadPromo(src){
+  src = String(src || '').trim();
+  if (src.indexOf('function') === 0) computePromotion_ = (0, eval)('(' + src + ')');
+}
+loadPromo(document.getElementById('promo-src').textContent);
+
 /* ========= ICONS ========= */
 const ICON = {
   truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
@@ -484,6 +497,14 @@ let toastT;
 function toast(msg, ms){ const t = $('toast'); t.textContent = msg; t.classList.remove('hidden'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.add('hidden'), ms || 2800); }
 
 function run(fn, ...args){
+  if (!IN_GAS) {
+    return fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },  // tránh CORS preflight
+      body: JSON.stringify({ fn: fn, args: args })
+    }).then(r => r.json()).catch(() => { throw new Error('Không kết nối được máy chủ. Kiểm tra mạng hoặc API_URL.'); })
+      .then(j => { if (!j.ok) throw new Error(j.error); return j.data; });
+  }
   return new Promise((resolve, reject) => {
     google.script.run.withSuccessHandler(resolve).withFailureHandler(err => {
       const m = String((err && err.message) || err).replace(/^(Exception|Error):\s*/, '');
@@ -539,6 +560,11 @@ function localLogout(msg){
 }
 
 async function boot(){
+  if (!IN_GAS && API_URL.indexOf('DÁN_MÃ') !== -1) {
+    $('screen-login').classList.remove('hidden');
+    $('lg-err').innerHTML = 'Chưa cấu hình <b>API_URL</b>: dán link Web app (…/exec) vào đầu phần script của index.html.';
+    return;
+  }
   const t = store.get('annt_token');
   if (!t) { $('screen-login').classList.remove('hidden'); return; }
   loading(true);
@@ -793,6 +819,7 @@ async function initTet(){
     loading(true);
     try {
       T.data = await api('getTetInit');
+      if (!computePromotion_) loadPromo(T.data.promoSource);
       T.custIndex = T.data.customers.map(c => ({ code: c[0], name: c[1], key: norm(c[0] + ' ' + c[1]) }));
       const d = store.get(draftKey());
       if (d && d.lines && d.lines.length) {
