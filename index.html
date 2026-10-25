@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+<!-- ================================================================
+     ⚙️ CẤU HÌNH – CHỈ CẦN SỬA DÒNG API_URL BÊN DƯỚI
+     Khi host trên GitHub: thay cả đoạn link bằng link Web app (/exec)
+     lấy ở Apps Script → Triển khai → Quản lý triển khai.
+     ================================================================ -->
+<script>
+var API_URL = 'https://script.google.com/macros/s/AKfycbxAyzMMLgMnJuk_2DacvaAfN-auCbudAmTnS97yXki6qCGn9D8jwBGc53c8XCfoQx107w/exec';
+</script>
 <base target="_top">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -104,13 +112,12 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .tbl{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}
 .tbl th{background:#f5f7fb;color:var(--muted);font-weight:600;font-size:12.5px;text-align:left;padding:10px;border-bottom:1px solid var(--line)}
 .tbl td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
-@media(max-width:760px){
-  .tbl thead{display:none}
-  .tbl,.tbl tbody,.tbl tr,.tbl td{display:block;width:100%}
-  .tbl tr{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;padding:6px 10px;background:#fff}
-  .tbl td{border:0;padding:5px 0;display:flex;justify-content:space-between;gap:12px;text-align:right}
-  .tbl td::before{content:attr(data-l);color:var(--muted);font-size:12.5px;text-align:left;flex:none}
-}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;margin-top:12px}
+.tbl-wrap .tbl{margin-top:0}
+.tbl th,.tbl td{white-space:nowrap}
+.tbl td.wrap{white-space:normal;min-width:180px}
+.tbl tbody tr:nth-child(even){background:#fafbfa}
+@media(max-width:760px){.tbl{font-size:13px}.tbl th,.tbl td{padding:8px 7px}}
 .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
 .st-done{background:var(--green-l);color:var(--green)}
 .st-ship{background:#e3f2fd;color:#1565c0}
@@ -159,6 +166,21 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .kpi-mini{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:12px 6px;text-align:center}
 .kpi-mini b{display:block;font-size:24px;color:var(--pri)}
 .kpi-mini small{font-size:12px;color:var(--muted);font-weight:600}
+.ad-user{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #f0f2f5;cursor:pointer}
+.ad-user:first-child{border-top:0}
+.ad-user .chev-r{transform:rotate(-90deg);color:var(--muted)}
+.feat-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.feat{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:11px;padding:10px;font-size:14px;cursor:pointer}
+.feat input{width:18px;height:18px;accent-color:var(--pri)}
+.feat.dis{opacity:.65;cursor:default}
+.se-days{display:grid;grid-template-columns:repeat(3,1fr)}
+.se-days button{white-space:nowrap;padding:10px 4px}
+.se-days button.on{color:var(--pri)}
+.se-ses{border:1px solid var(--line);border-radius:12px;padding:4px 12px 12px;margin-top:12px}
+.se-title{font-weight:800;color:var(--pri);margin-top:8px}
+.se-note{display:grid;grid-template-columns:120px 1fr 36px;gap:6px;margin-top:8px;align-items:center}
+.se-note input[data-note="text"]{grid-column:1/3}
+.tl-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .up-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
 @media(min-width:760px){.up-kpis{grid-template-columns:repeat(4,1fr)}}
 .up-k{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:12px 14px;border-left:5px solid var(--c);cursor:pointer}
@@ -196,6 +218,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .seg{display:flex;background:#eef1f6;border-radius:12px;padding:4px;gap:4px}
 .seg button{flex:1;border:0;background:transparent;padding:11px;border-radius:9px;font-weight:700;cursor:pointer;color:var(--muted)}
 .seg button.on{background:#fff;color:var(--red);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+#ad-tabs button.on,#mu-fmode button.on,.se-days button.on{color:var(--pri)}
 .ac{position:relative}
 .ac-list{position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.14);max-height:320px;overflow:auto;z-index:40}
 .ac-item{padding:10px 12px;border-bottom:1px solid #f0f2f5;cursor:pointer}
@@ -322,11 +345,11 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
       <div class="hello">
         <div><h3 id="hello-name">Xin chào</h3><p id="hello-date"></p></div>
       </div>
-      <div class="sec-title">Giao hàng</div>
-      <div class="grid-apps" id="apps-main"></div>
-      <div class="sec-title" id="sec-tet">Chương trình Tết</div>
-      <div class="grid-apps" id="apps-tet"></div>
-      <div class="sec-title">Tài khoản</div>
+      <div class="sec-title">Tính năng chung</div>
+      <div class="grid-apps" id="apps-common"></div>
+      <div class="sec-title" id="sec-mine">Công việc của tôi</div>
+      <div class="grid-apps" id="apps-mine"></div>
+      <div class="sec-title">Cài đặt</div>
       <div class="grid-apps" id="apps-acc"></div>
     </div>
 
@@ -411,7 +434,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
       </div>
       <div class="card"><h4>Số đơn giao theo ngày (tháng này)</h4><div class="bars" id="mn-chart"></div></div>
       <div class="card"><h4>Đã giao hôm nay</h4><div id="mn-list-today"></div></div>
-      <div class="card"><h4>Đơn đã giao trong tháng (KPI)</h4><div id="mn-list-kpi"></div></div>
+      <div class="card"><h4>Đơn đã giao trong tháng (KPI) <span class="muted" id="mn-kpi-n" style="font-weight:600"></span></h4><div id="mn-list-kpi"></div></div>
     </div>
 
     <!-- TRA CỨU -->
@@ -429,41 +452,33 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 
     <!-- LỊCH GIAO HÀNG -->
     <div class="view hidden" id="v-schedule">
-      <div class="card">
-        <div class="sched-wrap">
-          <table class="sched">
-            <thead>
-              <tr><th></th><th>Thứ 2</th><th>Thứ 3</th><th>Thứ 4</th><th>Thứ 5</th><th>Thứ 6</th><th>Thứ 7</th></tr>
-              <tr><th class="sm">Giao hàng xe máy</th><th class="sm">Duy</th><th class="sm">Cảnh</th><th class="sm">Huy</th><th class="sm">Duy</th><th class="sm">Cảnh</th><th class="sm">Huy</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="ses">Sáng</td>
-                <td><span class="hl-r">Tuyến phía Bắc</span><span class="hl-mt">Lotte Mart<br>Co.op Mart</span><span class="hl-c">MTI/GT/HRC trung tâm</span></td>
-                <td><span class="hl-mt">Mega Market</span><span class="hl-c">MTI/GT/HRC trung tâm</span></td>
-                <td><span class="hl-y">Đảo Hòn Tre</span><br><span class="hl-r">Tuyến phía Bắc</span><span class="hl-c">MTI/GT/HRC trung tâm</span></td>
-                <td><span class="hl-y">Cam Ranh</span><span class="hl-mt">Lotte Mart<br>Winmart Trần Phú</span><span class="hl-c">MTI/GT/HRC trung tâm</span></td>
-                <td><span class="hl-r">Tuyến phía Bắc</span><span class="hl-mt">Winmart Lê Thánh Tôn<br>Winmart Thái Nguyên</span><span class="hl-c">MTI/GT/HRC trung tâm</span></td>
-                <td><span class="hl-y">Cam Ranh,<br>Đảo Hòn Tre</span><span class="hl-mt">Go Nha Trang<br>Lotte Gold Coast</span><span class="hl-c">MTI/GT/HRC trung tâm</span></td>
-              </tr>
-              <tr>
-                <td class="ses">Chiều</td>
-                <td><span class="hl-r">Tuyến phía Nam</span><span class="hl-c">MTI/GT/HRC trung tâm</span></td>
-                <td><span class="hl-y">Cam Ranh, Trảng É</span><br><span class="hl-r">Tuyến phía Nam</span><span class="hl-mt">Lotte Gold Coast<br>Winmart Trần Phú</span><span class="hl-c">MTI/GT/HRC trung tâm</span></td>
-                <td><span class="hl-r">Tuyến phía Nam</span><span class="hl-mt">Go Nha Trang</span><span class="hl-c">MTI/GT/HRC trung tâm</span></td>
-                <td><span class="hl-r">Tuyến phía Nam</span><span class="hl-mt">Lotte Gold Coast<br>Mega Market<br>Co.op Mart</span><span class="hl-c">MTI/GT/HRC trung tâm</span></td>
-                <td><span class="hl-r">Tuyến phía Nam</span><span class="hl-c">MTI/GT/HRC trung tâm</span></td>
-                <td><span class="hl-r">Tuyến phía Nam</span><span class="hl-c">MTI/GT/HRC trung tâm</span></td>
-              </tr>
-            </tbody>
-          </table>
+      <div class="card"><div id="sched-box"><div class="empty">Đang tải lịch giao hàng...</div></div></div>
+    </div>
+
+    <!-- QUẢN TRỊ (admin) -->
+    <div class="view hidden" id="v-admin">
+      <div class="seg" id="ad-tabs" style="margin-bottom:14px"><button data-t="users" class="on">Người dùng & phân quyền</button><button data-t="sched">Lịch giao hàng</button></div>
+      <div id="ad-users">
+        <div class="card" style="display:flex;gap:8px;align-items:center">
+          <input class="inp" id="ad-q" placeholder="Tìm theo tên, username, vai trò...">
+          <button class="btn" id="ad-add" style="white-space:nowrap">+ Thêm user</button>
         </div>
-        <div style="margin-top:14px;font-size:14px;line-height:1.8">
-          <b>Ghi chú:</b><br>
-          • <span class="hl-y" style="margin:0">Đảo Hòn Tre / Cam Ranh</span> Lịch giao cố định, ưu tiên<br>
-          • <span class="hl-r" style="margin:0">Tuyến phía Bắc</span> Giao cách ngày<br>
-          • <i>MT/GT/HRC trung tâm:</i> Giao hàng ngày, <b>lưu ý tần suất giao hàng mỗi khách</b>, không giao 2 ngày liên tiếp.
+        <div class="muted" id="ad-count" style="font-size:13px;margin:0 4px 8px"></div>
+        <div class="card" style="padding:4px 14px" id="ad-list"></div>
+      </div>
+      <div id="ad-sched" class="hidden">
+        <div class="card">
+          <h4>Chọn ngày cần sửa</h4>
+          <div class="seg se-days" id="se-days" style="margin-top:8px"></div>
+          <div id="se-day-form" style="margin-top:14px"></div>
         </div>
+        <div class="card">
+          <h4>Ghi chú cuối bảng</h4>
+          <div id="se-notes"></div>
+          <button class="btn ghost" id="se-note-add" type="button" style="margin-top:10px">+ Thêm ghi chú</button>
+        </div>
+        <div class="card"><h4>Xem trước</h4><div id="se-preview"></div></div>
+        <div style="display:flex;gap:10px"><button class="btn light" id="se-reset" style="flex:1">Hủy thay đổi</button><button class="btn" id="se-save" style="flex:2">Lưu lịch giao hàng</button></div>
       </div>
     </div>
 
@@ -504,7 +519,12 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
     <!-- DANH SÁCH ĐƠN TẾT -->
     <div class="view hidden" id="v-tetlist">
       <div class="card">
-        <input class="inp" id="tl-q" placeholder="Lọc theo mã đơn, khách hàng, nhân viên...">
+        <input class="inp" id="tl-q" placeholder="Tìm theo mã đơn, khách hàng...">
+        <div class="tl-filters hidden" id="tl-filters">
+          <select class="inp" id="tl-sale"></select>
+          <select class="inp" id="tl-group"><option value="">Nhóm: Tất cả</option><option>GT</option><option>MTI</option></select>
+        </div>
+        <div class="muted" id="tl-sum" style="font-size:13px;margin-top:8px"></div>
       </div>
       <div id="tl-list"></div>
     </div>
@@ -549,12 +569,6 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 <script type="text/plain" id="promo-src"><?!= promoSource ?></script>
 
 <script>
-/* =====================================================================
- * ĐƯỜNG LINK WEB APP APPS SCRIPT (chỉ cần khi host trên GitHub Pages)
- * Dán link dạng https://script.google.com/macros/s/xxxxx/exec vào đây.
- * Khi mở trực tiếp bằng link Apps Script thì dòng này không cần sửa.
- * ===================================================================== */
-const API_URL = 'https://script.google.com/macros/s/AKfycbxAyzMMLgMnJuk_2DacvaAfN-auCbudAmTnS97yXki6qCGn9D8jwBGc53c8XCfoQx107w/exec';
 
 const IN_GAS = typeof google !== 'undefined' && !!google.script;
 var computePromotion_ = null;
@@ -574,6 +588,7 @@ const ICON = {
   qr:'<rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3M21 21v.01M12 7v3a2 2 0 0 1-2 2H7M3 12h.01M12 3h.01M12 16v.01M16 12h1M21 12v.01M12 21v-1"/>',
   box:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
   cal:'<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
   gift:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
   list:'<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/>',
@@ -656,6 +671,7 @@ $('login-form').addEventListener('submit', async e => {
 });
 
 function localLogout(msg){
+  S.schedule = null; if (typeof AD !== 'undefined') { AD.data = null; AD.draft = null; }
   qrStop(); QR.loaded = false; QR.items = [];
   store.del('annt_token');
   S.token = null; S.user = null; S.bcLoaded = false; S.upReady = false; S.filters = null; S.tetOrders = null; S.tet.data = null;
@@ -708,21 +724,19 @@ const VIEWS = {
   schedule: { title: 'Lịch giao hàng',    icon: 'cal',    color: 'linear-gradient(135deg,#26a69a,#00796b)', label: 'Lịch giao hàng' },
   tetnew:   { title: 'Lên đơn hàng Tết',  icon: 'gift',   color: 'linear-gradient(135deg,#e53935,#b71c1c)', label: 'Lên đơn Tết' },
   tetlist:  { title: 'Đơn hàng Tết đã gửi', icon: 'list', color: 'linear-gradient(135deg,#ffb300,#f57c00)', label: 'Đơn Tết đã gửi' },
+  admin:    { title: 'Quản trị',          icon: 'shield', color: 'linear-gradient(135deg,#455a64,#182e22)', label: 'Quản trị' },
   settings: { title: 'Cài đặt',           icon: 'cog',    color: 'linear-gradient(135deg,#78909c,#455a64)', label: 'Cài đặt' }
 };
 function tile(k){ const v = VIEWS[k]; return `<button class="app-tile" data-go="${k}"><div class="app-ic" style="background:${v.color}">${ic(v.icon)}</div><span>${v.label}</span></button>`; }
 function renderHome(){
-  const p = S.user.perms;
-  const main = ['scan'];
-  if (p.delivery) main.push('waiting', 'mine');
-  $('apps-main').innerHTML = main.concat(['bc','update','lookup','bank','schedule']).map(tile).join('');
-  const tet = [];
-  if (p.tetCreate) tet.push('tetnew');
-  if (p.tetList) tet.push('tetlist');
-  $('apps-tet').innerHTML = tet.map(tile).join('');
-  $('sec-tet').classList.toggle('hidden', !tet.length);
-  $('apps-tet').classList.toggle('hidden', !tet.length);
-  $('apps-acc').innerHTML = tile('settings') + (isStandalone() ? '' : tile('install'));
+  const u = S.user;
+  const common = (u.common || []).filter(k => VIEWS[k]);
+  const mine = (u.features || []).filter(k => VIEWS[k]);
+  $('apps-common').innerHTML = common.map(tile).join('');
+  $('apps-mine').innerHTML = mine.map(tile).join('');
+  $('sec-mine').classList.toggle('hidden', !mine.length);
+  $('apps-mine').classList.toggle('hidden', !mine.length);
+  $('apps-acc').innerHTML = (u.perms && u.perms.admin ? tile('admin') : '') + tile('settings') + (isStandalone() ? '' : tile('install'));
   refreshBadges();
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go); });
@@ -746,6 +760,8 @@ function go(view){
   if (view === 'waiting') loadWaiting();
   if (view === 'mine') loadMine();
   if (view === 'bank') renderBank();
+  if (view === 'schedule') loadSchedule();
+  if (view === 'admin') initAdmin();
   if (view === 'tetnew') initTet();
   if (view === 'tetlist') loadTetOrders();
 }
@@ -823,6 +839,8 @@ async function initBC(){
     const d = await getFilters();
     fillFilters(d, 'bc-dept', 'bc-sales');
     S.bcLoaded = true;
+    $('bc-dept').closest('.card').classList.toggle('hidden', !!d.lockedSales);
+    if (d.lockedSales) setTimeout(() => $('bc-load').click(), 0);   // xem thẳng đơn của mình
   } catch (e) { toast(e.message); }
   finally { loading(false); }
 }
@@ -842,14 +860,19 @@ function statusClass(s){
   if (s === 'Chưa xác nhận' || s === 'Chờ lịch giao') return 'st-wait';
   return 'st-other';
 }
+function dataTable(heads, rows, wrapCol){
+  if (!rows.length) return '';
+  return `<div class="tbl-wrap"><table class="tbl"><thead><tr>${heads.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>
+    ${rows.map(r => `<tr>${r.map((c, i) => `<td${i === wrapCol ? ' class="wrap"' : ''}>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
 function orderTable(rows){
-  return `<div style="overflow-x:auto"><table class="tbl"><thead><tr>
+  return `<div class="tbl-wrap"><table class="tbl"><thead><tr>
     <th>Ngày ĐH</th><th>Sales Order</th><th>PO</th><th>Khách hàng</th><th>Trạng thái</th><th>Ngày giao</th><th>NV thực hiện</th></tr></thead><tbody>
     ${rows.map(r => `<tr>
       <td data-l="Ngày ĐH">${esc(r.created || '-')}</td>
       <td data-l="Sales Order"><b>${esc(r.so || '-')}</b></td>
       <td data-l="PO">${esc(r.req || '-')}</td>
-      <td data-l="Khách hàng">${esc(r.customer || '-')}</td>
+      <td data-l="Khách hàng" class="wrap">${esc(r.customer || '-')}</td>
       <td data-l="Trạng thái"><span class="badge ${statusClass(r.status)}">${esc(r.status || '-')}</span></td>
       <td data-l="Ngày giao">${esc(r.deliveryDate || '-')}</td>
       <td data-l="NV thực hiện">${esc(r.deliveryMan || '-')}</td></tr>`).join('')}
@@ -883,7 +906,9 @@ async function initUpdate(){
   if (S.upReady) return;
   loading(true);
   try {
-    fillFilters(await getFilters(), 'up-dept', 'up-sales');
+    const d = await getFilters();
+    fillFilters(d, 'up-dept', 'up-sales');
+    $('up-dept').closest('.card').classList.toggle('hidden', !!d.lockedSales);
     S.upReady = true;
     loadUpdate();
   } catch (e) { toast(e.message); }
@@ -921,9 +946,9 @@ document.addEventListener('click', e => {
 /* ========= QUÉT MÃ QR ========= */
 const QR = { mode: null, items: [], sending: false, scanner: null, lib: null, opening: false, last: '', lastT: 0, loaded: false };
 const QR_MODES = {
-  XUAT:   { label: 'XUẤT HÀNG', sub: 'Trạng thái: Đang giao', bg: 'linear-gradient(135deg,#fb8c00,#e65100)', color: '#e65100', icon: 'box' },
-  GIAO:   { label: 'GIAO HÀNG', sub: 'Trạng thái: Đã giao',   bg: 'linear-gradient(135deg,#3d7a57,#182e22)', color: '#24573c', icon: 'truck' },
-  LOOKUP: { label: 'TRA CỨU ĐƠN', sub: 'Quét mã để xem thông tin đơn hàng', bg: 'linear-gradient(135deg,#00acc1,#00838f)', color: '#00838f', icon: 'search' }
+  // Các nút trong màn hình quét. Thêm nút mới: khai báo ở đây + SCAN_MODES trong Code.gs
+  XUAT: { label: 'XUẤT HÀNG', sub: 'Trạng thái: Đang giao', bg: 'linear-gradient(135deg,#fb8c00,#e65100)', color: '#e65100', icon: 'box' },
+  GIAO: { label: 'GIAO HÀNG', sub: 'Trạng thái: Đã giao',   bg: 'linear-gradient(135deg,#3d7a57,#182e22)', color: '#24573c', icon: 'truck' }
 };
 const qrKey = () => 'annt_qr_queue_' + (S.user ? S.user.username : '');
 
@@ -955,15 +980,12 @@ function beep(kind){
 }
 
 function qrInit(){
-  const w = S.user.perms.scanWrite;
   if (!QR.loaded) { QR.items = store.get(qrKey()) || []; QR.loaded = true; }
-  const modes = w ? ['XUAT', 'GIAO'] : ['LOOKUP'];
-  $('qr-modes').style.gridTemplateColumns = modes.length === 1 ? '1fr' : '';
-  $('qr-modes').innerHTML = modes.map(m => `<button class="qr-mode" data-qm="${m}" style="background:${QR_MODES[m].bg}">
-    ${ic(QR_MODES[m].icon)}${QR_MODES[m].label}<small>${QR_MODES[m].sub}</small></button>`).join('');
-  $('qr-note-box').classList.toggle('hidden', !w);
-  $('qr-change').classList.toggle('hidden', !w);
-  if (w) qrShowPick(); else qrOpen('LOOKUP');
+  const modes = (S.user.scanModes || []).filter(m => QR_MODES[m]);
+  $('qr-modes').innerHTML = modes.length ? modes.map(m => `<button class="qr-mode" data-qm="${m}" style="background:${QR_MODES[m].bg}">
+    ${ic(QR_MODES[m].icon)}${QR_MODES[m].label}<small>${QR_MODES[m].sub}</small></button>`).join('')
+    : '<div class="card empty" style="grid-column:1/-1">Tài khoản của bạn chưa được mở chức năng quét mã.</div>';
+  qrShowPick();
   qrFlush();
 }
 function qrShowPick(){
@@ -989,7 +1011,7 @@ async function qrOpen(mode){
   QR.mode = mode; unlockAudio();
   $('qr-pick').classList.add('hidden'); $('qr-run').classList.remove('hidden');
   $('qr-pill').textContent = QR_MODES[mode].label; $('qr-pill').style.background = QR_MODES[mode].color;
-  $('view-title').textContent = mode === 'LOOKUP' ? 'Quét mã QR' : 'Quét QR · ' + QR_MODES[mode].label;
+  $('view-title').textContent = 'Quét QR · ' + QR_MODES[mode].label;
   $('qr-note').value = ''; qrRender();
   qrSetStatus('Đang mở camera...'); qrCamMsg('');
   QR.opening = true;
@@ -1036,7 +1058,6 @@ $('qr-manual').addEventListener('keydown', e => { if (e.key === 'Enter') $('qr-a
 function qrAdd(raw){
   const code = String(raw || '').trim();
   if (!code) return;
-  if (QR.mode === 'LOOKUP') return qrLookup(code);
   if (QR.items.find(i => i.code === code && i.mode === QR.mode && i.state !== 'err')) {
     beep('warn'); qrSetStatus('⚠ Đã quét rồi: ' + code, 'warn'); return;
   }
@@ -1052,7 +1073,7 @@ function qrSave(){ if (S.user) store.set(qrKey(), QR.items.filter(i => i.state =
 /* --- Gửi nền theo lô, tự gửi lại khi mất mạng --- */
 async function qrFlush(){
   if (QR.sending || !S.token || !S.user || !S.user.perms.scanWrite) return;
-  const batch = QR.items.filter(i => i.state === 'pending' && i.mode !== 'LOOKUP').slice(-20).reverse();  // gửi mã cũ trước
+  const batch = QR.items.filter(i => i.state === 'pending').slice(-20).reverse();  // gửi mã cũ trước
   if (!batch.length) return;
   QR.sending = true;
   let retry = 0;
@@ -1078,35 +1099,17 @@ async function qrFlush(){
   }
   QR.sending = false;
   qrSave(); qrRender();
-  if (QR.items.some(i => i.state === 'pending' && i.mode !== 'LOOKUP')) setTimeout(qrFlush, retry || 200);
+  if (QR.items.some(i => i.state === 'pending')) setTimeout(qrFlush, retry || 200);
 }
 setInterval(qrFlush, 10000);
 window.addEventListener('online', qrFlush);
 function qrNet(ok){ $('qr-net').innerHTML = ok ? '<span style="color:var(--green)">● Đã kết nối</span>' : '<span style="color:var(--red)">● Mất kết nối – sẽ tự gửi lại</span>'; }
 
-/* --- Tra cứu (user không ghi Log Detail) --- */
-async function qrLookup(code){
-  beep('ok'); qrSetStatus('Đang tra cứu ' + code + '...');
-  const it = { id: Date.now().toString(36), mode: 'LOOKUP', code: code, ts: Date.now(), state: 'pending', msg: '' };
-  QR.items.unshift(it); qrRender();
-  try {
-    const r = await api('lookupCodes', [code]);
-    const o = r[code.toUpperCase()];
-    if (o) {
-      it.state = 'ok';
-      it.msg = `${o.customer} · ${o.status || '-'}${o.deliveryDate ? ' · ' + o.deliveryDate : ''}${o.deliveryMan ? ' · ' + o.deliveryMan : ''}`;
-      qrSetStatus('✔ ' + code + ' – ' + (o.status || 'đã tìm thấy'), 'ok');
-    } else { it.state = 'dup'; it.msg = 'Không tìm thấy đơn hàng'; beep('warn'); qrSetStatus('⚠ Không tìm thấy: ' + code, 'warn'); }
-  } catch (e) { it.state = 'err'; it.msg = e.message; beep('err'); qrSetStatus('✖ ' + e.message, 'err'); }
-  qrRender();
-}
-
 function qrRender(){
   const list = QR.items.filter(i => i.mode === QR.mode);
   $('qr-cnt').textContent = list.length;
   $('qr-cnt-p').textContent = list.filter(i => i.state === 'pending').length;
-  const lbl = QR.mode === 'LOOKUP' ? { pending: '⏳ Đang tra cứu', ok: '✔', dup: '⚠', err: '✖ Lỗi' }
-                                    : { pending: '⏳ Đang gửi', ok: '✔ Đã lưu', dup: '⚠ Trùng', err: '✖ Lỗi' };
+  const lbl = { pending: '⏳ Đang gửi', ok: '✔ Đã lưu', dup: '⚠ Trùng', err: '✖ Lỗi' };
   const cls = { pending: '', ok: 'ok', dup: 'warn', err: 'err' };
   $('qr-hist').innerHTML = list.slice(0, 100).map(i => `<li><div class="l1"><span class="code">${esc(i.code)}</span>
     <span class="t">${new Date(i.ts).toLocaleTimeString('vi-VN', { hour12: false })}</span></div>
@@ -1115,17 +1118,15 @@ function qrRender(){
 }
 
 /* ========= ĐƠN CHỜ GIAO ========= */
-function dlItem(o, extra){
-  return `<div class="dl-item"><div class="dl-time">${esc(o.time || o.date || '')}</div><div class="dl-main">
-    <div class="dl-cus">${esc(o.customer || '-')}</div>
-    <div class="dl-meta"><b>${esc(o.so)}</b>${o.req ? ' · PO ' + esc(o.req) : ''}${o.sales ? ' · ' + esc(o.sales) : ''}${o.dept ? ' · ' + esc(o.dept) : ''}${extra || ''}</div></div></div>`;
-}
+const H_WAIT = ['Giờ', 'Sales order', 'Số PO', 'Khách hàng', 'Sale', 'Dept'];
+const H_KPI  = ['Ngày giao', 'Sales order', 'PO', 'Khách hàng', 'Trạng thái'];
+const waitRow = o => [esc(o.time), '<b>' + esc(o.so) + '</b>', esc(o.req || '-'), esc(o.customer || '-'), esc(o.sales || '-'), esc(o.dept || '-')];
 async function loadWaiting(){
   $('wt-note').textContent = 'Đang tải...';
   try {
     const d = await api('getWaitingOrders');
     $('wt-note').textContent = `${d.length} đơn · cập nhật ${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
-    $('wt-list').innerHTML = d.length ? d.map(o => dlItem(o, o.by ? ' · xuất bởi ' + esc(o.by) : '')).join('') : '<div class="empty">Không có đơn chờ giao 🎉</div>';
+    $('wt-list').innerHTML = d.length ? dataTable(H_WAIT, d.map(waitRow), 3) : '<div class="empty">Không có đơn chờ giao 🎉</div>';
   } catch (e) { $('wt-note').textContent = e.message; }
 }
 $('wt-reload').addEventListener('click', loadWaiting);
@@ -1143,12 +1144,14 @@ async function loadMine(who){
     const days = d.chart.length;
     $('mn-today').textContent = d.deliveredToday.length;
     $('mn-month').textContent = d.kpi.length;
+    $('mn-kpi-n').textContent = `(Tổng: ${d.kpi.length} đơn)`;
     $('mn-avg').textContent = days ? (d.kpi.length / days).toFixed(1).replace('.', ',') : 0;
     const max = Math.max(1, ...d.chart.map(x => x.n));
     $('mn-chart').innerHTML = days ? d.chart.map(x => `<div class="bar"><b>${x.n}</b><i style="height:${Math.round(x.n / max * 80)}%"></i><small>${x.day.slice(0, 2)}</small></div>`).join('')
       : '<div class="empty" style="width:100%">Chưa có dữ liệu tháng này</div>';
-    $('mn-list-today').innerHTML = d.deliveredToday.length ? d.deliveredToday.map(o => dlItem(o)).join('') : '<div class="empty">Chưa giao đơn nào hôm nay</div>';
-    $('mn-list-kpi').innerHTML = d.kpi.length ? d.kpi.slice(0, 300).map(o => dlItem(o)).join('') : '<div class="empty">Chưa có đơn giao trong tháng</div>';
+    $('mn-list-today').innerHTML = d.deliveredToday.length ? dataTable(H_WAIT, d.deliveredToday.map(waitRow), 3) : '<div class="empty">Chưa giao đơn nào hôm nay</div>';
+    $('mn-list-kpi').innerHTML = d.kpi.length ? dataTable(H_KPI, d.kpi.slice(0, 300).map(o => [esc(o.date), '<b>' + esc(o.so) + '</b>', esc(o.req || '-'),
+      esc(o.customer || '-'), `<span class="badge ${statusClass(o.status)}">${esc(o.status)}</span>`]), 3) : '<div class="empty">Chưa có đơn giao trong tháng</div>';
   } catch (e) { toast(e.message); }
   finally { loading(false); }
 }
@@ -1470,11 +1473,20 @@ async function loadTetOrders(){
     catch (e) { toast(e.message); return; }
     finally { loading(false); }
   }
+  const all = S.user.perms.tetViewAll;
+  $('tl-filters').classList.toggle('hidden', !all);
+  if (all) {
+    const cur = $('tl-sale').value;
+    const sales = [...new Set((S.tetOrders || []).map(o => o.saleName).filter(Boolean))].sort();
+    $('tl-sale').innerHTML = '<option value="">Nhân viên: Tất cả</option>' + sales.map(s => `<option ${s === cur ? 'selected' : ''}>${esc(s)}</option>`).join('');
+  }
   renderTetOrders();
 }
 function renderTetOrders(){
-  const q = norm($('tl-q').value);
-  const list = (S.tetOrders || []).filter(o => !q || norm([o.id, o.custCode, o.custName, o.saleName, o.username].join(' ')).includes(q));
+  const q = norm($('tl-q').value), sale = $('tl-sale').value, grp = $('tl-group').value;
+  const list = (S.tetOrders || []).filter(o => (!q || norm([o.id, o.custCode, o.custName, o.saleName, o.username].join(' ')).includes(q))
+    && (!sale || o.saleName === sale) && (!grp || o.group === grp));
+  $('tl-sum').textContent = list.length ? `${list.length} đơn · Tổng thanh toán ${fmt(list.reduce((s, o) => s + o.total, 0))} đ` : '';
   $('tl-list').innerHTML = !list.length ? '<div class="card empty">Chưa có đơn hàng Tết nào.</div>' : list.map((o, i) => `
     <div class="card order-card" data-tog="ol${i}">
       <div class="order-top">
@@ -1493,6 +1505,238 @@ function renderTetOrders(){
     </div>`).join('');
 }
 $('tl-q').addEventListener('input', renderTetOrders);
+$('tl-sale').addEventListener('change', renderTetOrders);
+$('tl-group').addEventListener('change', renderTetOrders);
+
+/* ========= LỊCH GIAO HÀNG (đọc từ máy chủ) ========= */
+function schedTable(sch){
+  const br = s => esc(s).replace(/\n/g, '<br>');
+  const cell = c => {
+    let h = '';
+    if (c.priority) h += `<span class="hl-y">${br(c.priority)}</span><br>`;
+    if (c.route) h += `<span class="hl-r">${br(c.route)}</span>`;
+    if (c.stores) h += `<span class="hl-mt">${br(c.stores)}</span>`;
+    if (c.center) h += `<span class="hl-c">${br(c.center)}</span>`;
+    return h || '<span class="muted">–</span>';
+  };
+  const noteCls = { priority: 'hl-y', route: 'hl-r' };
+  return `<div class="sched-wrap"><table class="sched">
+    <thead><tr><th></th>${sch.days.map(d => `<th>${esc(d)}</th>`).join('')}</tr>
+      <tr><th class="sm">${esc(sch.driverLabel)}</th>${sch.drivers.map(d => `<th class="sm">${esc(d)}</th>`).join('')}</tr></thead>
+    <tbody>${sch.sessions.map(se => `<tr><td class="ses">${esc(se.name)}</td>${se.cells.map(c => `<td>${cell(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table></div>
+  ${sch.notes && sch.notes.length ? `<div style="margin-top:14px;font-size:14px;line-height:1.8"><b>Ghi chú:</b><br>
+    ${sch.notes.map(n => `• ${noteCls[n.style] ? `<span class="${noteCls[n.style]}" style="margin:0">${esc(n.label)}</span>` : `<i>${esc(n.label)}</i>`} ${esc(n.text)}`).join('<br>')}</div>` : ''}
+  ${sch.updatedAt ? `<div class="muted" style="font-size:12px;margin-top:10px">Cập nhật ${esc(sch.updatedAt)}${sch.updatedBy ? ' bởi ' + esc(sch.updatedBy) : ''}</div>` : ''}`;
+}
+async function loadSchedule(force){
+  if (S.schedule && !force) { $('sched-box').innerHTML = schedTable(S.schedule); }
+  try {
+    S.schedule = await api('getSchedule');
+    $('sched-box').innerHTML = schedTable(S.schedule);
+  } catch (e) { if (!S.schedule) $('sched-box').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+/* ========= QUẢN TRỊ ========= */
+const AD = { data: null, tab: 'users', draft: null, day: 0 };
+const SCOPE_LABEL = { all: 'Tất cả – có bộ lọc', own: 'Chỉ đơn của mình' };
+async function initAdmin(){
+  showAdminTab(AD.tab);
+  await loadAdminUsers();
+}
+function showAdminTab(t){
+  AD.tab = t;
+  document.querySelectorAll('#ad-tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  $('ad-users').classList.toggle('hidden', t !== 'users');
+  $('ad-sched').classList.toggle('hidden', t !== 'sched');
+  if (t === 'sched') initSchedEditor();
+}
+$('ad-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) showAdminTab(b.dataset.t); });
+
+async function loadAdminUsers(){
+  loading(true);
+  try { AD.data = await api('adminListUsers'); renderAdminUsers(); }
+  catch (e) { toast(e.message); }
+  finally { loading(false); }
+}
+const roleOf = k => (AD.data.roles.find(r => r.key === k) || { label: k, features: [], scope: 'all' });
+const featLabel = k => (AD.data.features.find(f => f.key === k) || { label: k }).label;
+function userFeatures(u){
+  if (u.features === 'none') return [];
+  const own = u.features ? u.features.split(/[,;\s]+/).filter(Boolean) : [];
+  return own.length ? own : roleOf(u.role).features;
+}
+function renderAdminUsers(){
+  const q = norm($('ad-q').value);
+  const list = AD.data.users.filter(u => !q || norm([u.username, u.name, roleOf(u.role).label].join(' ')).includes(q));
+  $('ad-count').textContent = `${list.length} / ${AD.data.users.length} user`;
+  $('ad-list').innerHTML = list.map(u => {
+    const f = userFeatures(u);
+    const scope = u.scope || roleOf(u.role).scope;
+    return `<div class="ad-user" data-u="${esc(u.username)}">
+      <div class="avatar" style="background:var(--pri-l);width:40px;height:40px;font-size:15px">${esc((u.name || u.username).trim().split(/\s+/).pop().charAt(0).toUpperCase())}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700">${esc(u.name || u.username)} <span class="muted" style="font-weight:500;font-size:13px">@${esc(u.username)}</span></div>
+        <div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">
+          <span class="badge st-ship">${esc(roleOf(u.role).label)}</span>
+          ${u.status === 'Active' ? '' : '<span class="badge st-cancel">Khóa</span>'}
+          ${u.mustChange ? '<span class="badge st-wait">MK mặc định</span>' : ''}
+          ${u.features ? '<span class="badge st-other">Tùy chỉnh</span>' : ''}
+          <span class="badge st-other">${esc(SCOPE_LABEL[scope])}</span>
+        </div>
+        <div class="muted" style="font-size:12.5px;margin-top:4px">${f.length ? f.map(featLabel).map(esc).join(' · ') : 'Chỉ tính năng chung'}</div>
+      </div>${ic('chev', 'chev-r')}</div>`;
+  }).join('') || '<div class="empty">Không tìm thấy user</div>';
+}
+$('ad-q').addEventListener('input', () => AD.data && renderAdminUsers());
+$('ad-add').addEventListener('click', () => openUserModal(null));
+$('ad-list').addEventListener('click', e => {
+  const el = e.target.closest('[data-u]'); if (!el) return;
+  openUserModal(AD.data.users.find(u => u.username === el.dataset.u));
+});
+
+function openUserModal(u){
+  const isNew = !u;
+  u = u || { username: '', name: '', email: '', role: 'sale', status: 'Active', features: '', scope: '' };
+  const custom = !!u.features;
+  const isMe = !isNew && u.username.toLowerCase() === S.user.username.toLowerCase();
+  modal(`<h3>${isNew ? 'Thêm user mới' : 'Sửa user @' + esc(u.username)}</h3>
+    ${isNew ? `<label class="f">Tên đăng nhập</label><input class="inp" id="mu-user" autocapitalize="none" placeholder="VD: duy.nguyen">` : ''}
+    <label class="f">Tên nhân viên</label><input class="inp" id="mu-name" value="${esc(u.name)}">
+    <label class="f">Email (để nhận CC đơn Tết – không bắt buộc)</label><input class="inp" id="mu-email" type="email" value="${esc(u.email)}">
+    <div class="row2">
+      <div><label class="f">Vai trò</label><select class="inp" id="mu-role" ${isMe ? 'disabled' : ''}>${AD.data.roles.map(r => `<option value="${r.key}" ${r.key === u.role ? 'selected' : ''}>${esc(r.label)}</option>`).join('')}</select></div>
+      <div><label class="f">Trạng thái</label><select class="inp" id="mu-status" ${isMe ? 'disabled' : ''}><option ${u.status === 'Active' ? 'selected' : ''}>Active</option><option ${u.status === 'Khóa' ? 'selected' : ''}>Khóa</option></select></div>
+    </div>
+    <label class="f">Phạm vi dữ liệu (BC Giao hàng, Yêu cầu kiểm tra, Đơn Tết)</label>
+    <select class="inp" id="mu-scope"></select>
+    <label class="f">Tính năng riêng ("Công việc của tôi")</label>
+    <div class="seg" id="mu-fmode"><button type="button" data-m="role" class="${custom ? '' : 'on'}">Theo vai trò</button><button type="button" data-m="custom" class="${custom ? 'on' : ''}">Tùy chỉnh</button></div>
+    <div id="mu-feats" class="feat-list"></div>
+    ${isNew ? `<label class="f">Mật khẩu mặc định (user sẽ phải đổi khi đăng nhập lần đầu)</label><input class="inp" id="mu-pw" value="123456">`
+            : `<div class="card" style="background:#f6f8f7;box-shadow:none;margin:16px 0 0;padding:12px">
+                 <label class="f" style="margin-top:0">Đặt lại mật khẩu mặc định</label>
+                 <div style="display:flex;gap:8px"><input class="inp" id="mu-pw" placeholder="Mật khẩu mới"><button class="btn light" id="mu-reset" type="button">Đặt lại</button></div>
+                 <div class="muted" style="font-size:12px;margin-top:6px">${u.lastChange ? 'Đổi MK lần cuối: ' + esc(u.lastChange) : 'Đang dùng mật khẩu mặc định'}</div></div>`}
+    <div class="err" id="mu-err"></div>
+    <div class="modal-actions"><button class="btn light" onclick="closeModal()">Hủy</button><button class="btn" id="mu-save">${isNew ? 'Tạo user' : 'Lưu thay đổi'}</button></div>`);
+
+  let mode = custom ? 'custom' : 'role';
+  let picked = custom ? userFeatures(u).slice() : [];
+  const drawScope = () => {
+    const r = roleOf($('mu-role').value);
+    $('mu-scope').innerHTML = `<option value="">Theo vai trò (${SCOPE_LABEL[r.scope]})</option>
+      <option value="all" ${u.scope === 'all' ? 'selected' : ''}>${SCOPE_LABEL.all}</option>
+      <option value="own" ${u.scope === 'own' ? 'selected' : ''}>${SCOPE_LABEL.own}</option>`;
+  };
+  const drawFeats = () => {
+    const r = roleOf($('mu-role').value);
+    const on = mode === 'role' ? r.features : picked;
+    document.querySelectorAll('#mu-fmode button').forEach(b => b.classList.toggle('on', b.dataset.m === mode));
+    $('mu-feats').innerHTML = AD.data.features.map(f => `<label class="feat ${mode === 'role' ? 'dis' : ''}">
+      <input type="checkbox" value="${f.key}" ${on.indexOf(f.key) !== -1 ? 'checked' : ''} ${mode === 'role' ? 'disabled' : ''}> ${esc(f.label)}</label>`).join('');
+  };
+  drawScope(); drawFeats();
+  $('mu-role').addEventListener('change', () => { u.scope = $('mu-scope').value; drawScope(); drawFeats(); });
+  $('mu-fmode').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    mode = b.dataset.m;
+    if (mode === 'custom' && !picked.length) picked = roleOf($('mu-role').value).features.slice();
+    drawFeats();
+  });
+  $('mu-feats').addEventListener('change', () => { picked = [...document.querySelectorAll('#mu-feats input:checked')].map(i => i.value); });
+
+  $('mu-save').onclick = async () => {
+    $('mu-err').textContent = '';
+    const d = {
+      username: isNew ? $('mu-user').value.trim() : u.username,
+      name: $('mu-name').value.trim(), email: $('mu-email').value.trim(),
+      role: $('mu-role').value, status: $('mu-status').value, scope: $('mu-scope').value,
+      features: mode === 'role' ? '' : (picked.length ? picked : 'none'),
+      password: isNew ? $('mu-pw').value.trim() : ''
+    };
+    $('mu-save').disabled = true; loading(true);
+    try {
+      AD.data = await api('adminSaveUser', d, isNew);
+      closeModal(); renderAdminUsers();
+      toast(isNew ? `Đã tạo user ${d.username}. Mật khẩu mặc định: ${d.password}` : 'Đã lưu thay đổi.', 4000);
+      if (isMe) { S.user = await api('getSession'); renderHome(); }
+    } catch (e) { $('mu-err').textContent = e.message; const b = $('mu-save'); if (b) b.disabled = false; }
+    finally { loading(false); }
+  };
+  if (!isNew) $('mu-reset').onclick = async () => {
+    const pw = $('mu-pw').value.trim();
+    if (pw.length < 4) { $('mu-err').textContent = 'Mật khẩu mặc định phải có ít nhất 4 ký tự.'; return; }
+    loading(true);
+    try { await api('adminResetPassword', u.username, pw); toast(`Đã đặt lại mật khẩu cho ${u.username}: ${pw}`, 4000); closeModal(); loadAdminUsers(); }
+    catch (e) { $('mu-err').textContent = e.message; }
+    finally { loading(false); }
+  };
+}
+
+/* --- Sửa lịch giao hàng --- */
+async function initSchedEditor(){
+  if (!AD.draft) {
+    loading(true);
+    try { if (!S.schedule) S.schedule = await api('getSchedule'); AD.draft = JSON.parse(JSON.stringify(S.schedule)); }
+    catch (e) { toast(e.message); return; }
+    finally { loading(false); }
+  }
+  drawSchedEditor();
+}
+function drawSchedEditor(){
+  const d = AD.draft, i = AD.day;
+  $('se-days').innerHTML = d.days.map((x, k) => `<button type="button" data-d="${k}" class="${k === i ? 'on' : ''}">${esc(x)}</button>`).join('');
+  let h = `<label class="f" style="margin-top:0">${esc(d.driverLabel)} – ${esc(d.days[i])}</label>
+    <input class="inp" data-se="driver" value="${esc(d.drivers[i] || '')}" placeholder="Tên NV giao xe máy">`;
+  d.sessions.forEach((se, s) => {
+    const c = se.cells[i];
+    h += `<div class="se-ses"><div class="se-title">Buổi ${esc(se.name)}</div>
+      <label class="f"><span class="hl-y" style="margin:0">Cố định / ưu tiên</span></label><input class="inp" data-se="priority" data-s="${s}" value="${esc(c.priority)}" placeholder="VD: Cam Ranh, Đảo Hòn Tre">
+      <label class="f"><span class="hl-r" style="margin:0">Tuyến</span></label><input class="inp" data-se="route" data-s="${s}" value="${esc(c.route)}" placeholder="VD: Tuyến phía Bắc">
+      <label class="f">Siêu thị / MT (mỗi dòng 1 điểm)</label><textarea class="inp" rows="3" data-se="stores" data-s="${s}">${esc(c.stores)}</textarea>
+      <label class="f">Khu vực chung</label><input class="inp" data-se="center" data-s="${s}" value="${esc(c.center)}"></div>`;
+  });
+  $('se-day-form').innerHTML = h;
+  $('se-notes').innerHTML = d.notes.map((n, k) => `<div class="se-note">
+    <select class="inp" data-note="style" data-k="${k}"><option value="priority" ${n.style === 'priority' ? 'selected' : ''}>Nền vàng</option>
+      <option value="route" ${n.style === 'route' ? 'selected' : ''}>Tuyến</option><option value="center" ${n.style === 'center' ? 'selected' : ''}>Chữ nghiêng</option></select>
+    <input class="inp" data-note="label" data-k="${k}" value="${esc(n.label)}" placeholder="Nhãn">
+    <input class="inp" data-note="text" data-k="${k}" value="${esc(n.text)}" placeholder="Nội dung">
+    <button class="icon-btn" type="button" data-note-del="${k}" title="Xóa">${ic('trash')}</button></div>`).join('');
+  $('se-preview').innerHTML = schedTable(d);
+}
+$('se-days').addEventListener('click', e => { const b = e.target.closest('[data-d]'); if (b) { AD.day = +b.dataset.d; drawSchedEditor(); } });
+$('ad-sched').addEventListener('input', e => {
+  const el = e.target, d = AD.draft; if (!d) return;
+  if (el.dataset.se === 'driver') d.drivers[AD.day] = el.value;
+  else if (el.dataset.se) d.sessions[+el.dataset.s].cells[AD.day][el.dataset.se] = el.value;
+  else if (el.dataset.note) d.notes[+el.dataset.k][el.dataset.note] = el.value;
+  else if (el.id === 'se-driver-label') d.driverLabel = el.value;
+  else return;
+  $('se-preview').innerHTML = schedTable(d);
+});
+$('ad-sched').addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.note === 'style') { AD.draft.notes[+el.dataset.k].style = el.value; $('se-preview').innerHTML = schedTable(AD.draft); }
+});
+$('ad-sched').addEventListener('click', e => {
+  const del = e.target.closest('[data-note-del]');
+  if (del) { AD.draft.notes.splice(+del.dataset.noteDel, 1); drawSchedEditor(); }
+});
+$('se-note-add').addEventListener('click', () => { AD.draft.notes.push({ label: '', style: 'center', text: '' }); drawSchedEditor(); });
+$('se-reset').addEventListener('click', () => { AD.draft = JSON.parse(JSON.stringify(S.schedule)); drawSchedEditor(); toast('Đã hủy các thay đổi chưa lưu.'); });
+$('se-save').addEventListener('click', async () => {
+  loading(true);
+  try {
+    S.schedule = await api('adminSaveSchedule', AD.draft);
+    AD.draft = JSON.parse(JSON.stringify(S.schedule));
+    drawSchedEditor();
+    toast('Đã lưu lịch giao hàng. Mọi người sẽ thấy lịch mới ngay.');
+  } catch (e) { toast(e.message, 4000); }
+  finally { loading(false); }
+});
+
 
 boot();
 </script>
