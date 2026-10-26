@@ -127,6 +127,9 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .src{font-size:11px;color:var(--muted)}
 .empty{text-align:center;color:var(--muted);padding:28px 10px}
 .qr-modes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.qr-modes .qr-mode:last-child:nth-child(odd){grid-column:1/-1}
+.sync-line{font-size:12.5px;color:var(--muted);margin-top:2px}
+.sync-line b{color:var(--text)}
 .qr-mode{border:0;border-radius:20px;color:#fff;padding:22px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;box-shadow:var(--shadow);font-weight:800;font-size:17px}
 .qr-mode small{font-weight:500;font-size:12.5px;opacity:.92}
 .qr-mode svg.i{width:38px;height:38px}
@@ -136,7 +139,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .qr-cam video{width:100%;height:100%;object-fit:cover;display:block}
 .qr-cam .frame{position:absolute;inset:16%;border:3px solid rgba(255,255,255,.85);border-radius:18px;box-shadow:0 0 0 999px rgba(0,0,0,.25);pointer-events:none}
 .qr-cam .cam-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#fff;text-align:center;padding:20px;font-size:14px;background:rgba(13,23,18,.85)}
-.qr-status{padding:12px;border-radius:12px;font-size:15.5px;font-weight:700;text-align:center;margin:12px 0;background:#eceff1;word-break:break-all}
+.qr-status{padding:12px;border-radius:12px;font-size:15.5px;font-weight:700;text-align:center;margin:12px 0;background:#eceff1;overflow-wrap:anywhere}
 .qr-status.ok{background:var(--green-l);color:var(--green)}
 .qr-status.warn{background:var(--amber-l);color:var(--amber)}
 .qr-status.err{background:var(--red-l);color:var(--red)}
@@ -409,7 +412,8 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
             <button class="btn" id="qr-add">Thêm</button></div>
         </div>
         <div class="card">
-          <div class="qr-stats"><span>Đã quét: <b id="qr-cnt">0</b> · Chờ gửi: <b id="qr-cnt-p">0</b></span><span id="qr-net"></span></div>
+          <div class="qr-stats"><span>Đã quét: <b id="qr-cnt">0</b> · Chờ gửi: <b id="qr-cnt-p">0</b> · Đã lưu: <b id="qr-cnt-ok">0</b></span><span id="qr-net"></span></div>
+          <div class="sync-line" id="qr-sync"></div>
           <ul class="hist" id="qr-hist"></ul>
         </div>
       </div>
@@ -618,11 +622,14 @@ function toast(msg, ms){ const t = $('toast'); t.textContent = msg; t.classList.
 
 function run(fn, ...args){
   if (!IN_GAS) {
+    const ctl = window.AbortController ? new AbortController() : null;
+    const timer = ctl ? setTimeout(() => ctl.abort(), 45000) : 0;     // quá 45 giây coi như mất mạng
     return fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },  // tránh CORS preflight
-      body: JSON.stringify({ fn: fn, args: args })
-    }).then(r => r.json()).catch(() => { throw new Error('Không kết nối được máy chủ. Kiểm tra mạng hoặc API_URL.'); })
+      body: JSON.stringify({ fn: fn, args: args }),
+      signal: ctl ? ctl.signal : undefined
+    }).then(r => { clearTimeout(timer); return r.json(); }).catch(() => { throw new Error('Không kết nối được máy chủ. Kiểm tra mạng hoặc API_URL.'); })
       .then(j => { if (!j.ok) throw new Error(j.error); return j.data; });
   }
   return new Promise((resolve, reject) => {
@@ -708,6 +715,10 @@ function enterApp(){
   $('s-user').textContent = u.username; $('s-name').textContent = u.name;
   renderHome();
   go(u.mustChange ? 'settings' : 'home');
+  // Nạp lại hàng chờ quét còn dở (VD: phiên hết hạn trước đó) và gửi tiếp ở nền
+  QR.authErr = false; QR.netErr = ''; QR.backoff = 0;
+  if (!QR.loaded) { QR.items = store.get(qrKey()) || []; QR.loaded = true; }
+  if (!u.mustChange) qrSchedule(500);
 }
 
 /* ========= ĐIỀU HƯỚNG ========= */
@@ -948,7 +959,8 @@ const QR = { mode: null, items: [], sending: false, scanner: null, lib: null, op
 const QR_MODES = {
   // Các nút trong màn hình quét. Thêm nút mới: khai báo ở đây + SCAN_MODES trong Code.gs
   XUAT: { label: 'XUẤT HÀNG', sub: 'Trạng thái: Đang giao', bg: 'linear-gradient(135deg,#fb8c00,#e65100)', color: '#e65100', icon: 'box' },
-  GIAO: { label: 'GIAO HÀNG', sub: 'Trạng thái: Đã giao',   bg: 'linear-gradient(135deg,#3d7a57,#182e22)', color: '#24573c', icon: 'truck' }
+  GIAO: { label: 'GIAO HÀNG', sub: 'Trạng thái: Đã giao',   bg: 'linear-gradient(135deg,#3d7a57,#182e22)', color: '#24573c', icon: 'truck' },
+  HOAN_CT: { label: 'HOÀN CHỨNG TỪ', sub: 'Ghi vào sheet Hoàn chứng từ', bg: 'linear-gradient(135deg,#7e57c2,#4527a0)', color: '#5e35b1', icon: 'list' }
 };
 const qrKey = () => 'annt_qr_queue_' + (S.user ? S.user.username : '');
 
@@ -1058,7 +1070,8 @@ $('qr-manual').addEventListener('keydown', e => { if (e.key === 'Enter') $('qr-a
 function qrAdd(raw){
   const code = String(raw || '').trim();
   if (!code) return;
-  if (QR.items.find(i => i.code === code && i.mode === QR.mode && i.state !== 'err')) {
+  // Hoàn chứng từ: cho quét lại cùng mã; các nút khác chặn mã đã quét
+  if (QR.mode !== 'HOAN_CT' && QR.items.find(i => i.code === code && i.mode === QR.mode && i.state !== 'err')) {
     beep('warn'); qrSetStatus('⚠ Đã quét rồi: ' + code, 'warn'); return;
   }
   QR.items.unshift({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), mode: QR.mode, code: code,
@@ -1066,49 +1079,55 @@ function qrAdd(raw){
   if (QR.items.length > 500) QR.items.length = 500;
   $('qr-note').value = '';
   beep('ok'); qrSetStatus('✔ ' + code, 'ok');
-  qrSave(); qrRender(); qrFlush();
+  qrSave(); qrRender(); qrSchedule(0);
 }
 function qrSave(){ if (S.user) store.set(qrKey(), QR.items.filter(i => i.state === 'pending')); }
 
-/* --- Gửi nền theo lô, tự gửi lại khi mất mạng --- */
+/* --- Đồng bộ nền: chạy song song, KHÔNG chặn camera, KHÔNG phát âm thanh ---
+ * Mỗi mã quét được đưa ngay vào hàng chờ (lưu trên máy). Hàng chờ gửi lên máy chủ theo lô 20 mã.
+ * Kết quả (đã lưu / trùng / lỗi) chỉ hiển thị trong danh sách lịch sử.
+ * Mất mạng: tự thử lại sau 3s, 6s, 12s... (tối đa 60s). Phiên hết hạn: giữ mã lại, báo trong lịch sử. */
+QR.backoff = 0; QR.authErr = false; QR.timer = 0;
+function qrSchedule(ms){ clearTimeout(QR.timer); QR.timer = setTimeout(qrFlush, ms); }
 async function qrFlush(){
-  if (QR.sending || !S.token || !S.user || !S.user.perms.scanWrite) return;
+  if (QR.sending || QR.authErr || !S.token || !S.user || !S.user.perms.scanWrite) return;
   const batch = QR.items.filter(i => i.state === 'pending').slice(-20).reverse();  // gửi mã cũ trước
   if (!batch.length) return;
   QR.sending = true;
-  let retry = 0;
+  let ok = false;
   try {
     const res = await run('scanBatch', S.token, batch.map(i => ({ id: i.id, mode: i.mode, code: i.code, note: i.note, ts: i.ts })));
-    let ok = 0, dup = 0, er = 0;
-    res.forEach(r => {
+    (res || []).forEach(r => {
       const it = QR.items.find(i => i.id === r.id); if (!it) return;
-      if (r.result === 'Success') { it.state = 'ok'; it.msg = ''; ok++; }
-      else if (r.result === 'Duplicate') { it.state = 'dup'; it.msg = r.message; dup++; }
-      else { it.state = 'err'; it.msg = r.message; er++; }
+      if (r.result === 'Success') { it.state = 'ok'; it.msg = ''; }
+      else if (r.result === 'Duplicate') { it.state = 'dup'; it.msg = r.message; }
+      else { it.state = 'err'; it.msg = r.message; }
     });
-    if (S.view === 'scan') {
-      if (er) { beep('err'); qrSetStatus('✖ ' + er + ' mã lỗi – xem danh sách', 'err'); }
-      else if (dup) { beep('warn'); qrSetStatus('⚠ ' + dup + ' mã trùng – xem danh sách', 'warn'); }
-      else if (ok) setTimeout(() => beep('saved'), 150);
-    }
-    qrNet(true);
+    ok = true; QR.backoff = 0; QR.netErr = '';
   } catch (e) {
-    QR.sending = false;
-    if (/SESSION_EXPIRED/.test(e.message)) { qrSave(); localLogout('Phiên đăng nhập hết hạn. Các mã chưa gửi vẫn được giữ lại, đăng nhập lại để gửi tiếp.'); return; }
-    qrNet(false); retry = 4000;
+    if (/SESSION_EXPIRED/.test(e.message)) QR.authErr = true;
+    QR.netErr = QR.authErr ? 'Phiên đăng nhập hết hạn – đăng nhập lại để gửi các mã đang chờ' : 'Mất kết nối – sẽ tự gửi lại';
+    QR.backoff = Math.min(60000, (QR.backoff || 1500) * 2);
   }
   QR.sending = false;
-  qrSave(); qrRender();
-  if (QR.items.some(i => i.state === 'pending')) setTimeout(qrFlush, retry || 200);
+  qrSave();
+  if (S.view === 'scan') qrRender();
+  if (!QR.authErr && QR.items.some(i => i.state === 'pending')) qrSchedule(ok ? 300 : QR.backoff);
 }
-setInterval(qrFlush, 10000);
-window.addEventListener('online', qrFlush);
-function qrNet(ok){ $('qr-net').innerHTML = ok ? '<span style="color:var(--green)">● Đã kết nối</span>' : '<span style="color:var(--red)">● Mất kết nối – sẽ tự gửi lại</span>'; }
+setInterval(qrFlush, 15000);
+window.addEventListener('online', () => { QR.backoff = 0; qrFlush(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) qrFlush(); });
 
 function qrRender(){
   const list = QR.items.filter(i => i.mode === QR.mode);
+  const cnt = st => list.filter(i => i.state === st).length;
   $('qr-cnt').textContent = list.length;
-  $('qr-cnt-p').textContent = list.filter(i => i.state === 'pending').length;
+  $('qr-cnt-p').textContent = cnt('pending');
+  $('qr-cnt-ok').textContent = cnt('ok');
+  $('qr-net').innerHTML = QR.netErr ? `<span style="color:var(--red)">● ${esc(QR.netErr)}</span>`
+    : (QR.sending ? '<span style="color:var(--amber)">● Đang đồng bộ…</span>' : '<span style="color:var(--green)">● Đã kết nối</span>');
+  const nd = cnt('dup'), ne = cnt('err');
+  $('qr-sync').innerHTML = nd || ne ? `Cần xem lại: ${nd ? `<b style="color:var(--amber)">${nd} trùng</b>` : ''}${nd && ne ? ' · ' : ''}${ne ? `<b style="color:var(--red)">${ne} lỗi</b>` : ''}` : '';
   const lbl = { pending: '⏳ Đang gửi', ok: '✔ Đã lưu', dup: '⚠ Trùng', err: '✖ Lỗi' };
   const cls = { pending: '', ok: 'ok', dup: 'warn', err: 'err' };
   $('qr-hist').innerHTML = list.slice(0, 100).map(i => `<li><div class="l1"><span class="code">${esc(i.code)}</span>
