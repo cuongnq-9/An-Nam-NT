@@ -136,7 +136,12 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .qr-mode.xuat{background:linear-gradient(135deg,#fb8c00,#e65100)}
 .qr-mode.giao{background:linear-gradient(135deg,#3d7a57,#182e22)}
 .qr-cam{position:relative;width:100%;aspect-ratio:1;max-height:62vh;border-radius:18px;overflow:hidden;background:#0d1712}
-.qr-cam video{width:100%;height:100%;object-fit:cover;display:block}
+.qr-cam #qr-reader,.scan-box{width:100%;height:100%;border:0!important}
+.qr-cam video,.scan-box video{width:100%!important;height:100%!important;object-fit:cover;display:block}
+.qr-cam #qr-reader > div,.scan-box > div{border-color:transparent!important}
+.scan-box{aspect-ratio:1;max-height:60vh;border-radius:16px;overflow:hidden;background:#0d1712;position:relative}
+.scan-btn{flex:none;padding:0 14px}
+.scan-btn svg.i{width:22px;height:22px}
 .qr-cam .frame{position:absolute;inset:16%;border:3px solid rgba(255,255,255,.85);border-radius:18px;box-shadow:0 0 0 999px rgba(0,0,0,.25);pointer-events:none}
 .qr-cam .cam-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#fff;text-align:center;padding:20px;font-size:14px;background:rgba(13,23,18,.85)}
 .qr-status{padding:12px;border-radius:12px;font-size:15.5px;font-weight:700;text-align:center;margin:12px 0;background:#eceff1;overflow-wrap:anywhere}
@@ -184,6 +189,35 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .se-note{display:grid;grid-template-columns:120px 1fr 36px;gap:6px;margin-top:8px;align-items:center}
 .se-note input[data-note="text"]{grid-column:1/3}
 .tl-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.pc .line-code{font-size:15px}
+.bt-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f0f2f5;font-weight:600;font-size:14.5px}
+.qty-in{width:96px!important;flex:none;text-align:center;font-weight:800;font-size:16px;padding:10px 6px;border:1.5px solid var(--pri);border-radius:10px;outline:none}
+.manual-box{display:flex;gap:8px;margin-top:10px;padding:10px;border:1px dashed #a5c9b3;border-radius:12px;background:#f6faf7}
+.manual-box .m-bn{flex:1;min-width:0}
+.ms-note{font-size:12px;margin-top:8px}
+.hrow{padding:9px 0;border-top:1px solid #f0f2f5;font-size:14px;position:relative}
+.hrow:first-child{border-top:0}
+.hrow .hq{position:absolute;right:0;top:9px;font-weight:800;color:var(--green)}
+.hrow .muted{font-size:12px}
+.kk-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.kk-kpis .kpi-mini b{font-size:22px}
+.mis.g1{border-left:4px solid var(--red)} .mis.g2{border-left:4px solid var(--amber)}
+.reason-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.reason-list label{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:11px;padding:11px;font-size:14.5px;cursor:pointer}
+.reason-list input{width:18px;height:18px;accent-color:var(--red)}
+.pk-tabs{display:grid;grid-template-columns:repeat(4,1fr)}
+.pk-tabs button{padding:10px 2px;font-size:13px}
+#kk-tabs button.on,#kk-round button.on,.pk-tabs button.on{color:var(--pri)}
+#kk-round button{padding:9px 4px;font-size:13px}
+.pick-choice{padding:10px 0;border-top:1px solid #f0f2f5;cursor:pointer;font-size:14px}
+.pick-choice:first-of-type{border-top:0}
+.alloc{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-left:4px solid var(--green);background:#f6faf7;border-radius:10px;margin-top:8px}
+.alloc.surplus{border-left-color:var(--amber);background:var(--amber-l)}
+.alloc .aq{font-size:22px;font-weight:900;color:var(--green)}
+.alloc.surplus .aq{color:var(--amber)}
+.order-pk{border-top:4px solid #8e24aa}
+.pend-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dotted #d0d4da;font-size:13.5px}
+.pend-row .pk-chk{width:22px;height:22px;accent-color:#8e24aa;flex:none}
 .up-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
 @media(min-width:760px){.up-kpis{grid-template-columns:repeat(4,1fr)}}
 .up-k{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:12px 14px;border-left:5px solid var(--c);cursor:pointer}
@@ -401,7 +435,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
           </div>
           <input type="file" id="qr-file" accept="image/*" capture="environment" class="hidden">
         </div>
-        <div class="qr-cam" id="qr-cam"><video id="qr-video" muted playsinline></video><div class="frame"></div>
+        <div class="qr-cam" id="qr-cam"><div id="qr-reader"></div>
           <div class="cam-msg hidden" id="qr-cam-msg"></div></div>
         <div class="qr-status" id="qr-status">Đưa mã QR vào khung hình</div>
         <div class="card">
@@ -441,6 +475,76 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
       <div class="card"><h4>Đơn đã giao trong tháng (KPI) <span class="muted" id="mn-kpi-n" style="font-weight:600"></span></h4><div id="mn-list-kpi"></div></div>
     </div>
 
+    <!-- KIỂM KÊ -->
+    <div class="view hidden" id="v-kiemke">
+      <div class="card kk-banner" id="kk-banner"><div class="empty">Đang tải...</div></div>
+      <div class="seg" id="kk-tabs" style="margin-bottom:14px"><button data-t="count" class="on">Đếm hàng</button><button data-t="result">Kết quả & đếm lại</button></div>
+      <div id="kk-count">
+        <div class="card">
+          <div class="row2">
+            <div><label class="f" style="margin-top:0">Vị trí (Location)</label><input class="inp" id="kk-loc" placeholder="Khu vực, ô kệ..."></div>
+            <div><label class="f" style="margin-top:0">Lần đếm</label><div class="seg" id="kk-round"><button data-r="1" class="on">Lần 1</button><button data-r="2">Lần 2 (đếm lại)</button></div></div>
+          </div>
+          <label class="f">Barcode / Mã hàng / Tên hàng</label>
+          <div style="display:flex;gap:8px"><input class="inp" id="kk-q" placeholder="Nhập vài số cuối hoặc tên hàng" enterkeyhint="search"><button class="btn" id="kk-find">Tìm</button><button class="btn light scan-btn" id="kk-scan" title="Quét mã vạch / QR"></button></div>
+          <div class="muted ms-note" id="kk-ms"></div>
+        </div>
+        <div id="kk-list"></div>
+        <button class="btn block hidden" id="kk-save">Lưu số đếm</button>
+        <div class="card hidden" id="kk-hist-card"><h4>Đã lưu trong phiên này</h4><div id="kk-hist"></div></div>
+      </div>
+      <div id="kk-result" class="hidden">
+        <button class="btn block ghost" id="kk-sum" style="margin-top:0">Tổng hợp kết quả mới nhất</button>
+        <div class="kk-kpis" id="kk-kpis"></div>
+        <div id="kk-mis"></div>
+        <button class="btn block red hidden" id="kk-finish">Hoàn tất kiểm kê – chốt số liệu</button>
+      </div>
+    </div>
+
+    <!-- BC HỦY HÀNG -->
+    <div class="view hidden" id="v-huyhang">
+      <div class="card">
+        <label class="f" style="margin-top:0">Barcode / Mã hàng / Tên hàng</label>
+        <div style="display:flex;gap:8px"><input class="inp" id="wo-q" placeholder="Nhập vài số cuối hoặc tên hàng" enterkeyhint="search"><button class="btn red" id="wo-find">Tìm</button><button class="btn light scan-btn" id="wo-scan" title="Quét mã vạch / QR"></button></div>
+        <div class="muted ms-note" id="wo-ms"></div>
+      </div>
+      <div id="wo-list"></div>
+      <div class="card hidden" id="wo-form">
+        <h4 style="color:var(--red)">Lý do hủy hàng</h4>
+        <div class="reason-list" id="wo-reason">
+          <label><input type="radio" name="wo-r" value="Hàng hư hỏng"> Hàng hư hỏng</label>
+          <label><input type="radio" name="wo-r" value="Hàng hết hạn"> Hàng hết hạn</label>
+          <label><input type="radio" name="wo-r" value="Hàng thất lạc chờ kiểm tra"> Hàng thất lạc chờ kiểm tra</label>
+        </div>
+        <label class="f">Ghi chú – mô tả</label><textarea class="inp" id="wo-note" rows="2" placeholder="Nhập chi tiết nội dung hủy..."></textarea>
+        <button class="btn block red" id="wo-save">Lưu báo cáo hủy</button>
+      </div>
+      <div class="card hidden" id="wo-hist-card"><h4>Đã báo cáo trong phiên này</h4><div id="wo-hist"></div></div>
+    </div>
+
+    <!-- SOẠN HÀNG -->
+    <div class="view hidden" id="v-soanhang">
+      <div class="seg pk-tabs" id="pk-tabs" style="margin-bottom:14px">
+        <button data-t="pick" class="on">Pick</button><button data-t="pending">Chưa xong</button><button data-t="done">Đã xong</button><button data-t="hist">Lịch sử</button>
+      </div>
+      <div id="pk-pick">
+        <div class="card">
+          <label class="f" style="margin-top:0">Barcode / Mã hàng / Tên hàng</label>
+          <div style="display:flex;gap:8px"><input class="inp" id="pk-q" placeholder="Nhập 4-6 số cuối hoặc tên hàng" enterkeyhint="search"><button class="btn" id="pk-find">Tìm</button><button class="btn light scan-btn" id="pk-scan" title="Quét mã vạch / QR"></button></div>
+          <div class="muted ms-note" id="pk-ms"></div>
+        </div>
+        <div id="pk-choose"></div>
+        <div id="pk-item"></div>
+        <div id="pk-alloc"></div>
+      </div>
+      <div id="pk-pending" class="hidden"></div>
+      <div id="pk-done" class="hidden"></div>
+      <div id="pk-hist" class="hidden">
+        <div class="card"><div style="display:flex;gap:8px"><input class="inp" id="pk-hq" placeholder="Mã hàng, batch hoặc khách hàng..."><button class="btn" id="pk-hfind">Tìm</button></div></div>
+        <div class="card" id="pk-hres"><div class="empty">Bấm Tìm để xem lịch sử soạn hàng gần đây</div></div>
+      </div>
+    </div>
+
     <!-- TRA CỨU -->
     <div class="view hidden" id="v-lookup">
       <div class="card">
@@ -461,7 +565,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 
     <!-- QUẢN TRỊ (admin) -->
     <div class="view hidden" id="v-admin">
-      <div class="seg" id="ad-tabs" style="margin-bottom:14px"><button data-t="users" class="on">Người dùng & phân quyền</button><button data-t="sched">Lịch giao hàng</button></div>
+      <div class="seg" id="ad-tabs" style="margin-bottom:14px"><button data-t="users" class="on">Người dùng</button><button data-t="sched">Lịch giao</button><button data-t="kk">Kiểm kê</button></div>
       <div id="ad-users">
         <div class="card" style="display:flex;gap:8px;align-items:center">
           <input class="inp" id="ad-q" placeholder="Tìm theo tên, username, vai trò...">
@@ -470,6 +574,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
         <div class="muted" id="ad-count" style="font-size:13px;margin:0 4px 8px"></div>
         <div class="card" style="padding:4px 14px" id="ad-list"></div>
       </div>
+      <div id="ad-kk" class="hidden"><div id="akk-box"></div></div>
       <div id="ad-sched" class="hidden">
         <div class="card">
           <h4>Chọn ngày cần sửa</h4>
@@ -593,6 +698,8 @@ const ICON = {
   box:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
+  clip:'<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+  cart:'<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
   cal:'<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
   gift:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
   list:'<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/>',
@@ -652,7 +759,7 @@ function modal(html){
   $('modal-root').innerHTML = `<div class="modal-bg" id="mbg"><div class="modal">${html}</div></div>`;
   $('mbg').addEventListener('click', e => { if (e.target.id === 'mbg') closeModal(); });
 }
-function closeModal(){ $('modal-root').innerHTML = ''; }
+function closeModal(){ if (scanCleanup) { const f = scanCleanup; scanCleanup = null; f(); return; } $('modal-root').innerHTML = ''; }
 
 /* ========= TRẠNG THÁI ========= */
 const S = {
@@ -678,7 +785,7 @@ $('login-form').addEventListener('submit', async e => {
 });
 
 function localLogout(msg){
-  S.schedule = null; if (typeof AD !== 'undefined') { AD.data = null; AD.draft = null; }
+  S.master = null; S.schedule = null; if (typeof AD !== 'undefined') { AD.data = null; AD.draft = null; }
   qrStop(); QR.loaded = false; QR.items = [];
   store.del('annt_token');
   S.token = null; S.user = null; S.bcLoaded = false; S.upReady = false; S.filters = null; S.tetOrders = null; S.tet.data = null;
@@ -730,6 +837,9 @@ const VIEWS = {
   scan:     { title: 'Quét mã QR',        icon: 'qr',     color: 'linear-gradient(135deg,#fb8c00,#e65100)', label: 'Quét mã QR' },
   waiting:  { title: 'Đơn chờ giao',      icon: 'box',    color: 'linear-gradient(135deg,#5c6bc0,#3949ab)', label: 'Đơn chờ giao' },
   mine:     { title: 'Đơn của tôi',       icon: 'user',   color: 'linear-gradient(135deg,#26a69a,#00695c)', label: 'Đơn của tôi' },
+  kiemke:   { title: 'Kiểm kê',           icon: 'clip',   color: 'linear-gradient(135deg,#1e88e5,#1565c0)', label: 'Kiểm kê' },
+  huyhang:  { title: 'BC Hủy hàng',       icon: 'trash',  color: 'linear-gradient(135deg,#e53935,#b71c1c)', label: 'BC Hủy hàng' },
+  soanhang: { title: 'Soạn hàng',         icon: 'cart',   color: 'linear-gradient(135deg,#8e24aa,#5e35b1)', label: 'Soạn hàng' },
   lookup:   { title: 'Tra cứu đơn hàng',  icon: 'search', color: 'linear-gradient(135deg,#00acc1,#00838f)', label: 'Tra cứu đơn' },
   bank:     { title: 'Thông tin tài khoản', icon: 'bank', color: 'linear-gradient(135deg,#7e57c2,#5e35b1)', label: 'Thông tin TK' },
   schedule: { title: 'Lịch giao hàng',    icon: 'cal',    color: 'linear-gradient(135deg,#26a69a,#00796b)', label: 'Lịch giao hàng' },
@@ -770,6 +880,9 @@ function go(view){
   if (view === 'scan') qrInit();
   if (view === 'waiting') loadWaiting();
   if (view === 'mine') loadMine();
+  if (view === 'kiemke') initKiemke();
+  if (view === 'huyhang') initHuyhang();
+  if (view === 'soanhang') initSoanhang();
   if (view === 'bank') renderBank();
   if (view === 'schedule') loadSchedule();
   if (view === 'admin') initAdmin();
@@ -954,6 +1067,76 @@ document.addEventListener('click', e => {
   $('upc' + id.slice(3)).scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
+/* ========= CAMERA DÙNG CHUNG: đọc được CẢ QR code VÀ mã vạch (EAN-13/8, UPC, Code128, Code39...) =========
+ * Thư viện html5-qrcode (ZXing). Trên Android/Chrome tự dùng bộ giải mã gốc của máy (BarcodeDetector) cho nhanh. */
+function camLib(){
+  return window.Html5Qrcode ? Promise.resolve(window.Html5Qrcode) : new Promise((ok, fail) => {
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+    s.onload = () => ok(window.Html5Qrcode); s.onerror = () => fail(new Error('Không tải được thư viện quét mã.'));
+    document.head.appendChild(s);
+  });
+}
+function camFormats(){
+  const F = window.Html5QrcodeSupportedFormats;
+  if (!F) return undefined;   // để thư viện tự nhận tất cả định dạng
+  return [F.QR_CODE, F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.CODE_128, F.CODE_39, F.CODE_93, F.ITF, F.CODABAR, F.DATA_MATRIX];
+}
+const camOpts = () => ({ formatsToSupport: camFormats(), verbose: false, experimentalFeatures: { useBarCodeDetectorIfSupported: true } });
+async function camStart(elId, onCode){
+  const H = await camLib();
+  const cam = new H(elId, camOpts());
+  await cam.start({ facingMode: 'environment' }, {
+    fps: 12,
+    // Khung quét rộng & thấp vừa cho mã vạch dài, vẫn đủ cao cho QR
+    qrbox: (w, h) => { const s = Math.min(w, h); return { width: Math.floor(w * 0.88), height: Math.floor(s * 0.62) }; },
+    videoConstraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 }, advanced: [{ focusMode: 'continuous' }] }
+  }, text => onCode(String(text || '').trim()), () => {});
+  return cam;
+}
+async function camStop(cam){
+  if (!cam) return;
+  try { if (cam.isScanning) await cam.stop(); } catch (e) {}
+  try { cam.clear(); } catch (e) {}
+}
+async function camScanFile(file){
+  const H = await camLib();
+  if (!$('cam-file-host')) { const d = document.createElement('div'); d.id = 'cam-file-host'; d.style.display = 'none'; document.body.appendChild(d); }
+  const c = new H('cam-file-host', camOpts());
+  try { return String(await c.scanFile(file, false)).trim(); } finally { try { c.clear(); } catch (e) {} }
+}
+const camBlockedMsg = () => `Không mở được camera${IN_GAS ? ' (link Apps Script chặn camera – hãy mở app bằng link GitHub)' : '. Hãy cấp quyền camera cho trình duyệt.'}`;
+
+/* Quét 1 mã rồi đóng (dùng cho Kiểm kê, Hủy hàng, Soạn hàng) */
+let scanCleanup = null;
+function scanOnce(title){
+  return new Promise(resolve => {
+    modal(`<h3>${esc(title || 'Quét mã vạch / QR')}</h3>
+      <div class="scan-box" id="scan-reader"></div>
+      <div class="muted" id="scan-msg" style="text-align:center;margin-top:8px;font-size:13.5px">Đưa mã vạch hoặc mã QR vào khung</div>
+      <input type="file" id="scan-file" accept="image/*" capture="environment" class="hidden">
+      <div class="modal-actions"><button class="btn light" id="scan-photo">Chụp ảnh mã</button><button class="btn" id="scan-close">Đóng</button></div>`);
+    let cam = null, done = false;
+    const finish = async code => {
+      if (done) return; done = true; scanCleanup = null;
+      const c = cam; cam = null; await camStop(c);
+      closeModal(); resolve(code || '');
+    };
+    scanCleanup = () => finish('');
+    $('scan-close').onclick = () => finish('');
+    $('scan-photo').onclick = () => $('scan-file').click();
+    $('scan-file').onchange = async e => {
+      const f = e.target.files[0]; if (!f) return;
+      $('scan-msg').textContent = 'Đang đọc ảnh...';
+      try { const code = await camScanFile(f); beep('ok'); finish(code); }
+      catch (x) { beep('err'); $('scan-msg').textContent = 'Không đọc được mã trong ảnh, hãy chụp gần và rõ hơn.'; }
+    };
+    camStart('scan-reader', code => { if (code) { beep('ok'); finish(code); } })
+      .then(c => { cam = c; if (done) camStop(c); })
+      .catch(() => { $('scan-msg').innerHTML = esc(camBlockedMsg()) + '<br>Bấm <b>Chụp ảnh mã</b> để quét bằng ảnh.'; });
+  });
+}
+
 /* ========= QUÉT MÃ QR ========= */
 const QR = { mode: null, items: [], sending: false, scanner: null, lib: null, opening: false, last: '', lastT: 0, loaded: false };
 const QR_MODES = {
@@ -1010,52 +1193,40 @@ function qrShowPick(){
 $('qr-modes').addEventListener('click', e => { const b = e.target.closest('[data-qm]'); if (b) qrOpen(b.dataset.qm); });
 $('qr-change').addEventListener('click', qrShowPick);
 
-async function qrLib(){
-  if (!QR.lib) QR.lib = (await import('https://unpkg.com/qr-scanner@1.4.2/qr-scanner.min.js')).default;
-  return QR.lib;
-}
 function qrSetStatus(text, type){ const el = $('qr-status'); el.textContent = text; el.className = 'qr-status ' + (type || ''); }
 function qrCamMsg(html){ const m = $('qr-cam-msg'); m.innerHTML = html || ''; m.classList.toggle('hidden', !html); }
 
 async function qrOpen(mode){
   if (QR.opening) return;
-  qrStop();
+  QR.opening = true;
+  await qrStopAsync();
   QR.mode = mode; unlockAudio();
   $('qr-pick').classList.add('hidden'); $('qr-run').classList.remove('hidden');
   $('qr-pill').textContent = QR_MODES[mode].label; $('qr-pill').style.background = QR_MODES[mode].color;
-  $('view-title').textContent = 'Quét QR · ' + QR_MODES[mode].label;
+  $('view-title').textContent = 'Quét · ' + QR_MODES[mode].label;
   $('qr-note').value = ''; qrRender();
   qrSetStatus('Đang mở camera...'); qrCamMsg('');
-  QR.opening = true;
   try {
-    const Q = await qrLib();
-    const sc = new Q($('qr-video'), r => qrOnScan(r.data), { preferredCamera: 'environment', highlightScanRegion: false, highlightCodeOutline: false });
-    await sc.start();
-    if (S.view !== 'scan') { try { sc.destroy(); } catch (x) {} return; }   // đã rời màn hình khi camera đang mở
-    QR.scanner = sc;
-    qrSetStatus('Đưa mã QR vào khung hình');
+    const cam = await camStart('qr-reader', qrOnScan);
+    if (S.view !== 'scan') { camStop(cam); return; }   // đã rời màn hình khi camera đang mở
+    QR.scanner = cam;
+    qrSetStatus('Đưa mã QR hoặc mã vạch vào khung hình');
   } catch (e) {
-    qrCamMsg(`<div>Không mở được camera trực tiếp${IN_GAS ? ' (link Apps Script chặn camera)' : ''}.</div>
-      <button class="btn" onclick="$('qr-file').click()">Chụp ảnh mã QR</button>
-      <div style="opacity:.85;font-size:12.5px">${IN_GAS ? 'Mở app bằng link GitHub để quét liên tục bằng camera.' : 'Hãy cấp quyền camera cho trình duyệt rồi thử lại.'}</div>`);
+    qrCamMsg(`<div>${esc(camBlockedMsg())}</div>
+      <button class="btn" onclick="$('qr-file').click()">Chụp ảnh mã</button>`);
     qrSetStatus('Dùng "Chụp ảnh mã" hoặc nhập mã thủ công', 'warn');
   } finally { QR.opening = false; }
 }
-function qrStop(){
-  const s = QR.scanner; QR.scanner = null;
-  if (s) { try { s.stop(); } catch (e) {} try { s.destroy(); } catch (e) {} }
-}
+async function qrStopAsync(){ const s = QR.scanner; QR.scanner = null; await camStop(s); }
+function qrStop(){ qrStopAsync(); }
 
 $('qr-photo').addEventListener('click', () => $('qr-file').click());
 $('qr-file').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
   qrSetStatus('Đang đọc ảnh...');
-  try {
-    const Q = await qrLib();
-    const r = await Q.scanImage(f, { returnDetailedScanResult: true });
-    qrAdd(r.data);
-  } catch (err) { beep('err'); qrSetStatus('Không đọc được mã trong ảnh, hãy chụp gần và rõ hơn.', 'err'); }
+  try { qrAdd(await camScanFile(f)); }
+  catch (err) { beep('err'); qrSetStatus('Không đọc được mã trong ảnh, hãy chụp gần và rõ hơn.', 'err'); }
 });
 
 function qrOnScan(code){
@@ -1175,6 +1346,354 @@ async function loadMine(who){
   finally { loading(false); }
 }
 $('mn-man').addEventListener('change', e => loadMine(e.target.value));
+
+/* ========= KHO: DANH MỤC HÀNG (tải 1 lần, tìm tức thì trên máy) ========= */
+async function loadMaster(force){
+  if (S.master && !force) return S.master;
+  loading(true);
+  try { S.master = await api('getOpsMaster'); S.master.items.forEach(it => it.k = norm(it.n)); }
+  finally { loading(false); }
+  return S.master;
+}
+function findProducts(q){
+  q = String(q || '').trim(); if (!q) return [];
+  const ql = q.toLowerCase(), qn = norm(q), out = [];
+  const exact = S.master.items.filter(it => it.i.toLowerCase() === ql || it.b.some(b => b.toLowerCase() === ql));
+  if (exact.length) return exact;
+  for (const it of S.master.items) {
+    const il = it.i.toLowerCase();
+    if (il.endsWith(ql) || it.b.some(b => b.toLowerCase().endsWith(ql)) || (q.length >= 3 && (il.includes(ql) || it.k.includes(qn)))) out.push(it);
+    if (out.length >= 30) break;
+  }
+  return out;
+}
+const batchesOf = item => (S.master.batches[item] || []);
+// Quét mã vạch / QR → điền vào ô tìm kiếm và tìm ngay
+[['kk', () => kkSearch()], ['wo', () => woSearch()], ['pk', () => pkSearch()]].forEach(([p, fn]) => {
+  $(p + '-scan').innerHTML = ic('qr');
+  $(p + '-scan').addEventListener('click', async () => {
+    if (!S.master) { try { await loadMaster(); } catch (e) { toast(e.message); return; } }
+    const code = await scanOnce('Quét mã vạch / QR sản phẩm');
+    if (!code) return;
+    $(p + '-q').value = code; fn();
+  });
+});
+function msNote(id){ $(id).innerHTML = S.master ? `Danh mục: ${S.master.items.length.toLocaleString('vi-VN')} mã · tải lúc ${esc(S.master.at)} · <a href="#" data-reload-master>Tải lại</a>` : ''; }
+document.addEventListener('click', async e => {
+  const a = e.target.closest('[data-reload-master]'); if (!a) return;
+  e.preventDefault();
+  try { await loadMaster(true); ['kk-ms', 'wo-ms', 'pk-ms'].forEach(msNote); toast('Đã tải lại danh mục hàng.'); } catch (x) { toast(x.message); }
+});
+
+/* Thẻ sản phẩm có ô nhập số lượng theo từng batch + ô nhập batch khác */
+function prodCards(list, cls){
+  return list.map((p, i) => {
+    const bs = batchesOf(p.i);
+    return `<div class="card pc ${cls}" data-i="${i}">
+      <div class="line-code">${esc(p.i)}</div><div class="line-desc">${esc(p.n || '')}</div>
+      ${p.b.length ? `<div class="muted" style="font-size:12px">Barcode: ${esc(p.b.slice(0, 3).join(', '))}${p.b.length > 3 ? '…' : ''}</div>` : ''}
+      <div style="margin-top:6px">${bs.length ? bs.map(b => `<div class="bt-row"><span>${esc(b)}</span>
+        <input class="qty-in" inputmode="decimal" data-bn="${esc(b)}" placeholder="0"></div>`).join('') : '<div class="muted" style="font-size:13px;padding:6px 0">Không có batch trong tồn kho – nhập batch bên dưới</div>'}</div>
+      <div class="manual-box"><input class="inp m-bn" placeholder="Batch khác"><input class="inp qty-in m-qty" inputmode="decimal" placeholder="SL"></div>
+    </div>`;
+  }).join('');
+}
+function collectEntries(box, list){
+  const out = [];
+  box.querySelectorAll('.pc').forEach(card => {
+    const p = list[+card.dataset.i], entries = [];
+    card.querySelectorAll('.bt-row .qty-in').forEach(inp => { const q = parseFloat(String(inp.value).replace(',', '.')); if (q > 0) entries.push({ batchNumber: inp.dataset.bn, qty: q }); });
+    const mb = card.querySelector('.m-bn').value.trim(), mq = parseFloat(String(card.querySelector('.m-qty').value).replace(',', '.'));
+    if (mb && mq > 0) entries.push({ batchNumber: mb, qty: mq });
+    if (entries.length) out.push({ barcode: p.b[0] || '', itemNumber: p.i, productName: p.n, entries: entries });
+  });
+  return out;
+}
+const reqId = p => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+/* ========= KIỂM KÊ ========= */
+const KK = { list: [], round: 1, state: null, summary: null };
+async function initKiemke(){
+  try {
+    KK.state = await api('kkGetState');
+    renderKkBanner();
+    await loadMaster(); msNote('kk-ms');
+    try { $('kk-loc').value = store.get('annt_kk_loc') || ''; } catch (e) {}
+  } catch (e) { toast(e.message); }
+}
+function kkOpen(){ return KK.state && KK.state.campaign && KK.state.campaign.status === 'open'; }
+function renderKkBanner(){
+  const c = KK.state && KK.state.campaign;
+  $('kk-banner').innerHTML = !c ? `<b>Chưa có đợt kiểm kê nào.</b><div class="muted" style="font-size:13.5px">Admin cần mở đợt kiểm kê trong mục Quản trị.</div>`
+    : `<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+        <div><div style="font-weight:800;font-size:16px">${esc(c.name)}</div>
+        <div class="muted" style="font-size:12.5px">Mở ${esc(c.startedAt)} bởi ${esc(c.startedBy)} · Tồn kho: ${esc(c.stockFile || '')}</div>
+        ${c.status === 'done' ? `<div class="muted" style="font-size:12.5px">Hoàn tất ${esc(c.doneAt)} bởi ${esc(c.doneBy)}</div>` : ''}</div>
+        <span class="badge ${c.status === 'open' ? 'st-done' : 'st-other'}">${c.status === 'open' ? 'Đang kiểm kê' : 'Đã hoàn tất'}</span></div>`;
+  const open = kkOpen();
+  ['kk-q', 'kk-find', 'kk-loc'].forEach(id => $(id).disabled = !open);
+  $('kk-finish').classList.toggle('hidden', !open);
+}
+$('kk-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) kkTab(b.dataset.t); });
+function kkTab(t){
+  document.querySelectorAll('#kk-tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  $('kk-count').classList.toggle('hidden', t !== 'count');
+  $('kk-result').classList.toggle('hidden', t !== 'result');
+  if (t === 'result' && KK.state && KK.state.campaign) kkSummary();
+}
+$('kk-round').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; KK.round = +b.dataset.r;
+  document.querySelectorAll('#kk-round button').forEach(x => x.classList.toggle('on', x === b)); });
+$('kk-loc').addEventListener('change', e => store.set('annt_kk_loc', e.target.value.trim()));
+function kkSearch(){
+  if (!S.master) return;
+  KK.list = findProducts($('kk-q').value);
+  $('kk-list').innerHTML = KK.list.length ? prodCards(KK.list, 'kk') : '<div class="card empty">Không tìm thấy mã hàng</div>';
+  $('kk-save').classList.toggle('hidden', !KK.list.length);
+}
+$('kk-find').addEventListener('click', kkSearch);
+$('kk-q').addEventListener('keydown', e => { if (e.key === 'Enter') kkSearch(); });
+$('kk-save').addEventListener('click', async () => {
+  const loc = $('kk-loc').value.trim();
+  if (!loc) { toast('Vui lòng nhập Vị trí (Location).'); $('kk-loc').focus(); return; }
+  const data = collectEntries($('kk-list'), KK.list);
+  if (!data.length) { toast('Chưa nhập số lượng.'); return; }
+  const btn = $('kk-save'); btn.disabled = true; btn.textContent = 'Đang lưu...';
+  try {
+    const r = await api('kkSave', { location: loc, round: KK.round, data: data, requestId: reqId('KK') });
+    beep('saved'); toast(`✔ Đã lưu ${r.saved} dòng kiểm kê`);
+    $('kk-hist-card').classList.remove('hidden');
+    $('kk-hist').insertAdjacentHTML('afterbegin', data.map(p => p.entries.map(e => `<div class="hrow"><b>${esc(p.itemNumber)}</b> · ${esc(e.batchNumber)}
+      <span class="hq">${fmt(e.qty)}</span><div class="muted">${esc(p.productName || '')} · ${esc(loc)} · Lần ${KK.round} · ${esc(r.time)}</div></div>`).join('')).join(''));
+    $('kk-list').innerHTML = ''; $('kk-q').value = ''; btn.classList.add('hidden'); $('kk-q').focus();
+  } catch (e) { beep('err'); toast(e.message, 4000); }
+  finally { btn.disabled = false; btn.textContent = 'Lưu số đếm'; }
+});
+async function kkSummary(){
+  loading(true);
+  try { KK.summary = await api('kkSummary'); KK.state.campaign = KK.summary.campaign; renderKkBanner(); renderKkSummary(); }
+  catch (e) { toast(e.message); }
+  finally { loading(false); }
+}
+$('kk-sum').addEventListener('click', kkSummary);
+function renderKkSummary(){
+  const s = KK.summary, t = s.totals;
+  $('kk-kpis').innerHTML = [['Tổng mã', t.items, 'var(--pri)'], ['Khớp', t.g3, 'var(--green)'], ['Lệch tổng SL', t.g1, 'var(--red)'], ['Lệch batch', t.g2, 'var(--amber)']]
+    .map(k => `<div class="kpi-mini"><b style="color:${k[2]}">${fmt(k[1])}</b><small>${k[0]}</small></div>`).join('');
+  $('kk-mis').innerHTML = `<div class="muted" style="font-size:12.5px;margin:0 4px 8px">${fmt(s.counted)} dòng đếm · tổng hợp lúc ${esc(s.at)} · chi tiết ở sheet BC Kiem ke</div>` +
+    (s.mismatches.length ? s.mismatches.map((m, i) => `<div class="card mis ${m.group === 1 ? 'g1' : 'g2'}">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <div><div class="line-code">${esc(m.item)} <span class="badge ${m.group === 1 ? 'st-cancel' : 'st-wait'}">${m.group === 1 ? 'Lệch tổng' : 'Lệch batch'}</span>
+          <span class="badge st-other">Lần ${m.round}</span></div><div class="line-desc">${esc(m.name)}</div></div>
+        <div style="text-align:right;white-space:nowrap"><b style="font-size:18px;color:${m.act - m.sys < 0 ? 'var(--red)' : 'var(--amber)'}">${m.act - m.sys > 0 ? '+' : ''}${fmt(m.act - m.sys)}</b>
+          <div class="muted" style="font-size:12px">${fmt(m.act)} / ${fmt(m.sys)}</div></div>
+      </div>
+      ${dataTable(['Batch', 'Thực tế', 'Hệ thống', 'Lệch'], m.batches.map(b => [esc(b.b), fmt(b.act), fmt(b.sys),
+        `<b style="color:${b.act === b.sys ? 'var(--green)' : 'var(--red)'}">${b.act - b.sys > 0 ? '+' : ''}${fmt(b.act - b.sys)}</b>`]))}
+      ${kkOpen() ? `<button class="btn ghost" data-recount="${i}" style="margin-top:10px;width:100%">Đếm lại lần 2</button>` : ''}
+    </div>`).join('') : '<div class="card empty">Không có mã lệch 🎉 Tất cả đều khớp.</div>');
+}
+$('kk-mis').addEventListener('click', e => {
+  const b = e.target.closest('[data-recount]'); if (!b) return;
+  const m = KK.summary.mismatches[+b.dataset.recount];
+  const it = S.master.items.find(x => x.i.toUpperCase() === m.item.toUpperCase()) || { i: m.item, n: m.name, b: [] };
+  KK.round = 2; document.querySelectorAll('#kk-round button').forEach(x => x.classList.toggle('on', x.dataset.r === '2'));
+  kkTab('count');
+  KK.list = [it]; $('kk-q').value = it.i;
+  $('kk-list').innerHTML = `<div class="muted" style="font-size:13px;margin:0 4px 8px">Đếm lại lần 2: số lần 2 sẽ thay thế toàn bộ số lần 1 của mã này.</div>` + prodCards(KK.list, 'kk');
+  $('kk-save').classList.remove('hidden');
+  window.scrollTo(0, 0);
+});
+$('kk-finish').addEventListener('click', () => {
+  modal(`<h3>Hoàn tất kiểm kê?</h3><p class="muted">Số liệu sẽ được chốt và đợt kiểm kê <b>${esc(KK.state.campaign.name)}</b> bị khóa, không thể nhập thêm. Báo cáo cuối được ghi vào sheet <b>BC Kiem ke</b>.</p>
+    <div class="modal-actions"><button class="btn light" onclick="closeModal()">Hủy</button><button class="btn red" id="m-kkf">Hoàn tất</button></div>`);
+  $('m-kkf').onclick = async () => {
+    closeModal(); loading(true);
+    try { KK.summary = await api('kkFinish'); KK.state.campaign = KK.summary.campaign; renderKkBanner(); renderKkSummary(); toast('Đã chốt số liệu kiểm kê.'); }
+    catch (e) { toast(e.message, 4000); }
+    finally { loading(false); }
+  };
+});
+
+/* ========= BC HỦY HÀNG ========= */
+const WO = { list: [] };
+async function initHuyhang(){ try { await loadMaster(); msNote('wo-ms'); } catch (e) { toast(e.message); } }
+function woSearch(){
+  if (!S.master) return;
+  WO.list = findProducts($('wo-q').value);
+  $('wo-list').innerHTML = WO.list.length ? prodCards(WO.list, 'wo') : '<div class="card empty">Không tìm thấy mã hàng</div>';
+  $('wo-form').classList.toggle('hidden', !WO.list.length);
+}
+$('wo-find').addEventListener('click', woSearch);
+$('wo-q').addEventListener('keydown', e => { if (e.key === 'Enter') woSearch(); });
+$('wo-save').addEventListener('click', async () => {
+  const r = document.querySelector('input[name="wo-r"]:checked');
+  if (!r) { toast('Vui lòng chọn 1 lý do hủy hàng.'); return; }
+  const data = collectEntries($('wo-list'), WO.list);
+  if (!data.length) { toast('Chưa nhập số lượng hủy.'); return; }
+  const note = $('wo-note').value.trim(), btn = $('wo-save');
+  btn.disabled = true; btn.textContent = 'Đang lưu...';
+  try {
+    const res = await api('whSaveWriteOff', { reason: r.value, note: note, data: data, requestId: reqId('WO') });
+    beep('saved'); toast(`✔ Đã lưu báo cáo hủy (${res.saved} dòng)`);
+    $('wo-hist-card').classList.remove('hidden');
+    $('wo-hist').insertAdjacentHTML('afterbegin', data.map(p => p.entries.map(e => `<div class="hrow"><b>${esc(p.itemNumber)}</b> · ${esc(e.batchNumber)}
+      <span class="hq" style="color:var(--red)">${fmt(e.qty)}</span><div class="muted">${esc(p.productName || '')} · ${esc(r.value)}${note ? ' · ' + esc(note) : ''}</div></div>`).join('')).join(''));
+    $('wo-list').innerHTML = ''; $('wo-q').value = ''; $('wo-note').value = ''; r.checked = false; $('wo-form').classList.add('hidden');
+  } catch (e) { beep('err'); toast(e.message, 4000); }
+  finally { btn.disabled = false; btn.textContent = 'Lưu báo cáo hủy'; }
+});
+
+/* ========= SOẠN HÀNG ========= */
+const PK = { item: null, orders: null };
+async function initSoanhang(){ try { await loadMaster(); msNote('pk-ms'); } catch (e) { toast(e.message); } }
+$('pk-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) pkTab(b.dataset.t); });
+function pkTab(t){
+  document.querySelectorAll('#pk-tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  ['pick', 'pending', 'done', 'hist'].forEach(x => $('pk-' + x).classList.toggle('hidden', x !== t));
+  if (t === 'pending' || t === 'done') pkLoadOrders(t);
+}
+function pkSearch(){
+  if (!S.master) return;
+  const list = findProducts($('pk-q').value);
+  $('pk-item').innerHTML = ''; $('pk-alloc').innerHTML = '';
+  if (!list.length) { $('pk-choose').innerHTML = '<div class="card empty">Không tìm thấy mã hàng</div>'; return; }
+  if (list.length === 1) { $('pk-choose').innerHTML = ''; pkOpen(list[0]); return; }
+  PK.choices = list;
+  $('pk-choose').innerHTML = `<div class="card"><h4>Chọn mã hàng (${list.length})</h4>${list.map((p, i) => `<div class="pick-choice" data-ch="${i}">
+    <b class="line-code">${esc(p.i)}</b><div>${esc(p.n)}</div></div>`).join('')}</div>`;
+}
+$('pk-find').addEventListener('click', pkSearch);
+$('pk-q').addEventListener('keydown', e => { if (e.key === 'Enter') pkSearch(); });
+$('pk-choose').addEventListener('click', e => { const c = e.target.closest('[data-ch]'); if (c) { $('pk-choose').innerHTML = ''; pkOpen(PK.choices[+c.dataset.ch]); } });
+async function pkOpen(p){
+  loading(true);
+  try {
+    const bs = await api('pickSearch', p.i);
+    PK.item = p;
+    $('pk-item').innerHTML = `<div class="card" style="border-top:4px solid var(--green)">
+      <div class="line-code" style="font-size:16px">${esc(p.i)}</div><div class="line-desc">${esc(p.n || bs[0].name)}</div>
+      ${bs.map(b => `<div class="bt-row"><span><b>${esc(b.batch)}</b><div class="muted" style="font-size:12px">TFO còn: ${fmt(b.avail)}</div></span>
+        <input class="qty-in" inputmode="decimal" data-bn="${esc(b.batch)}" value="${b.spec || ''}" placeholder="0"></div>`).join('')}
+      <button class="btn block" id="pk-confirm">Xác nhận pick</button></div>`;
+    $('pk-confirm').onclick = pkConfirm;
+  } catch (e) { beep('err'); $('pk-item').innerHTML = `<div class="card empty" style="color:var(--red)">${esc(e.message)}</div>`; }
+  finally { loading(false); }
+}
+async function pkConfirm(){
+  const allocs = [...document.querySelectorAll('#pk-item .qty-in')].map(i => ({ batch: i.dataset.bn, qty: parseFloat(String(i.value).replace(',', '.')) || 0 })).filter(a => a.qty > 0);
+  if (!allocs.length) { toast('Vui lòng nhập số lượng cho ít nhất 1 batch.'); return; }
+  const btn = $('pk-confirm'); btn.disabled = true; btn.textContent = 'Đang xử lý...';
+  try {
+    const res = await api('pickConfirm', PK.item.i, allocs);
+    beep('saved');
+    $('pk-alloc').innerHTML = `<div class="card"><h4>Phân bổ cho đơn hàng – ${esc(PK.item.i)}</h4>${res.map(a => `<div class="alloc ${a.cust === 'HÀNG DƯ' ? 'surplus' : ''}">
+      <div><b>${esc(a.cust)}</b><div class="muted" style="font-size:12px">Batch ${esc(a.batch)}</div></div><span class="aq">${fmt(a.qty)}</span></div>`).join('')}
+      <button class="btn block light" id="pk-next">Xong – soạn mã khác</button></div>`;
+    $('pk-item').innerHTML = '';
+    $('pk-next').onclick = () => { $('pk-alloc').innerHTML = ''; $('pk-q').value = ''; $('pk-q').focus(); };
+    PK.orders = null;
+  } catch (e) { beep('err'); toast(e.message, 5000); btn.disabled = false; btn.textContent = 'Xác nhận pick'; }
+}
+async function pkLoadOrders(t){
+  const box = $('pk-' + t);
+  box.innerHTML = '<div class="card empty">Đang tải...</div>';
+  try {
+    PK.orders = await api('pickOrders');
+    if (t === 'pending') {
+      box.innerHTML = PK.orders.pending.length ? PK.orders.pending.map((o, ci) => `<div class="card order-pk">
+        <div class="t" style="font-weight:800;color:#6a1b9a">📦 ${esc(o.cust)} <span class="muted" style="font-weight:500;font-size:12.5px">· ${o.lines.length} mã còn thiếu</span></div>
+        ${o.lines.map((l, li) => `<label class="pend-row"><input type="checkbox" class="pk-chk" data-c="${ci}" data-l="${li}">
+          <div style="flex:1;min-width:0"><b>${esc(l.item)}</b> · B: <b>${esc(l.batch)}</b><div class="muted" style="font-size:12px">${esc(l.name)} · đặt ${fmt(l.qty)}</div></div>
+          <input class="qty-in pk-q" inputmode="decimal" data-c="${ci}" data-l="${li}" value="${l.left}"></label>`).join('')}
+        <button class="btn block" data-pkdone="${ci}">Xác nhận soạn bổ sung</button></div>`).join('')
+        : '<div class="card empty">✅ Không còn đơn nào thiếu hàng.</div>';
+    } else {
+      box.innerHTML = PK.orders.done.length ? `<div class="card">${PK.orders.done.map(o => `<div class="alloc"><div><b style="color:var(--green)">✔ ${esc(o.cust)}</b>
+        <div class="muted" style="font-size:12px">${o.count} dòng hàng</div></div><span class="aq">${fmt(o.qty)}</span></div>`).join('')}</div>`
+        : '<div class="card empty">Chưa có đơn nào hoàn thành.</div>';
+    }
+  } catch (e) { box.innerHTML = `<div class="card empty" style="color:var(--red)">${esc(e.message)}</div>`; }
+}
+$('pk-pending').addEventListener('click', async e => {
+  const b = e.target.closest('[data-pkdone]'); if (!b) return;
+  const ci = +b.dataset.pkdone, o = PK.orders.pending[ci];
+  const items = [...document.querySelectorAll(`.pk-chk[data-c="${ci}"]:checked`)].map(ch => {
+    const l = o.lines[+ch.dataset.l], q = document.querySelector(`.pk-q[data-c="${ci}"][data-l="${ch.dataset.l}"]`);
+    return { row: l.row, qty: parseFloat(String(q.value).replace(',', '.')) || 0 };
+  }).filter(x => x.qty > 0);
+  if (!items.length) { toast('Vui lòng tick chọn mã hàng và nhập số lượng.'); return; }
+  b.disabled = true; b.textContent = 'Đang lưu...';
+  try { await api('pickComplete', o.cust, items); beep('saved'); toast('Đã cập nhật đơn ' + o.cust); pkLoadOrders('pending'); }
+  catch (x) { beep('err'); toast(x.message, 4000); b.disabled = false; b.textContent = 'Xác nhận soạn bổ sung'; }
+});
+async function pkHist(){
+  $('pk-hres').innerHTML = '<div class="empty">Đang tải...</div>';
+  try {
+    const h = await api('pickHistory', $('pk-hq').value.trim());
+    $('pk-hres').innerHTML = h.length ? dataTable(['Thời gian', 'Người soạn', 'Hành động', 'Mã hàng', 'Batch', 'Khách hàng', 'SL'],
+      h.map(x => [esc(x.time), esc(x.user), esc(x.action), '<b>' + esc(x.item) + '</b>', esc(x.batch), esc(x.cust), '<b>' + fmt(x.qty) + '</b>'])) : '<div class="empty">Không có dữ liệu</div>';
+  } catch (e) { $('pk-hres').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+$('pk-hfind').addEventListener('click', pkHist);
+$('pk-hq').addEventListener('keydown', e => { if (e.key === 'Enter') pkHist(); });
+
+/* ========= QUẢN TRỊ: TỒN KHO & ĐỢT KIỂM KÊ ========= */
+async function initAdminKK(){
+  $('akk-box').innerHTML = '<div class="card empty">Đang tải...</div>';
+  try { renderAdminKK(await api('kkGetState')); } catch (e) { $('akk-box').innerHTML = `<div class="card empty">${esc(e.message)}</div>`; }
+}
+function renderAdminKK(st){
+  const s = st.stock, c = st.campaign, open = c && c.status === 'open';
+  $('akk-box').innerHTML = `<div class="card"><h4>1. Dữ liệu tồn kho hệ thống</h4>
+      ${s ? `<div style="font-size:14px;margin:6px 0 4px"><b>${esc(s.fileName)}</b> · ${fmt(s.rows)} dòng</div>
+        <div class="muted" style="font-size:12.5px">Import ${esc(s.at)} bởi ${esc(s.by)}${s.fileUrl ? ` · <a href="${esc(s.fileUrl)}" target="_blank">Mở file trên Drive</a>` : ''}</div>`
+          : '<div class="muted" style="font-size:14px">Chưa import file tồn kho.</div>'}
+      <label class="f">Chọn file tồn kho (.xlsx / .csv) – cần các cột Item number, Batch number, Physical inventory</label>
+      <input type="file" class="inp" id="akk-file" accept=".xlsx,.xls,.csv">
+      <button class="btn block" id="akk-import">Import & lưu vào thư mục Drive</button>
+      ${open ? '<div class="hint" style="font-size:12.5px">Lưu ý: đang có đợt kiểm kê mở – import lại sẽ thay đổi số hệ thống dùng để so sánh.</div>' : ''}
+    </div>
+    <div class="card"><h4>2. Đợt kiểm kê</h4>
+      ${c ? `<div style="font-size:14px;margin:6px 0"><b>${esc(c.name)}</b> <span class="badge ${open ? 'st-done' : 'st-other'}">${open ? 'Đang kiểm kê' : 'Đã hoàn tất'}</span></div>
+        <div class="muted" style="font-size:12.5px">Mở ${esc(c.startedAt)} bởi ${esc(c.startedBy)}${c.doneAt ? ' · Hoàn tất ' + esc(c.doneAt) + ' bởi ' + esc(c.doneBy) : ''}</div>` : '<div class="muted" style="font-size:14px">Chưa có đợt nào.</div>'}
+      ${open ? `<button class="btn block ghost" data-go="kiemke">Xem kết quả kiểm kê</button>`
+        : `<label class="f">Tên đợt kiểm kê mới</label><input class="inp" id="akk-name" placeholder="VD: Kiểm kê cuối tháng 10/2026">
+           <button class="btn block" id="akk-start" ${s ? '' : 'disabled'}>Bắt đầu đợt kiểm kê</button>`}
+    </div>`;
+  $('akk-import').onclick = adminImportStock;
+  if ($('akk-start')) $('akk-start').onclick = async () => {
+    loading(true);
+    try { await api('adminStartCampaign', $('akk-name').value.trim()); toast('Đã mở đợt kiểm kê. Thủ kho có thể bắt đầu đếm.'); initAdminKK(); }
+    catch (e) { toast(e.message, 4000); } finally { loading(false); }
+  };
+}
+function loadXlsx(){
+  return window.XLSX ? Promise.resolve() : new Promise((ok, fail) => {
+    const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = ok; s.onerror = () => fail(new Error('Không tải được thư viện đọc Excel.')); document.head.appendChild(s);
+  });
+}
+async function adminImportStock(){
+  const f = $('akk-file').files[0];
+  if (!f) { toast('Hãy chọn file tồn kho.'); return; }
+  loading(true);
+  try {
+    await loadXlsx();
+    const buf = await f.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    let rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+    const hr = rows.findIndex((r, i) => i < 15 && r.some(c => String(c).trim().toLowerCase() === 'item number'));
+    if (hr === -1) throw new Error('Không tìm thấy dòng tiêu đề có cột "Item number" trong file.');
+    rows = rows.slice(hr);
+    let bin = ''; const bytes = new Uint8Array(buf);
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    const meta = await api('adminImportStock', { name: f.name, mime: f.type, base64: btoa(bin), rows: rows });
+    toast(`Đã import ${fmt(meta.rows)} dòng tồn kho và lưu file lên Drive.`, 4000);
+    S.master = null; initAdminKK();
+  } catch (e) { toast(e.message, 5000); }
+  finally { loading(false); }
+}
 
 /* ========= TRA CỨU ========= */
 async function doLookup(){
@@ -1568,7 +2087,9 @@ function showAdminTab(t){
   document.querySelectorAll('#ad-tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
   $('ad-users').classList.toggle('hidden', t !== 'users');
   $('ad-sched').classList.toggle('hidden', t !== 'sched');
+  $('ad-kk').classList.toggle('hidden', t !== 'kk');
   if (t === 'sched') initSchedEditor();
+  if (t === 'kk') initAdminKK();
 }
 $('ad-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) showAdminTab(b.dataset.t); });
 
