@@ -207,8 +207,12 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .reason-list input{width:18px;height:18px;accent-color:var(--red)}
 .pk-tabs{display:grid;grid-template-columns:repeat(4,1fr)}
 .pk-tabs button{padding:10px 2px;font-size:13px}
-#kk-tabs button.on,#kk-round button.on,.pk-tabs button.on{color:var(--pri)}
-#kk-round button{padding:9px 4px;font-size:13px}
+#kk-tabs button.on,.pk-tabs button.on{color:var(--pri)}
+.rc-row{display:grid;grid-template-columns:1fr 64px 96px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #f0f2f5}
+.rc-row.head{font-size:12px;color:var(--muted);font-weight:700;padding:4px 0}
+.rc-row .old{text-align:center;color:var(--muted);font-weight:700}
+.rc-row .bn{font-weight:700;font-size:14.5px;word-break:break-all}
+.rc-row input.bn-in{width:100%;padding:9px;border:1.5px solid var(--line);border-radius:9px;font-size:14px}
 .pick-choice{padding:10px 0;border-top:1px solid #f0f2f5;cursor:pointer;font-size:14px}
 .pick-choice:first-of-type{border-top:0}
 .alloc{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-left:4px solid var(--green);background:#f6faf7;border-radius:10px;margin-top:8px}
@@ -481,10 +485,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
       <div class="seg" id="kk-tabs" style="margin-bottom:14px"><button data-t="count" class="on">Đếm hàng</button><button data-t="result">Kết quả & đếm lại</button></div>
       <div id="kk-count">
         <div class="card">
-          <div class="row2">
-            <div><label class="f" style="margin-top:0">Vị trí (Location)</label><input class="inp" id="kk-loc" placeholder="Khu vực, ô kệ..."></div>
-            <div><label class="f" style="margin-top:0">Lần đếm</label><div class="seg" id="kk-round"><button data-r="1" class="on">Lần 1</button><button data-r="2">Lần 2 (đếm lại)</button></div></div>
-          </div>
+          <label class="f" style="margin-top:0">Vị trí (Location)</label><input class="inp" id="kk-loc" placeholder="Khu vực, ô kệ...">
           <label class="f">Barcode / Mã hàng / Tên hàng</label>
           <div style="display:flex;gap:8px"><input class="inp" id="kk-q" placeholder="Nhập vài số cuối hoặc tên hàng" enterkeyhint="search"><button class="btn" id="kk-find">Tìm</button><button class="btn light scan-btn" id="kk-scan" title="Quét mã vạch / QR"></button></div>
           <div class="muted ms-note" id="kk-ms"></div>
@@ -1427,7 +1428,7 @@ function renderKkBanner(){
   $('kk-banner').innerHTML = !c ? `<b>Chưa có đợt kiểm kê nào.</b><div class="muted" style="font-size:13.5px">Admin cần mở đợt kiểm kê trong mục Quản trị.</div>`
     : `<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
         <div><div style="font-weight:800;font-size:16px">${esc(c.name)}</div>
-        <div class="muted" style="font-size:12.5px">Mở ${esc(c.startedAt)} bởi ${esc(c.startedBy)} · Tồn kho: ${esc(c.stockFile || '')}</div>
+        <div class="muted" style="font-size:12.5px">Mở ${esc(c.startedAt)} bởi ${esc(c.startedBy)} · Đối chiếu với: ${esc(c.stockFile || '')}</div>
         ${c.status === 'done' ? `<div class="muted" style="font-size:12.5px">Hoàn tất ${esc(c.doneAt)} bởi ${esc(c.doneBy)}</div>` : ''}</div>
         <span class="badge ${c.status === 'open' ? 'st-done' : 'st-other'}">${c.status === 'open' ? 'Đang kiểm kê' : 'Đã hoàn tất'}</span></div>`;
   const open = kkOpen();
@@ -1441,8 +1442,6 @@ function kkTab(t){
   $('kk-result').classList.toggle('hidden', t !== 'result');
   if (t === 'result' && KK.state && KK.state.campaign) kkSummary();
 }
-$('kk-round').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; KK.round = +b.dataset.r;
-  document.querySelectorAll('#kk-round button').forEach(x => x.classList.toggle('on', x === b)); });
 $('kk-loc').addEventListener('change', e => store.set('annt_kk_loc', e.target.value.trim()));
 function kkSearch(){
   if (!S.master) return;
@@ -1459,11 +1458,11 @@ $('kk-save').addEventListener('click', async () => {
   if (!data.length) { toast('Chưa nhập số lượng.'); return; }
   const btn = $('kk-save'); btn.disabled = true; btn.textContent = 'Đang lưu...';
   try {
-    const r = await api('kkSave', { location: loc, round: KK.round, data: data, requestId: reqId('KK') });
+    const r = await api('kkSave', { location: loc, round: 1, data: data, requestId: reqId('KK') });
     beep('saved'); toast(`✔ Đã lưu ${r.saved} dòng kiểm kê`);
     $('kk-hist-card').classList.remove('hidden');
     $('kk-hist').insertAdjacentHTML('afterbegin', data.map(p => p.entries.map(e => `<div class="hrow"><b>${esc(p.itemNumber)}</b> · ${esc(e.batchNumber)}
-      <span class="hq">${fmt(e.qty)}</span><div class="muted">${esc(p.productName || '')} · ${esc(loc)} · Lần ${KK.round} · ${esc(r.time)}</div></div>`).join('')).join(''));
+      <span class="hq">${fmt(e.qty)}</span><div class="muted">${esc(p.productName || '')} · ${esc(loc)} · ${esc(r.time)}</div></div>`).join('')).join(''));
     $('kk-list').innerHTML = ''; $('kk-q').value = ''; btn.classList.add('hidden'); $('kk-q').focus();
   } catch (e) { beep('err'); toast(e.message, 4000); }
   finally { btn.disabled = false; btn.textContent = 'Lưu số đếm'; }
@@ -1494,15 +1493,45 @@ function renderKkSummary(){
 }
 $('kk-mis').addEventListener('click', e => {
   const b = e.target.closest('[data-recount]'); if (!b) return;
-  const m = KK.summary.mismatches[+b.dataset.recount];
-  const it = S.master.items.find(x => x.i.toUpperCase() === m.item.toUpperCase()) || { i: m.item, n: m.name, b: [] };
-  KK.round = 2; document.querySelectorAll('#kk-round button').forEach(x => x.classList.toggle('on', x.dataset.r === '2'));
-  kkTab('count');
-  KK.list = [it]; $('kk-q').value = it.i;
-  $('kk-list').innerHTML = `<div class="muted" style="font-size:13px;margin:0 4px 8px">Đếm lại lần 2: số lần 2 sẽ thay thế toàn bộ số lần 1 của mã này.</div>` + prodCards(KK.list, 'kk');
-  $('kk-save').classList.remove('hidden');
-  window.scrollTo(0, 0);
+  openRecount(KK.summary.mismatches[+b.dataset.recount]);
 });
+function openRecount(m){
+  const prev2 = m.round === 2;
+  const rows = m.batches.map(x => ({ b: x.b, a1: x.a1 || 0, a2: x.a2 || 0 }));
+  const rowHtml = (r, i) => `<div class="rc-row"><span class="bn">${esc(r.b)}</span><span class="old">${fmt(r.a1)}${prev2 ? `<div style="font-size:11px">L2: ${fmt(r.a2)}</div>` : ''}</span>
+    <input class="qty-in rc-q" inputmode="decimal" data-i="${i}" value="${prev2 ? r.a2 : r.a1}"></div>`;
+  modal(`<h3>Đếm lại lần 2 – ${esc(m.item)}</h3>
+    <div class="muted" style="font-size:13.5px;margin-bottom:8px">${esc(m.name)}<br>Kiểm tra lại <b>tất cả batch</b>, sửa số lượng thực tế. Khi lưu, số mới sẽ <b>ghi đè</b> số cũ của mã này.</div>
+    <div class="rc-row head"><span>Batch number</span><span style="text-align:center">Đã đếm lần 1</span><span style="text-align:center">Số mới</span></div>
+    <div id="rc-list">${rows.map(rowHtml).join('')}</div>
+    <button class="btn ghost" id="rc-add" type="button" style="margin-top:10px;width:100%">+ Thêm batch khác</button>
+    <div class="err" id="rc-err"></div>
+    <div class="modal-actions"><button class="btn light" onclick="closeModal()">Hủy</button><button class="btn" id="rc-save">Lưu đếm lại (ghi đè)</button></div>`);
+  $('rc-add').onclick = () => {
+    $('rc-list').insertAdjacentHTML('beforeend', `<div class="rc-row"><input class="bn-in" placeholder="Batch mới"><span class="old">–</span>
+      <input class="qty-in rc-q" inputmode="decimal" placeholder="0"></div>`);
+  };
+  $('rc-save').onclick = async () => {
+    const entries = [];
+    document.querySelectorAll('#rc-list .rc-row').forEach(rw => {
+      const q = parseFloat(String(rw.querySelector('.rc-q').value).replace(',', '.'));
+      const bnIn = rw.querySelector('.bn-in');
+      const bn = bnIn ? bnIn.value.trim() : rows[+rw.querySelector('.rc-q').dataset.i].b;
+      if (!bn) return;
+      entries.push({ batchNumber: bn, qty: q > 0 ? q : 0 });
+    });
+    if (!entries.length) { $('rc-err').textContent = 'Chưa có batch nào.'; return; }
+    const it = S.master && S.master.items.find(x => x.i.toUpperCase() === m.item.toUpperCase());
+    $('rc-save').disabled = true; loading(true);
+    try {
+      await api('kkSave', { round: 2, location: $('kk-loc').value.trim(), requestId: reqId('KK2'),
+        data: [{ itemNumber: m.item, productName: m.name, barcode: it && it.b[0] || '', entries: entries }] });
+      beep('saved'); closeModal(); toast('✔ Đã lưu đếm lại lần 2 cho ' + m.item);
+      kkSummary();
+    } catch (x) { beep('err'); $('rc-err').textContent = x.message; const s = $('rc-save'); if (s) s.disabled = false; }
+    finally { loading(false); }
+  };
+}
 $('kk-finish').addEventListener('click', () => {
   modal(`<h3>Hoàn tất kiểm kê?</h3><p class="muted">Số liệu sẽ được chốt và đợt kiểm kê <b>${esc(KK.state.campaign.name)}</b> bị khóa, không thể nhập thêm. Báo cáo cuối được ghi vào sheet <b>BC Kiem ke</b>.</p>
     <div class="modal-actions"><button class="btn light" onclick="closeModal()">Hủy</button><button class="btn red" id="m-kkf">Hoàn tất</button></div>`);
@@ -1643,24 +1672,28 @@ async function initAdminKK(){
   try { renderAdminKK(await api('kkGetState')); } catch (e) { $('akk-box').innerHTML = `<div class="card empty">${esc(e.message)}</div>`; }
 }
 function renderAdminKK(st){
-  const s = st.stock, c = st.campaign, open = c && c.status === 'open';
-  $('akk-box').innerHTML = `<div class="card"><h4>1. Dữ liệu tồn kho hệ thống</h4>
-      ${s ? `<div style="font-size:14px;margin:6px 0 4px"><b>${esc(s.fileName)}</b> · ${fmt(s.rows)} dòng</div>
-        <div class="muted" style="font-size:12.5px">Import ${esc(s.at)} bởi ${esc(s.by)}${s.fileUrl ? ` · <a href="${esc(s.fileUrl)}" target="_blank">Mở file trên Drive</a>` : ''}</div>`
-          : '<div class="muted" style="font-size:14px">Chưa import file tồn kho.</div>'}
-      <label class="f">Chọn file tồn kho (.xlsx / .csv) – cần các cột Item number, Batch number, Physical inventory</label>
-      <input type="file" class="inp" id="akk-file" accept=".xlsx,.xls,.csv">
-      <button class="btn block" id="akk-import">Import & lưu vào thư mục Drive</button>
-      ${open ? '<div class="hint" style="font-size:12.5px">Lưu ý: đang có đợt kiểm kê mở – import lại sẽ thay đổi số hệ thống dùng để so sánh.</div>' : ''}
-    </div>
-    <div class="card"><h4>2. Đợt kiểm kê</h4>
-      ${c ? `<div style="font-size:14px;margin:6px 0"><b>${esc(c.name)}</b> <span class="badge ${open ? 'st-done' : 'st-other'}">${open ? 'Đang kiểm kê' : 'Đã hoàn tất'}</span></div>
-        <div class="muted" style="font-size:12.5px">Mở ${esc(c.startedAt)} bởi ${esc(c.startedBy)}${c.doneAt ? ' · Hoàn tất ' + esc(c.doneAt) + ' bởi ' + esc(c.doneBy) : ''}</div>` : '<div class="muted" style="font-size:14px">Chưa có đợt nào.</div>'}
-      ${open ? `<button class="btn block ghost" data-go="kiemke">Xem kết quả kiểm kê</button>`
-        : `<label class="f">Tên đợt kiểm kê mới</label><input class="inp" id="akk-name" placeholder="VD: Kiểm kê cuối tháng 10/2026">
-           <button class="btn block" id="akk-start" ${s ? '' : 'disabled'}>Bắt đầu đợt kiểm kê</button>`}
+  const c = st.campaign, open = c && c.status === 'open';
+  const stockCard = (kind, n, title, desc, m) => `<div class="card"><h4>${n}. ${title}</h4>
+      <div class="muted" style="font-size:12.5px;margin-top:2px">${desc}</div>
+      ${m ? `<div style="font-size:14px;margin:8px 0 2px"><b>${esc(m.fileName)}</b> · ${fmt(m.rows)} dòng${m.items ? ' · ' + fmt(m.items) + ' mã' : ''}</div>
+        <div class="muted" style="font-size:12.5px">Import ${esc(m.at)} bởi ${esc(m.by)}${m.fileUrl ? ` · <a href="${esc(m.fileUrl)}" target="_blank">Mở file trên Drive</a>` : ''}</div>`
+          : '<div class="muted" style="font-size:14px;margin-top:8px">Chưa import.</div>'}
+      <input type="file" class="inp" id="akk-file-${kind}" accept=".xlsx,.xls,.csv" style="margin-top:10px" ${kind === 'kk' && open ? 'disabled' : ''}>
+      <button class="btn block" data-import="${kind}" ${kind === 'kk' && open ? 'disabled' : ''}>Import & lưu vào thư mục Drive</button>
+      ${kind === 'kk' && open ? '<div class="hint" style="font-size:12.5px">Đợt kiểm kê đang mở – hoàn tất đợt rồi mới đổi tồn kho kiểm kê được.</div>' : ''}
     </div>`;
-  $('akk-import').onclick = adminImportStock;
+  $('akk-box').innerHTML =
+    stockCard('stock', 1, 'Tồn kho (tra cứu batch)', 'Toàn bộ tồn kho – dùng để hiện danh sách batch khi tìm hàng ở Kiểm kê, Hủy hàng.', st.stock) +
+    stockCard('kk', 2, 'Tồn kho kiểm kê (căn cứ đối chiếu)', 'Chỉ phần kho cần kiểm – kết quả kiểm kê chỉ so sánh với danh sách này.', st.stockKK) +
+    `<div class="card"><h4>3. Đợt kiểm kê</h4>
+      ${c ? `<div style="font-size:14px;margin:6px 0"><b>${esc(c.name)}</b> <span class="badge ${open ? 'st-done' : 'st-other'}">${open ? 'Đang kiểm kê' : 'Đã hoàn tất'}</span></div>
+        <div class="muted" style="font-size:12.5px">Mở ${esc(c.startedAt)} bởi ${esc(c.startedBy)} · Đối chiếu với: ${esc(c.stockFile || '')}${c.doneAt ? '<br>Hoàn tất ' + esc(c.doneAt) + ' bởi ' + esc(c.doneBy) : ''}</div>` : '<div class="muted" style="font-size:14px">Chưa có đợt nào.</div>'}
+      ${open ? `<button class="btn block ghost" data-go="kiemke">Xem kết quả kiểm kê</button>`
+        : `<label class="f">Tên đợt kiểm kê mới</label><input class="inp" id="akk-name" placeholder="VD: Kiểm kê khu A – 10/2026">
+           <button class="btn block" id="akk-start" ${st.stockKK ? '' : 'disabled'}>Bắt đầu đợt kiểm kê</button>
+           ${st.stockKK ? '' : '<div class="hint" style="font-size:12.5px">Cần import Tồn kho kiểm kê (mục 2) trước.</div>'}`}
+    </div>`;
+  document.querySelectorAll('[data-import]').forEach(b => b.onclick = () => adminImportStock(b.dataset.import));
   if ($('akk-start')) $('akk-start').onclick = async () => {
     loading(true);
     try { await api('adminStartCampaign', $('akk-name').value.trim()); toast('Đã mở đợt kiểm kê. Thủ kho có thể bắt đầu đếm.'); initAdminKK(); }
@@ -1673,8 +1706,8 @@ function loadXlsx(){
     s.onload = ok; s.onerror = () => fail(new Error('Không tải được thư viện đọc Excel.')); document.head.appendChild(s);
   });
 }
-async function adminImportStock(){
-  const f = $('akk-file').files[0];
+async function adminImportStock(kind){
+  const f = $('akk-file-' + kind).files[0];
   if (!f) { toast('Hãy chọn file tồn kho.'); return; }
   loading(true);
   try {
@@ -1688,8 +1721,8 @@ async function adminImportStock(){
     rows = rows.slice(hr);
     let bin = ''; const bytes = new Uint8Array(buf);
     for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-    const meta = await api('adminImportStock', { name: f.name, mime: f.type, base64: btoa(bin), rows: rows });
-    toast(`Đã import ${fmt(meta.rows)} dòng tồn kho và lưu file lên Drive.`, 4000);
+    const meta = await api('adminImportStock', { name: f.name, mime: f.type, base64: btoa(bin), rows: rows }, kind);
+    toast(`Đã import ${fmt(meta.rows)} dòng ${kind === 'kk' ? 'tồn kho kiểm kê' : 'tồn kho'} và lưu file lên Drive.`, 4000);
     S.master = null; initAdminKK();
   } catch (e) { toast(e.message, 5000); }
   finally { loading(false); }
