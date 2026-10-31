@@ -7,7 +7,7 @@
      lấy ở Apps Script → Triển khai → Quản lý triển khai.
      ================================================================ -->
 <script>
-var API_URL = 'https://script.google.com/macros/s/AKfycbxAyzMMLgMnJuk_2DacvaAfN-auCbudAmTnS97yXki6qCGn9D8jwBGc53c8XCfoQx107w/exec';
+var API_URL = 'https://script.google.com/macros/s/AKfycby1sVaLE3ERRRBcXk_V_a255ejaTbd_hgAIO56iPiFVp6hp7lgdGSXajh1nkKEEtEoMVw/exec';
 </script>
 <base target="_top">
 <meta charset="utf-8">
@@ -137,6 +137,14 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .qr-mode.giao{background:linear-gradient(135deg,#3d7a57,#182e22)}
 .qr-cam{position:relative;width:100%;min-height:260px;border-radius:18px;overflow:hidden;background:#0d1712}
 .qr-cam #qr-reader,.scan-box{width:100%;border:0!important}
+.bd-wrap{position:relative;width:100%;aspect-ratio:3/4;max-height:62vh;background:#0d1712;overflow:hidden}
+.bd-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.bd-guide{position:absolute;left:8%;right:8%;top:30%;bottom:30%;border:3px solid rgba(255,255,255,.9);border-radius:14px;box-shadow:0 0 0 999px rgba(0,0,0,.22);pointer-events:none}
+.bd-guide::after{content:'';position:absolute;left:6%;right:6%;top:50%;height:2px;background:rgba(229,57,53,.85)}
+.bd-torch{position:absolute;right:10px;bottom:10px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(0,0,0,.45);font-size:20px;cursor:pointer}
+.bd-torch.on{background:#ffd54f}
+.cam-info{font-size:12.5px;color:var(--muted);text-align:center;margin:-4px 0 10px}
+.cam-info a{color:var(--pri);font-weight:700}
 .qr-cam video,.scan-box video{display:block}
 .scan-box{min-height:240px;border-radius:16px;overflow:hidden;background:#0d1712;position:relative}
 .scan-btn{flex:none;padding:0 14px}
@@ -441,6 +449,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
         <div class="qr-cam" id="qr-cam"><div id="qr-reader"></div>
           <div class="cam-msg hidden" id="qr-cam-msg"></div></div>
         <div class="qr-status" id="qr-status">Đưa mã QR vào khung hình</div>
+        <div class="cam-info" id="qr-eng"></div>
         <div class="card">
           <div id="qr-note-box"><label class="f" style="margin-top:0">Ghi chú (gắn cho mã quét tiếp theo)</label>
           <input class="inp" id="qr-note"></div>
@@ -1108,14 +1117,109 @@ async function camStartQS(elId, onCode){
   await sc.start();
   return { isScanning: true, stop() { try { sc.stop(); } catch (e) {} this.isScanning = false; }, clear() { try { sc.destroy(); } catch (e) {} el.innerHTML = ''; } };
 }
-async function camStart(elId, onCode){
-  try { return await camStartH5(elId, onCode); }
-  catch (e1) {
-    console.warn('html5-qrcode lỗi, chuyển sang bộ quét QR dự phòng:', e1);
-    try { $(elId).innerHTML = ''; } catch (x) {}
-    try { const c = await camStartQS(elId, onCode); toast('Đang dùng bộ quét dự phòng (chỉ đọc mã QR).', 3500); return c; }
-    catch (e2) { const er = new Error((e1 && (e1.message || e1)) + ' | ' + (e2 && (e2.message || e2))); er.name = (e2 && e2.name) || 'Error'; throw er; }
+/* ---------- BỘ QUÉT CHÍNH: BarcodeDetector ----------
+ * Android/Chrome: dùng bộ đọc mã có sẵn của máy (rất nhanh).
+ * iPhone/máy khác: dùng bản BarcodeDetector chạy ZXing-C++ WebAssembly (nhanh & chắc hơn html5-qrcode nhiều).
+ * Camera Full HD, lấy nét liên tục, đọc trên TOÀN khung hình ~8 lần/giây, có nút đèn flash. */
+const BD_FORMATS = ['qr_code', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'code_93', 'itf', 'codabar', 'data_matrix'];
+let BD_CLASS = null, BD_DET = null;
+async function bdDetector(){
+  if (BD_DET) return BD_DET;
+  let C = null;
+  if ('BarcodeDetector' in window) {
+    try {
+      const sup = await window.BarcodeDetector.getSupportedFormats();
+      if (sup && sup.indexOf('qr_code') !== -1 && sup.indexOf('ean_13') !== -1) C = window.BarcodeDetector;
+    } catch (e) {}
   }
+  if (!C) C = (await import('https://cdn.jsdelivr.net/npm/barcode-detector@2.2.2/dist/es/pure.min.js')).BarcodeDetector;
+  let fmts = BD_FORMATS;
+  try { const sup = await C.getSupportedFormats(); fmts = BD_FORMATS.filter(f => sup.indexOf(f) !== -1); } catch (e) {}
+  BD_CLASS = C; BD_DET = new C({ formats: fmts });
+  return BD_DET;
+}
+function withTimeout(p, ms, msg){ return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), ms))]); }
+async function camStartBD(elId, onCode){
+  let det = await bdDetector();
+  try {   // chạy thử 1 lần: nếu bộ đọc (VD: tệp WASM) không tải được thì báo lỗi ngay để chuyển bộ khác
+    const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+    const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 64, 64);
+    await withTimeout(det.detect(cv), 10000, 'Bộ đọc mã tải quá lâu');
+  } catch (e) { BD_DET = null; throw new Error('BarcodeDetector chưa sẵn sàng: ' + (e.message || e)); }
+  const el = $(elId);
+  el.innerHTML = `<div class="bd-wrap"><video class="bd-video" muted playsinline autoplay></video><div class="bd-guide"></div>
+    <button type="button" class="bd-torch hidden" title="Đèn flash">💡</button></div>`;
+  const video = el.querySelector('video');
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: false,
+    video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+  video.srcObject = stream;
+  await video.play().catch(() => {});
+  const track = stream.getVideoTracks()[0];
+  try {   // lấy nét liên tục nếu máy hỗ trợ
+    const cap = track.getCapabilities ? track.getCapabilities() : {};
+    const adv = [];
+    if (cap.focusMode && cap.focusMode.indexOf('continuous') !== -1) adv.push({ focusMode: 'continuous' });
+    if (adv.length) await track.applyConstraints({ advanced: adv });
+    if (cap.torch) {
+      const b = el.querySelector('.bd-torch'); let on = false; b.classList.remove('hidden');
+      b.onclick = async () => { on = !on; try { await track.applyConstraints({ advanced: [{ torch: on }] }); b.classList.toggle('on', on); } catch (e) {} };
+    }
+  } catch (e) {}
+  const cam = { isScanning: true, busy: false, timer: 0, errs: 0, reads: 0,
+    engine: BD_CLASS === window.BarcodeDetector ? 'Bộ đọc của máy' : 'ZXing-WASM',
+    stop() { this.isScanning = false; clearTimeout(this.timer); stream.getTracks().forEach(t => t.stop()); },
+    clear() { el.innerHTML = ''; } };
+  const loop = async () => {
+    if (!cam.isScanning) return;
+    if (video.readyState >= 2 && !cam.busy) {
+      cam.busy = true;
+      try {
+        const res = await det.detect(video);
+        cam.reads++; cam.errs = 0;
+        if (res && res.length) {
+          // nhiều mã trong khung → lấy mã gần tâm nhất
+          const cx = video.videoWidth / 2, cy = video.videoHeight / 2;
+          const best = res.map(r => { const b = r.boundingBox || { x: cx, y: cy, width: 0, height: 0 };
+            return { v: r.rawValue, d: Math.hypot(b.x + b.width / 2 - cx, b.y + b.height / 2 - cy) }; })
+            .filter(x => x.v).sort((a, b) => a.d - b.d)[0];
+          if (best) onCode(String(best.v).trim());
+        }
+      } catch (e) {
+        cam.errs++;
+        if (cam.errs === 15 && cam.onTrouble) { console.warn('Bộ đọc lỗi liên tục, tự chuyển bộ khác:', e); cam.onTrouble(); }
+      }
+      cam.busy = false;
+    }
+    cam.timer = setTimeout(loop, 120);
+  };
+  loop();
+  return cam;
+}
+
+/* Thứ tự tự động: BarcodeDetector → html5-qrcode → qr-scanner (bộ cũ, chỉ QR). Có thể chọn cố định 1 bộ. */
+const CAM_ENGINES = [['bd', 'BarcodeDetector', 'Bộ đọc nhanh (máy / ZXing-WASM)'], ['h5', 'html5-qrcode', 'html5-qrcode (QR + mã vạch)'], ['qs', 'qr-scanner', 'qr-scanner (chỉ QR – bộ cũ)']];
+const CAM_SKIP = new Set();   // bộ đọc bị lỗi trong phiên này → tự bỏ qua
+const camPref = () => { try { return localStorage.getItem('annt_cam_engine') || 'auto'; } catch (e) { return 'auto'; } };
+async function camStart(elId, onCode){
+  const errs = [], pref = camPref();
+  const fns = { bd: camStartBD, h5: camStartH5, qs: camStartQS };
+  let order = pref === 'auto' ? CAM_ENGINES : CAM_ENGINES.filter(x => x[0] === pref).concat(CAM_ENGINES.filter(x => x[0] !== pref));
+  const usable = order.filter(x => !CAM_SKIP.has(x[0]));
+  if (usable.length) order = usable; else CAM_SKIP.clear();
+  for (const [key, name] of order) {
+    const fn = fns[key];
+    try {
+      const c = await fn(elId, onCode);
+      c.engine = c.engine || name; c.key = key;
+      return c;
+    } catch (e) {
+      errs.push(name + ': ' + (e && (e.message || e)));
+      console.warn('Bộ quét ' + name + ' lỗi:', e);
+      try { $(elId).innerHTML = ''; } catch (x) {}
+      if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) break;   // bị chặn quyền camera → thử bộ khác cũng vô ích
+    }
+  }
+  throw new Error(errs.join(' | '));
 }
 async function camStop(cam){
   if (!cam) return;
@@ -1123,6 +1227,12 @@ async function camStop(cam){
   try { cam.clear(); } catch (e) {}
 }
 async function camScanFile(file){
+  try {
+    const det = await bdDetector();
+    const bmp = await createImageBitmap(file);
+    const res = await det.detect(bmp);
+    if (res && res.length && res[0].rawValue) return String(res[0].rawValue).trim();
+  } catch (e) { console.warn('BarcodeDetector đọc ảnh lỗi:', e); }
   try {
     const H = await camLib();
     if (!$('cam-file-host')) { const d = document.createElement('div'); d.id = 'cam-file-host'; d.style.display = 'none'; document.body.appendChild(d); }
@@ -1137,6 +1247,22 @@ async function camScanFile(file){
 const camBlockedMsg = e => `Không mở được camera${IN_GAS ? ' (link Apps Script chặn camera – hãy mở app bằng link GitHub)' : '. Hãy cấp quyền camera cho trình duyệt.'}`
   + (e && e.message ? `\nChi tiết: ${String(e.message).slice(0, 160)}` : '');
 
+/* Dòng thông tin bộ đọc + nút đổi bộ đọc (lưu lựa chọn trên máy) */
+function camInfo(id, cam, restart){
+  const el = $(id); if (!el) return;
+  if (!(S.user && S.user.role === 'admin')) { el.innerHTML = ''; return; }
+  const pref = camPref();
+  el.innerHTML = `Bộ đọc: <b>${esc(cam.engine || '')}</b>${pref === 'auto' ? ' (tự động)' : ''} · <a href="#" data-cam-switch>Đổi bộ đọc</a>`;
+  el.querySelector('[data-cam-switch]').onclick = e => {
+    e.preventDefault();
+    const keys = ['auto'].concat(CAM_ENGINES.map(x => x[0]));
+    const next = keys[(keys.indexOf(pref) + 1) % keys.length];
+    try { localStorage.setItem('annt_cam_engine', next); } catch (x) {}
+    toast('Chuyển bộ đọc: ' + (next === 'auto' ? 'Tự động' : CAM_ENGINES.find(x => x[0] === next)[2]), 2500);
+    restart();
+  };
+}
+
 /* Quét 1 mã rồi đóng (dùng cho Kiểm kê, Hủy hàng, Soạn hàng) */
 let scanCleanup = null;
 function scanOnce(title){
@@ -1144,6 +1270,7 @@ function scanOnce(title){
     modal(`<h3>${esc(title || 'Quét mã vạch / QR')}</h3>
       <div class="scan-box" id="scan-reader"></div>
       <div class="muted" id="scan-msg" style="text-align:center;margin-top:8px;font-size:13.5px">Đưa mã vạch hoặc mã QR vào khung</div>
+      <div class="cam-info" id="scan-eng" style="margin-top:4px"></div>
       <input type="file" id="scan-file" accept="image/*" capture="environment" class="hidden">
       <div class="modal-actions"><button class="btn light" id="scan-photo">Chụp ảnh mã</button><button class="btn" id="scan-close">Đóng</button></div>`);
     let cam = null, done = false;
@@ -1161,9 +1288,14 @@ function scanOnce(title){
       try { const code = await camScanFile(f); beep('ok'); finish(code); }
       catch (x) { beep('err'); $('scan-msg').textContent = 'Không đọc được mã trong ảnh, hãy chụp gần và rõ hơn.'; }
     };
-    camStart('scan-reader', code => { if (code) { beep('ok'); finish(code); } })
-      .then(c => { cam = c; if (done) camStop(c); })
+    const startCam = () => camStart('scan-reader', code => { if (code) { beep('ok'); finish(code); } })
+      .then(c => {
+        cam = c; if (done) { camStop(c); return; }
+        c.onTrouble = async () => { CAM_SKIP.add(c.key); if (cam === c && !done) { cam = null; await camStop(c); startCam(); } };
+        camInfo('scan-eng', c, async () => { const o = cam; cam = null; await camStop(o); startCam(); });
+      })
       .catch(err => { $('scan-msg').innerHTML = esc(camBlockedMsg(err)).replace(/\n/g, '<br>') + '<br>Bấm <b>Chụp ảnh mã</b> để quét bằng ảnh.'; });
+    startCam();
   });
 }
 
@@ -1240,7 +1372,9 @@ async function qrOpen(mode){
     const cam = await camStart('qr-reader', qrOnScan);
     if (S.view !== 'scan') { camStop(cam); return; }   // đã rời màn hình khi camera đang mở
     QR.scanner = cam;
+    cam.onTrouble = () => { CAM_SKIP.add(cam.key); if (S.view === 'scan' && QR.scanner === cam) qrOpen(QR.mode); };
     qrSetStatus('Đưa mã QR hoặc mã vạch vào khung hình');
+    camInfo('qr-eng', cam, () => qrOpen(QR.mode));
   } catch (e) {
     qrCamMsg(`<div style="white-space:pre-line">${esc(camBlockedMsg(e))}</div>
       <button class="btn" onclick="$('qr-file').click()">Chụp ảnh mã</button>`);
