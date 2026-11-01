@@ -219,6 +219,21 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .ph-grid .ph img{width:100%;height:100%;object-fit:cover;cursor:pointer}
 .ph-grid .ph .del{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-weight:800;cursor:pointer}
 .bcs-big{width:100%;border-radius:10px;display:block}
+.bcs-big-btn{width:100%;min-height:150px;margin-bottom:14px}
+#bcs-rec .qr-mode svg{width:52px;height:52px;flex:none}
+.bcs-cam{position:relative;background:#000;border-radius:16px;overflow:hidden;aspect-ratio:3/4;max-height:62vh;margin:0 auto}
+.bcs-cam video{width:100%;height:100%;object-fit:cover;display:block}
+.bcs-cam .cam-msg{position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;color:#fff;text-align:center;padding:20px}
+.bcs-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .15s}
+.bcs-flash.on{opacity:.8;transition:none}
+.bcs-shots{display:flex;gap:8px;overflow-x:auto;padding:10px 0 4px;min-height:10px}
+.bcs-shots .ph{position:relative;flex:none;width:70px;height:70px;border-radius:10px;overflow:hidden}
+.bcs-shots img{width:100%;height:100%;object-fit:cover}
+.bcs-shots .del{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-weight:800}
+.bcs-ctl{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 12px}
+.bcs-ctl .btn{min-width:90px}
+.bcs-shutter{width:74px;height:74px;border-radius:50%;border:5px solid var(--pri);background:#fff;box-shadow:0 0 0 3px #fff inset,0 3px 10px rgba(0,0,0,.25);cursor:pointer}
+.bcs-shutter:active{background:#dfe9e2}
 .kk-kpis .kpi-mini b{font-size:22px}
 .mis.g1{border-left:4px solid var(--red)} .mis.g2{border-left:4px solid var(--amber)}
 .reason-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
@@ -570,6 +585,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
         <span class="n" id="db-sel">Đã chọn 0 đơn</span>
         <button class="btn ghost" id="db-ask" style="padding:9px 12px">Yêu cầu thu nợ</button>
         <button class="btn" id="db-done" style="padding:9px 12px">Hoàn thành</button>
+        <button class="btn light" id="db-del" style="padding:9px 12px;color:var(--red)">Xóa khỏi danh sách</button>
       </div>
       <div class="card hidden" id="db-admin">
         <h4 style="margin-top:0">Danh sách khách hàng (Payment term)</h4>
@@ -584,23 +600,39 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
     <div class="view hidden" id="v-bcsoan">
       <div class="seg" id="bcs-tabs" style="margin-bottom:14px"><button data-t="rec" class="on">Ghi nhận</button><button data-t="find">Tra cứu</button></div>
       <div id="bcs-rec">
-        <div class="card">
-          <label class="f" style="margin-top:0">Mã đơn</label>
-          <div style="display:flex;gap:8px"><input class="inp" id="bcs-code" autocapitalize="characters" placeholder="Quét hoặc nhập mã đơn" enterkeyhint="done">
-            <button class="btn" id="bcs-scan">Quét</button></div>
-          <div class="row2" style="margin-top:12px">
-            <button class="btn" id="bcs-photo-btn">Chụp ảnh</button>
-            <button class="btn ghost" id="bcs-cctv-btn">Ghi hình CCTV</button>
+        <!-- Bước 1: quét mã đơn -->
+        <div id="bcs-s1">
+          <button class="qr-mode bcs-big-btn" id="bcs-scan" style="background:linear-gradient(135deg,#6d4c41,#3e2723)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3M21 21v.01M12 7v3a2 2 0 0 1-2 2H7M3 12h.01M12 3h.01M12 16v.01M16 12h1M21 12v.01M12 21v-1"/></svg>QUÉT MÃ ĐƠN HÀNG<small>Bấm để mở camera quét mã</small></button>
+          <div class="card">
+            <label class="f" style="margin-top:0">Hoặc nhập mã đơn</label>
+            <div style="display:flex;gap:8px"><input class="inp" id="bcs-code" autocapitalize="characters" enterkeyhint="go">
+              <button class="btn" id="bcs-go" style="flex:none">Tiếp tục</button></div>
+          </div>
+        </div>
+        <!-- Bước 2: chọn hình thức -->
+        <div id="bcs-s2" class="hidden">
+          <div class="card" style="text-align:center"><div class="muted" style="font-size:13px">Mã đơn</div>
+            <div style="font-size:22px;font-weight:800;word-break:break-all" id="bcs-s2-code"></div></div>
+          <div class="qr-modes">
+            <button class="qr-mode" id="bcs-photo-btn" style="background:linear-gradient(135deg,#3d7a57,#182e22)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/></svg>CHỤP ẢNH<small>Chụp & gửi ảnh lên Drive</small></button>
+            <button class="qr-mode" id="bcs-cctv-btn" style="background:linear-gradient(135deg,#1e88e5,#0d47a1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>GHI HÌNH CCTV<small>Ghi nhận mã đơn & thời gian</small></button>
+          </div>
+          <button class="btn light block" id="bcs-back1">Quét đơn khác</button>
+        </div>
+        <!-- Bước 3: camera chụp ảnh trực tiếp -->
+        <div id="bcs-s3" class="hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="mode-pill" style="background:#24573c" id="bcs-s3-code"></span>
+            <button class="btn light" id="bcs-cancel" style="padding:8px 12px;font-size:13.5px">Hủy</button></div>
+          <div class="bcs-cam"><video id="bcs-video" muted playsinline autoplay></video>
+            <div class="cam-msg hidden" id="bcs-cam-msg"></div><div class="bcs-flash" id="bcs-flash"></div></div>
+          <div class="bcs-shots" id="bcs-photos"></div>
+          <div class="bcs-ctl">
+            <span class="muted" id="bcs-n" style="font-size:13px;min-width:70px">0 ảnh</span>
+            <button class="bcs-shutter" id="bcs-shoot" aria-label="Chụp"></button>
+            <button class="btn" id="bcs-send" disabled>Gửi</button>
           </div>
           <input type="file" id="bcs-file" accept="image/*" capture="environment" class="hidden">
-        </div>
-        <div class="card hidden" id="bcs-photo-card">
-          <h4 style="margin-top:0">Ảnh soạn hàng – <span id="bcs-photo-code"></span></h4>
-          <div class="ph-grid" id="bcs-photos"></div>
-          <button class="btn light block" id="bcs-more" style="margin-top:10px">+ Chụp thêm ảnh</button>
-          <label class="f">Ghi chú</label><input class="inp" id="bcs-note">
-          <button class="btn block" id="bcs-save">Tải ảnh lên & lưu</button>
-          <div class="muted" id="bcs-prog" style="font-size:13px;text-align:center;margin-top:6px"></div>
         </div>
         <div class="card hidden" id="bcs-hist-card"><h4>Đã ghi nhận trong phiên này</h4><div id="bcs-hist"></div></div>
       </div>
@@ -990,6 +1022,7 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-go]'
 function go(view){
   if (view === 'install') { showInstall(); return; }
   if (S.view === 'scan' && view !== 'scan') qrStop();
+  if (S.view === 'bcsoan' && view !== 'bcsoan' && typeof bcsCamStop === 'function') bcsCamStop();
   if (S.user && S.user.mustChange && view !== 'settings') { toast('Vui lòng đổi mật khẩu trước khi sử dụng.'); view = 'settings'; }
   S.view = view;
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
@@ -2078,8 +2111,10 @@ $('db-list').addEventListener('change', e => {
 async function dbAction(action){
   const sos = Object.keys(DB.sel);
   if (!sos.length) { toast('Hãy tick chọn đơn trước.'); return; }
-  const lbl = action === 'done' ? 'Hoàn thành (không nhắc nữa)' : 'Yêu cầu thu nợ (hiện cho Manager, Sale, CS)';
-  modal(`<h3>${action === 'done' ? 'Hoàn thành công nợ?' : 'Yêu cầu thu nợ?'}</h3><p>Chuyển <b>${sos.length}</b> đơn sang <b>${lbl}</b>.</p>
+  const T = { done: ['Hoàn thành công nợ?', 'Hoàn thành (không nhắc nữa)'], ask: ['Yêu cầu thu nợ?', 'Yêu cầu thu nợ (hiện cho Manager, Sale, CS)'],
+              remove: ['Xóa khỏi danh sách?', 'Đã xóa khỏi danh sách (không hiện trong báo cáo công nợ nữa)'] }[action];
+  const lbl = T[1];
+  modal(`<h3>${T[0]}</h3><p>Chuyển <b>${sos.length}</b> đơn sang <b>${lbl}</b>.</p>
     <div class="modal-actions"><button class="btn light" onclick="closeModal()">Hủy</button><button class="btn" id="db-ok">Đồng ý</button></div>`);
   $('db-ok').onclick = async () => {
     closeModal(); loading(true);
@@ -2090,6 +2125,7 @@ async function dbAction(action){
 }
 $('db-done').addEventListener('click', () => dbAction('done'));
 $('db-ask').addEventListener('click', () => dbAction('ask'));
+$('db-del').addEventListener('click', () => dbAction('remove'));
 $('db-import').addEventListener('click', async () => {
   const f = $('db-file').files[0];
   if (!f) { toast('Hãy chọn file Payment term.'); return; }
@@ -2106,10 +2142,10 @@ $('db-import').addEventListener('click', async () => {
 });
 
 /* ========= BÁO CÁO SOẠN HÀNG ========= */
-const BCS = { photos: [], code: '', canRecord: null, cache: {} };
+const BCS = { photos: [], code: '', canRecord: null, cache: {}, queue: [], busy: false, stream: null };
 async function initBcs(){
   if (BCS.canRecord === null) {
-    try { const r = await api('bcsSearch', ''); BCS.canRecord = r.canRecord; BCS.last = r.rows; } catch (e) { toast(e.message); return; }
+    try { const r = await api('bcsSearch', ''); BCS.canRecord = r.canRecord; } catch (e) { toast(e.message); return; }
   }
   $('bcs-tabs').classList.toggle('hidden', !BCS.canRecord);
   bcsTab(BCS.canRecord ? (BCS.tab || 'rec') : 'find');
@@ -2118,23 +2154,65 @@ function bcsTab(t){
   BCS.tab = t;
   document.querySelectorAll('#bcs-tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
   $('bcs-rec').classList.toggle('hidden', t !== 'rec'); $('bcs-find').classList.toggle('hidden', t !== 'find');
-  if (t === 'find' && !$('bcs-res').innerHTML) bcsFind();
+  if (t === 'find') { bcsCamStop(); if (!$('bcs-res').innerHTML) bcsFind(); }
+  if (t === 'rec') bcsStep(1, true);
 }
 $('bcs-tabs').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (b) bcsTab(b.dataset.t); });
-$('bcs-scan').addEventListener('click', async () => { const c = await scanOnce('Quét mã đơn'); if (c) $('bcs-code').value = c; });
 $('bcs-qscan').addEventListener('click', async () => { const c = await scanOnce('Quét mã đơn'); if (c) { $('bcs-q').value = c; bcsFind(); } });
-function bcsNeedCode(){
-  const c = $('bcs-code').value.trim();
-  if (!c) { toast('Hãy quét hoặc nhập mã đơn trước.'); $('bcs-code').focus(); return ''; }
-  return c;
+
+/* Luồng nhanh: 1 Quét mã đơn → 2 Chọn Chụp ảnh / Ghi hình CCTV → 3 Camera chụp trực tiếp → Gửi → quay lại 1 và tự mở quét */
+function bcsStep(n, autoScan){
+  if (n !== 3) bcsCamStop();
+  [1, 2, 3].forEach(i => $('bcs-s' + i).classList.toggle('hidden', i !== n));
+  if (n === 1) { $('bcs-code').value = ''; if (autoScan) setTimeout(bcsScan, 150); }
+  if (n === 2) $('bcs-s2-code').textContent = BCS.code;
 }
-$('bcs-photo-btn').addEventListener('click', () => {
-  const c = bcsNeedCode(); if (!c) return;
-  if (c !== BCS.code) { BCS.photos = []; BCS.doneIds = []; BCS.code = c; }
-  $('bcs-file').click();
+async function bcsScan(){
+  if (S.view !== 'bcsoan' || BCS.tab !== 'rec' || $('bcs-s1').classList.contains('hidden')) return;
+  const c = await scanOnce('Quét mã đơn hàng');
+  if (c) bcsSetCode(c);
+}
+function bcsSetCode(c){ BCS.code = String(c).trim(); BCS.photos = []; if (BCS.code) bcsStep(2); }
+$('bcs-scan').addEventListener('click', bcsScan);
+$('bcs-go').addEventListener('click', () => { const v = $('bcs-code').value.trim(); if (v) bcsSetCode(v); else toast('Hãy quét hoặc nhập mã đơn.'); });
+$('bcs-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('bcs-go').click(); });
+$('bcs-back1').addEventListener('click', () => bcsStep(1, true));
+$('bcs-photo-btn').addEventListener('click', () => { BCS.photos = []; bcsRenderPhotos(); bcsStep(3); bcsCamStart(); });
+$('bcs-cancel').addEventListener('click', () => {
+  if (BCS.photos.length && !confirm('Bỏ ' + BCS.photos.length + ' ảnh vừa chụp?')) return;
+  BCS.photos = []; bcsStep(2);
 });
-$('bcs-more').addEventListener('click', () => $('bcs-file').click());
-// Nén ảnh ngay trên trình duyệt (cạnh dài tối đa 1600px) rồi giữ trong bộ nhớ – không lưu vào máy
+
+/* --- Camera chụp ảnh (riêng cho báo cáo soạn hàng, không dùng chung bộ quét mã) --- */
+async function bcsCamStart(){
+  const v = $('bcs-video'), msg = $('bcs-cam-msg');
+  msg.classList.add('hidden');
+  try {
+    BCS.stream = await navigator.mediaDevices.getUserMedia({ audio: false,
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 } } });
+    if (S.view !== 'bcsoan' || $('bcs-s3').classList.contains('hidden')) { bcsCamStop(); return; }
+    v.srcObject = BCS.stream; await v.play().catch(() => {});
+  } catch (e) {
+    // Không mở được camera trong app → dùng camera của máy (vẫn chụp trực tiếp, không chọn từ thư viện)
+    msg.innerHTML = `<div>${esc(camBlockedMsg(e))}</div><button class="btn" onclick="$('bcs-file').click()">Mở camera của máy</button>`;
+    msg.classList.remove('hidden');
+  }
+}
+function bcsCamStop(){
+  if (BCS.stream) { BCS.stream.getTracks().forEach(t => t.stop()); BCS.stream = null; }
+  const v = $('bcs-video'); if (v) v.srcObject = null;
+}
+function bcsSnap(){
+  const v = $('bcs-video');
+  if (!BCS.stream || !v.videoWidth) { $('bcs-file').click(); return; }
+  const max = 1600, k = Math.min(1, max / Math.max(v.videoWidth, v.videoHeight));
+  const cv = document.createElement('canvas'); cv.width = Math.round(v.videoWidth * k); cv.height = Math.round(v.videoHeight * k);
+  cv.getContext('2d').drawImage(v, 0, 0, cv.width, cv.height);
+  BCS.photos.push(cv.toDataURL('image/jpeg', 0.8));
+  const f = $('bcs-flash'); f.classList.add('on'); setTimeout(() => f.classList.remove('on'), 60);
+  beep('ok'); bcsRenderPhotos();
+}
+$('bcs-shoot').addEventListener('click', bcsSnap);
 function compressImg(file, max, q){
   return new Promise((ok, fail) => {
     const url = URL.createObjectURL(file), img = new Image();
@@ -2151,57 +2229,68 @@ function compressImg(file, max, q){
 $('bcs-file').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
-  try { BCS.photos.push(await compressImg(f, 1600, 0.8)); bcsRenderPhotos(); }
-  catch (x) { toast(x.message); }
+  try { BCS.photos.push(await compressImg(f, 1600, 0.8)); bcsRenderPhotos(); } catch (x) { toast(x.message); }
 });
 function bcsRenderPhotos(){
-  $('bcs-photo-card').classList.toggle('hidden', !BCS.photos.length);
-  $('bcs-photo-code').textContent = BCS.code;
+  $('bcs-s3-code').textContent = BCS.code;
+  $('bcs-n').textContent = BCS.photos.length + ' ảnh';
+  $('bcs-send').disabled = !BCS.photos.length;
+  $('bcs-send').textContent = BCS.photos.length ? `Gửi (${BCS.photos.length})` : 'Gửi';
   $('bcs-photos').innerHTML = BCS.photos.map((p, i) => `<div class="ph"><img src="${p}" data-big="${i}"><button class="del" data-del="${i}">×</button></div>`).join('');
+  const s = $('bcs-photos'); s.scrollLeft = s.scrollWidth;
 }
 $('bcs-photos').addEventListener('click', e => {
   const d = e.target.closest('[data-del]'); if (d) { BCS.photos.splice(+d.dataset.del, 1); bcsRenderPhotos(); return; }
   const b = e.target.closest('[data-big]'); if (b) bcsShowBig(b.src);
 });
 function bcsShowBig(src){ modal(`<img class="bcs-big" src="${src}"><div class="modal-actions"><button class="btn" onclick="closeModal()">Đóng</button></div>`); }
-function bcsAddHist(code, type, n){
-  $('bcs-hist-card').classList.remove('hidden');
-  $('bcs-hist').insertAdjacentHTML('afterbegin', `<div class="hrow"><b>${esc(code)}</b> · ${esc(type)}${n ? ' · ' + n + ' ảnh' : ''}
-    <div class="muted">${new Date().toLocaleTimeString('vi-VN', { hour12: false })}</div></div>`);
+
+/* --- Gửi: đưa vào hàng chờ tải lên ở nền, người dùng quét ngay đơn tiếp theo --- */
+$('bcs-send').addEventListener('click', () => {
+  if (!BCS.photos.length) return;
+  bcsEnqueue({ code: BCS.code, type: 'photo', photos: BCS.photos.slice(), ids: [] });
+  BCS.photos = []; toast('Đang gửi ảnh đơn ' + BCS.code + ' lên Drive...');
+  bcsStep(1, true);
+});
+$('bcs-cctv-btn').addEventListener('click', () => {
+  bcsEnqueue({ code: BCS.code, type: 'cctv', photos: [], ids: [] });
+  beep('saved'); toast('✔ Ghi hình CCTV – ' + BCS.code);
+  bcsStep(1, true);
+});
+function bcsEnqueue(job){
+  job.id = reqId('BCS'); job.state = 'pending'; job.time = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+  BCS.queue.unshift(job); bcsRenderHist(); bcsPump();
 }
-$('bcs-save').addEventListener('click', async () => {
-  if (!BCS.photos.length && !(BCS.doneIds || []).length) return;
-  const btn = $('bcs-save'); btn.disabled = true;
-  const ids = [], prev = BCS.doneIds || [];
+async function bcsPump(){
+  if (BCS.busy) return;
+  const job = BCS.queue.slice().reverse().find(j => j.state === 'pending'); if (!job) return;
+  BCS.busy = true; job.state = 'sending'; bcsRenderHist();
   try {
-    for (let i = 0; i < BCS.photos.length; i++) {
-      $('bcs-prog').textContent = `Đang tải ảnh ${i + 1}/${BCS.photos.length}...`;
-      const r = await api('bcsUpload', BCS.code, { n: prev.length + i + 1, mime: 'image/jpeg', base64: BCS.photos[i].split(',')[1] });
-      ids.push(r.id);
+    while (job.photos.length) {
+      const r = await api('bcsUpload', job.code, { n: job.ids.length + 1, mime: 'image/jpeg', base64: job.photos[0].split(',')[1] });
+      job.ids.push(r.id); job.photos.shift(); bcsRenderHist();
     }
-    $('bcs-prog').textContent = 'Đang lưu báo cáo...';
-    await api('bcsSave', { code: BCS.code, type: 'photo', ids: prev.concat(ids), note: $('bcs-note').value.trim(), requestId: reqId('BCS') });
-    beep('saved'); toast('✔ Đã lưu ' + (prev.length + ids.length) + ' ảnh cho đơn ' + BCS.code);
-    bcsAddHist(BCS.code, 'Chụp ảnh', prev.length + ids.length);
-    BCS.doneIds = []; BCS.photos = []; BCS.code = ''; $('bcs-code').value = ''; $('bcs-note').value = ''; $('bcs-res').innerHTML = '';
-    bcsRenderPhotos();
+    await api('bcsSave', { code: job.code, type: job.type, ids: job.ids, requestId: job.id });
+    job.state = 'ok'; if (job.type === 'photo') beep('saved');
   } catch (e) {
-    beep('err'); toast(e.message, 4000);
-    BCS.photos.splice(0, ids.length);   // ảnh đã tải lên thì bỏ khỏi danh sách để không tải trùng
-    if (ids.length) toast(`Đã tải ${ids.length} ảnh nhưng chưa lưu xong – bấm lại để tiếp tục.`, 5000);
-    BCS.doneIds = (BCS.doneIds || []).concat(ids);
-  } finally { btn.disabled = false; $('bcs-prog').textContent = ''; }
+    job.state = /đã được gửi/.test(e.message) ? 'ok' : 'err'; job.msg = e.message;
+  }
+  BCS.busy = false; bcsRenderHist();
+  if (BCS.queue.some(j => j.state === 'pending')) bcsPump();
+}
+function bcsRenderHist(){
+  $('bcs-hist-card').classList.toggle('hidden', !BCS.queue.length);
+  const lbl = j => j.state === 'ok' ? '<span style="color:var(--green)">✔ Đã lưu</span>'
+    : j.state === 'err' ? `<span style="color:var(--red)">✖ Lỗi – ${esc(j.msg || '')}</span> <button class="btn light" data-retry="${j.id}" style="padding:4px 10px;font-size:12.5px">Gửi lại</button>`
+    : `<span style="color:var(--amber)">⏳ Đang gửi${j.type === 'photo' ? ` ${j.ids.length}/${j.ids.length + j.photos.length} ảnh` : ''}</span>`;
+  $('bcs-hist').innerHTML = BCS.queue.slice(0, 50).map(j => `<div class="hrow"><b>${esc(j.code)}</b> · ${j.type === 'photo' ? 'Chụp ảnh' : 'Ghi hình CCTV'}
+    <div class="muted">${j.time} · ${lbl(j)}</div></div>`).join('');
+}
+$('bcs-hist').addEventListener('click', e => {
+  const b = e.target.closest('[data-retry]'); if (!b) return;
+  const j = BCS.queue.find(x => x.id === b.dataset.retry); if (j) { j.state = 'pending'; j.msg = ''; bcsRenderHist(); bcsPump(); }
 });
-$('bcs-cctv-btn').addEventListener('click', async () => {
-  const c = bcsNeedCode(); if (!c) return;
-  loading(true);
-  try {
-    await api('bcsSave', { code: c, type: 'cctv', requestId: reqId('BCS') });
-    beep('saved'); toast('✔ Đã ghi nhận đơn ' + c + ' – Ghi hình CCTV');
-    bcsAddHist(c, 'Ghi hình CCTV'); $('bcs-code').value = ''; $('bcs-res').innerHTML = '';
-  } catch (e) { beep('err'); toast(e.message, 4000); }
-  finally { loading(false); }
-});
+window.addEventListener('beforeunload', e => { if (BCS.queue.some(j => j.state === 'pending' || j.state === 'sending')) { e.preventDefault(); e.returnValue = ''; } });
 async function bcsFind(){
   $('bcs-res').innerHTML = '<div class="card empty">Đang tìm...</div>';
   try {
