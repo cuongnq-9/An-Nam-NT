@@ -208,7 +208,17 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .hrow:first-child{border-top:0}
 .hrow .hq{position:absolute;right:0;top:9px;font-weight:800;color:var(--green)}
 .hrow .muted{font-size:12px}
-.kk-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.kk-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.ho-box{padding:12px 14px}
+.debt-bar{position:sticky;bottom:0;z-index:5;display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:10px 12px;margin-top:10px}
+.debt-bar .n{flex:1;font-size:13.5px;font-weight:700;min-width:120px}
+.tbl input[type=checkbox]{width:18px;height:18px;accent-color:var(--pri)}
+.tag-od{color:var(--red);font-weight:800}
+.ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-top:10px}
+.ph-grid .ph{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#eef1f6;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
+.ph-grid .ph img{width:100%;height:100%;object-fit:cover;cursor:pointer}
+.ph-grid .ph .del{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-weight:800;cursor:pointer}
+.bcs-big{width:100%;border-radius:10px;display:block}
 .kk-kpis .kpi-mini b{font-size:22px}
 .mis.g1{border-left:4px solid var(--red)} .mis.g2{border-left:4px solid var(--amber)}
 .reason-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
@@ -450,6 +460,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
           </div>
           <input type="file" id="qr-file" accept="image/*" capture="environment" class="hidden">
         </div>
+        <div class="card ho-box hidden" id="ho-box"></div>
         <div class="qr-cam" id="qr-cam"><div id="qr-reader"></div>
           <div class="cam-msg hidden" id="qr-cam-msg"></div></div>
         <div class="qr-status" id="qr-status">Đưa mã QR vào khung hình</div>
@@ -532,6 +543,72 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
         <button class="btn block red" id="wo-save">Lưu báo cáo hủy</button>
       </div>
       <div class="card hidden" id="wo-hist-card"><h4>Đã báo cáo trong phiên này</h4><div id="wo-hist"></div></div>
+    </div>
+
+    <!-- CHỨNG TỪ CHỜ HOÀN TRẢ -->
+    <div class="view hidden" id="v-docs">
+      <div class="card">
+        <div class="grp-head"><div><div class="t">Chứng từ tôi đang giữ – cần hoàn trả</div>
+          <div class="note" id="dc-note">Đang tải...</div></div><button class="btn ghost" id="dc-reload" style="padding:8px 12px;white-space:nowrap;flex:none">Tải lại</button></div>
+        <div id="dc-mine" style="margin-top:10px"></div>
+      </div>
+      <div class="card"><div class="grp-head"><div><div class="t">Chứng từ tôi đã giao – chờ nhận lại</div></div></div>
+        <div id="dc-wait" style="margin-top:10px"></div></div>
+      <button class="btn block" id="dc-new">Bàn giao chứng từ</button>
+    </div>
+
+    <!-- CÔNG NỢ -->
+    <div class="view hidden" id="v-congno">
+      <div class="card">
+        <div class="grp-head"><div><div class="t" id="db-title">Công nợ đến hạn nhắc</div>
+          <div class="note" id="db-note">Đang tải...</div></div><button class="btn ghost" id="db-reload" style="padding:8px 12px;white-space:nowrap;flex:none">Tải lại</button></div>
+      </div>
+      <div class="kk-kpis" id="db-kpis"></div>
+      <div class="seg" id="db-tabs" style="margin-bottom:12px;overflow-x:auto"></div>
+      <div id="db-list"></div>
+      <div class="debt-bar hidden" id="db-bar">
+        <span class="n" id="db-sel">Đã chọn 0 đơn</span>
+        <button class="btn ghost" id="db-ask" style="padding:9px 12px">Yêu cầu thu nợ</button>
+        <button class="btn" id="db-done" style="padding:9px 12px">Hoàn thành</button>
+      </div>
+      <div class="card hidden" id="db-admin">
+        <h4 style="margin-top:0">Danh sách khách hàng (Payment term)</h4>
+        <div class="muted" id="db-cust" style="font-size:13px"></div>
+        <input type="file" id="db-file" accept=".xlsx,.xls,.csv" class="inp" style="margin-top:8px">
+        <button class="btn block ghost" id="db-import">Cập nhật danh sách khách hàng</button>
+        <div class="muted" style="font-size:12.5px;margin-top:6px">File cần có cột: Customer Account, Customer Name, invoice account, Sales in charge, Payment term, Balance due.</div>
+      </div>
+    </div>
+
+    <!-- BÁO CÁO SOẠN HÀNG -->
+    <div class="view hidden" id="v-bcsoan">
+      <div class="seg" id="bcs-tabs" style="margin-bottom:14px"><button data-t="rec" class="on">Ghi nhận</button><button data-t="find">Tra cứu</button></div>
+      <div id="bcs-rec">
+        <div class="card">
+          <label class="f" style="margin-top:0">Mã đơn</label>
+          <div style="display:flex;gap:8px"><input class="inp" id="bcs-code" autocapitalize="characters" placeholder="Quét hoặc nhập mã đơn" enterkeyhint="done">
+            <button class="btn" id="bcs-scan">Quét</button></div>
+          <div class="row2" style="margin-top:12px">
+            <button class="btn" id="bcs-photo-btn">Chụp ảnh</button>
+            <button class="btn ghost" id="bcs-cctv-btn">Ghi hình CCTV</button>
+          </div>
+          <input type="file" id="bcs-file" accept="image/*" capture="environment" class="hidden">
+        </div>
+        <div class="card hidden" id="bcs-photo-card">
+          <h4 style="margin-top:0">Ảnh soạn hàng – <span id="bcs-photo-code"></span></h4>
+          <div class="ph-grid" id="bcs-photos"></div>
+          <button class="btn light block" id="bcs-more" style="margin-top:10px">+ Chụp thêm ảnh</button>
+          <label class="f">Ghi chú</label><input class="inp" id="bcs-note">
+          <button class="btn block" id="bcs-save">Tải ảnh lên & lưu</button>
+          <div class="muted" id="bcs-prog" style="font-size:13px;text-align:center;margin-top:6px"></div>
+        </div>
+        <div class="card hidden" id="bcs-hist-card"><h4>Đã ghi nhận trong phiên này</h4><div id="bcs-hist"></div></div>
+      </div>
+      <div id="bcs-find" class="hidden">
+        <div class="card"><div style="display:flex;gap:8px"><input class="inp" id="bcs-q" placeholder="Mã đơn (để trống = mới nhất)" enterkeyhint="search">
+          <button class="btn light" id="bcs-qscan" style="flex:none">Quét</button><button class="btn" id="bcs-qbtn" style="flex:none">Tìm</button></div></div>
+        <div id="bcs-res"></div>
+      </div>
     </div>
 
     <!-- SOẠN HÀNG -->
@@ -717,6 +794,11 @@ const ICON = {
   list:'<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/>',
   cog:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"/>',
   back:'<path d="m15 18-6-6 6-6"/>',
+  bike:'<circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h3l2 6M5.5 17.5 9 10h6l3.5 7.5M9 10 7.5 6H5"/>',
+  swap:'<path d="M16 3h5v5"/><path d="M21 3 14 10"/><path d="M8 21H3v-5"/><path d="m3 21 7-7"/>',
+  doc:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/>',
+  money:'<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+  cam:'<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/>',
   trash:'<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
   x:'<path d="M18 6 6 18M6 6l12 12"/>',
   chev:'<path d="m6 9 6 6 6-6"/>',
@@ -824,6 +906,7 @@ $('lg-ping').addEventListener('click', async e => {
 });
 
 function localLogout(msg){
+  S.staff = null; QR.ho = null; if (typeof BCS !== 'undefined') { BCS.canRecord = null; BCS.photos = []; BCS.cache = {}; }
   S.master = null; S.schedule = null; if (typeof AD !== 'undefined') { AD.data = null; AD.draft = null; }
   qrStop(); QR.loaded = false; QR.items = [];
   store.del('annt_token');
@@ -879,6 +962,9 @@ const VIEWS = {
   kiemke:   { title: 'Kiểm kê',           icon: 'clip',   color: 'linear-gradient(135deg,#1e88e5,#1565c0)', label: 'Kiểm kê' },
   huyhang:  { title: 'BC Hủy hàng',       icon: 'trash',  color: 'linear-gradient(135deg,#e53935,#b71c1c)', label: 'BC Hủy hàng' },
   soanhang: { title: 'Soạn hàng',         icon: 'cart',   color: 'linear-gradient(135deg,#8e24aa,#5e35b1)', label: 'Soạn hàng' },
+  bcsoan:   { title: 'Báo cáo soạn hàng', icon: 'cam',    color: 'linear-gradient(135deg,#6d4c41,#3e2723)', label: 'BC Soạn hàng' },
+  congno:   { title: 'Công nợ',           icon: 'money',  color: 'linear-gradient(135deg,#c62828,#7f0000)', label: 'Công nợ' },
+  docs:     { title: 'Chứng từ chờ hoàn trả', icon: 'doc', color: 'linear-gradient(135deg,#00897b,#004d40)', label: 'Chứng từ chờ hoàn trả' },
   lookup:   { title: 'Tra cứu đơn hàng',  icon: 'search', color: 'linear-gradient(135deg,#00acc1,#00838f)', label: 'Tra cứu đơn' },
   bank:     { title: 'Thông tin tài khoản', icon: 'bank', color: 'linear-gradient(135deg,#7e57c2,#5e35b1)', label: 'Thông tin TK' },
   schedule: { title: 'Lịch giao hàng',    icon: 'cal',    color: 'linear-gradient(135deg,#26a69a,#00796b)', label: 'Lịch giao hàng' },
@@ -891,7 +977,7 @@ function tile(k){ const v = VIEWS[k]; return `<button class="app-tile" data-go="
 function renderHome(){
   const u = S.user;
   const common = (u.common || []).filter(k => VIEWS[k]);
-  const mine = (u.features || []).filter(k => VIEWS[k]);
+  const mine = (u.features || []).filter(k => VIEWS[k]).concat(['docs']);   // Chứng từ chờ hoàn trả: mọi nhân viên
   $('apps-common').innerHTML = common.map(tile).join('');
   $('apps-mine').innerHTML = mine.map(tile).join('');
   $('sec-mine').classList.toggle('hidden', !mine.length);
@@ -922,6 +1008,9 @@ function go(view){
   if (view === 'kiemke') initKiemke();
   if (view === 'huyhang') initHuyhang();
   if (view === 'soanhang') initSoanhang();
+  if (view === 'docs') loadDocs();
+  if (view === 'congno') loadDebt();
+  if (view === 'bcsoan') initBcs();
   if (view === 'bank') renderBank();
   if (view === 'schedule') loadSchedule();
   if (view === 'admin') initAdmin();
@@ -955,8 +1044,15 @@ function showInstall(){
 }
 
 /* ========= SỐ ĐƠN CẦN KIỂM TRA TRÊN ICON ========= */
+function setBadge(view, n){
+  const t = document.querySelector('#v-home [data-go="' + view + '"]'); if (!t) return;
+  const old = t.querySelector('.tile-badge'); if (old) old.remove();
+  if (n) t.insertAdjacentHTML('beforeend', `<span class="tile-badge">${n > 99 ? '99+' : n}</span>`);
+}
 async function refreshBadges(){
   if (!S.user || S.user.mustChange) return;
+  api('docsPending').then(d => setBadge('docs', d.mine.length)).catch(() => {});
+  if ((S.user.features || []).indexOf('congno') !== -1) api('debtReport', { countOnly: true }).then(d => setBadge('congno', d.count)).catch(() => {});
   try {
     const d = await api('getUpdateRequests', '', '');
     const n = d.groups.reduce((s, g) => s + g.rows.length, 0);
@@ -1238,8 +1334,56 @@ const QR_MODES = {
   // Các nút trong màn hình quét. Thêm nút mới: khai báo ở đây + SCAN_MODES trong Code.gs
   XUAT: { label: 'XUẤT HÀNG', sub: 'Trạng thái: Đang giao', bg: 'linear-gradient(135deg,#fb8c00,#e65100)', color: '#e65100', icon: 'box' },
   GIAO: { label: 'GIAO HÀNG', sub: 'Trạng thái: Đã giao',   bg: 'linear-gradient(135deg,#3d7a57,#182e22)', color: '#24573c', icon: 'truck' },
-  HOAN_CT: { label: 'HOÀN CHỨNG TỪ', sub: 'Ghi vào sheet Hoàn chứng từ', bg: 'linear-gradient(135deg,#7e57c2,#4527a0)', color: '#5e35b1', icon: 'list' }
+  // Deliveryman: nút Giao hàng tách 2 loại xe (cùng ghi trạng thái Đã giao)
+  GIAO_TAI: { srv: 'GIAO', label: 'GIAO HÀNG XE TẢI', sub: 'Trạng thái: Đã giao', bg: 'linear-gradient(135deg,#3d7a57,#182e22)', color: '#24573c', icon: 'truck' },
+  GIAO_MAY: { srv: 'GIAO', note: 'Xe máy', label: 'GIAO HÀNG XE MÁY', sub: 'Trạng thái: Đã giao · Ghi chú: Xe máy', bg: 'linear-gradient(135deg,#43a047,#1b5e20)', color: '#2e7d32', icon: 'bike' },
+  HOAN_CT: { label: 'HOÀN CHỨNG TỪ', sub: 'Bàn giao chứng từ về kho', bg: 'linear-gradient(135deg,#7e57c2,#4527a0)', color: '#5e35b1', icon: 'list' },
+  BAN_GIAO: { label: 'BÀN GIAO CHỨNG TỪ', sub: 'Giao chứng từ giữa các nhân viên', bg: 'linear-gradient(135deg,#00897b,#004d40)', color: '#00695c', icon: 'swap' }
 };
+const qrSrv = m => (QR_MODES[m] && QR_MODES[m].srv) || m;
+
+/* --- Bàn giao chứng từ: chọn Giao từ / Giao cho / Yêu cầu hoàn lại trước khi quét --- */
+async function staffList(){
+  if (!S.staff) S.staff = await api('listStaff');
+  return S.staff;
+}
+async function hoSetup(preset){
+  let staff;
+  loading(true);
+  try { staff = await staffList(); } catch (e) { toast(e.message); return false; } finally { loading(false); }
+  const cur = Object.assign({ from: S.user.username, to: '', ret: true }, QR.ho || {}, preset || {});
+  const opts = sel => staff.map(s => `<option value="${esc(s.u)}" ${s.u.toLowerCase() === String(sel).toLowerCase() ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+  return new Promise(resolve => {
+    modal(`<h3>Bàn giao chứng từ</h3>
+      <label class="f" style="margin-top:0">Giao từ nhân viên</label><select class="inp" id="ho-from">${opts(cur.from)}</select>
+      <label class="f">Giao cho nhân viên</label><select class="inp" id="ho-to"><option value="">– Chọn người nhận –</option>${opts(cur.to)}</select>
+      <div class="reason-list" style="margin-top:12px">
+        <label><input type="radio" name="ho-ret" value="1" ${cur.ret ? 'checked' : ''}> Yêu cầu hoàn lại</label>
+        <label><input type="radio" name="ho-ret" value="0" ${cur.ret ? '' : 'checked'}> Không yêu cầu hoàn lại</label>
+      </div>
+      <div class="err" id="ho-err"></div>
+      <div class="modal-actions"><button class="btn light" id="ho-cancel">Hủy</button><button class="btn" id="ho-ok">Tiếp tục quét</button></div>`);
+    $('ho-cancel').onclick = () => { closeModal(); resolve(false); };
+    $('ho-ok').onclick = () => {
+      const from = $('ho-from').value, to = $('ho-to').value;
+      if (!to) { $('ho-err').textContent = 'Vui lòng chọn người nhận.'; return; }
+      if (from.toLowerCase() === to.toLowerCase()) { $('ho-err').textContent = 'Người giao và người nhận phải khác nhau.'; return; }
+      const nm = u => (staff.find(s => s.u === u) || {}).name || u;
+      QR.ho = { from: from, to: to, fromName: nm(from), toName: nm(to), ret: document.querySelector('[name=ho-ret]:checked').value === '1' };
+      closeModal(); resolve(true);
+    };
+  });
+}
+function hoRenderBox(){
+  const box = $('ho-box'), on = QR.mode === 'BAN_GIAO' && QR.ho;
+  box.classList.toggle('hidden', !on);
+  if (!on) return;
+  box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+    <div style="font-size:14px"><b>${esc(QR.ho.fromName)}</b> → <b>${esc(QR.ho.toName)}</b><br>
+      <span class="badge ${QR.ho.ret ? 'st-wait' : 'st-other'}">${QR.ho.ret ? 'Yêu cầu hoàn lại' : 'Không yêu cầu hoàn lại'}</span></div>
+    <button class="btn light" id="ho-edit" style="padding:8px 12px;font-size:13.5px;flex:none">Đổi</button></div>`;
+  $('ho-edit').onclick = async () => { if (await hoSetup()) hoRenderBox(); };
+}
 const qrKey = () => 'annt_qr_queue_' + (S.user ? S.user.username : '');
 
 /* --- Âm thanh: tít = đã quét, ting-tinh = đã lưu, 2 tiếng trầm = trùng, tiếng dài = lỗi --- */
@@ -1271,7 +1415,11 @@ function beep(kind){
 
 function qrInit(){
   if (!QR.loaded) { QR.items = store.get(qrKey()) || []; QR.loaded = true; }
-  const modes = (S.user.scanModes || []).filter(m => QR_MODES[m]);
+  const modes = [];
+  (S.user.scanModes || []).forEach(m => {
+    if (m === 'GIAO' && S.user.role === 'deliveryman') modes.push('GIAO_TAI', 'GIAO_MAY');
+    else if (QR_MODES[m]) modes.push(m);
+  });
   $('qr-modes').innerHTML = modes.length ? modes.map(m => `<button class="qr-mode" data-qm="${m}" style="background:${QR_MODES[m].bg}">
     ${ic(QR_MODES[m].icon)}${QR_MODES[m].label}<small>${QR_MODES[m].sub}</small></button>`).join('')
     : '<div class="card empty" style="grid-column:1/-1">Tài khoản của bạn chưa được mở chức năng quét mã.</div>';
@@ -1291,15 +1439,17 @@ $('qr-change').addEventListener('click', qrShowPick);
 function qrSetStatus(text, type){ const el = $('qr-status'); el.textContent = text; el.className = 'qr-status ' + (type || ''); }
 function qrCamMsg(html){ const m = $('qr-cam-msg'); m.innerHTML = html || ''; m.classList.toggle('hidden', !html); }
 
-async function qrOpen(mode){
+async function qrOpen(mode, preset){
   if (QR.opening) return;
+  if (mode === 'BAN_GIAO' && !(await hoSetup(preset))) return;
   QR.opening = true;
   await qrStopAsync();
   QR.mode = mode; unlockAudio();
+  hoRenderBox();
   $('qr-pick').classList.add('hidden'); $('qr-run').classList.remove('hidden');
   $('qr-pill').textContent = QR_MODES[mode].label; $('qr-pill').style.background = QR_MODES[mode].color;
   $('view-title').textContent = 'Quét · ' + QR_MODES[mode].label;
-  $('qr-note').value = ''; qrRender();
+  $('qr-note').value = QR_MODES[mode].note || ''; qrRender();
   qrSetStatus('Đang mở camera...'); qrCamMsg('');
   try {
     const cam = await camStart('qr-reader', qrOnScan);
@@ -1336,14 +1486,17 @@ $('qr-manual').addEventListener('keydown', e => { if (e.key === 'Enter') $('qr-a
 function qrAdd(raw){
   const code = String(raw || '').trim();
   if (!code) return;
-  // Hoàn chứng từ: cho quét lại cùng mã; các nút khác chặn mã đã quét
-  if (QR.mode !== 'HOAN_CT' && QR.items.find(i => i.code === code && i.mode === QR.mode && i.state !== 'err')) {
+  // Hoàn chứng từ: cho quét lại cùng mã; Bàn giao: chặn trùng cùng người nhận; các nút khác chặn mã đã quét
+  const ho = QR.mode === 'BAN_GIAO' ? QR.ho : null;
+  if (QR.mode !== 'HOAN_CT' && QR.items.find(i => i.code === code && qrSrv(i.mode) === qrSrv(QR.mode) && i.state !== 'err' && (!ho || (i.to === ho.to && i.from === ho.from)))) {
     beep('warn'); qrSetStatus('⚠ Đã quét rồi: ' + code, 'warn'); return;
   }
-  QR.items.unshift({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), mode: QR.mode, code: code,
-                     note: $('qr-note').value.trim(), ts: Date.now(), state: 'pending', msg: '' });
+  const it = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), mode: QR.mode, code: code,
+               note: $('qr-note').value.trim(), ts: Date.now(), state: 'pending', msg: '' };
+  if (ho) { it.from = ho.from; it.to = ho.to; it.ret = ho.ret; it.toName = ho.toName; }
+  QR.items.unshift(it);
   if (QR.items.length > 500) QR.items.length = 500;
-  $('qr-note').value = '';
+  $('qr-note').value = QR_MODES[QR.mode].note || '';
   beep('ok'); qrSetStatus('✔ ' + code, 'ok');
   qrSave(); qrRender(); qrSchedule(0);
 }
@@ -1362,10 +1515,10 @@ async function qrFlush(){
   QR.sending = true;
   let ok = false;
   try {
-    const res = await run('scanBatch', S.token, batch.map(i => ({ id: i.id, mode: i.mode, code: i.code, note: i.note, ts: i.ts })));
+    const res = await run('scanBatch', S.token, batch.map(i => ({ id: i.id, mode: qrSrv(i.mode), code: i.code, note: i.note, ts: i.ts, from: i.from, to: i.to, ret: i.ret })));
     (res || []).forEach(r => {
       const it = QR.items.find(i => i.id === r.id); if (!it) return;
-      if (r.result === 'Success') { it.state = 'ok'; it.msg = ''; }
+      if (r.result === 'Success') { it.state = 'ok'; it.msg = r.message || ''; }
       else if (r.result === 'Duplicate') { it.state = 'dup'; it.msg = r.message; }
       else { it.state = 'err'; it.msg = r.message; }
     });
@@ -1398,7 +1551,7 @@ function qrRender(){
   const cls = { pending: '', ok: 'ok', dup: 'warn', err: 'err' };
   $('qr-hist').innerHTML = list.slice(0, 100).map(i => `<li><div class="l1"><span class="code">${esc(i.code)}</span>
     <span class="t">${new Date(i.ts).toLocaleTimeString('vi-VN', { hour12: false })}</span></div>
-    <div class="l2 ${cls[i.state]}">${lbl[i.state]}${i.msg ? ' – ' + esc(i.msg) : ''}${i.note ? ' · Ghi chú: ' + esc(i.note) : ''}</div></li>`).join('')
+    <div class="l2 ${cls[i.state]}">${lbl[i.state]}${i.msg ? ' – ' + esc(i.msg) : ''}${i.toName ? ' · Giao cho: ' + esc(i.toName) + (i.ret ? ' (yêu cầu hoàn lại)' : '') : ''}${i.note ? ' · Ghi chú: ' + esc(i.note) : ''}</div></li>`).join('')
     || '<li class="muted" style="text-align:center">Chưa quét mã nào</li>';
 }
 
@@ -1570,9 +1723,10 @@ async function kkSummary(){
 $('kk-sum').addEventListener('click', kkSummary);
 function renderKkSummary(){
   const s = KK.summary, t = s.totals;
-  $('kk-kpis').innerHTML = [['Tổng mã', t.items, 'var(--pri)'], ['Khớp', t.g3, 'var(--green)'], ['Lệch tổng SL', t.g1, 'var(--red)'], ['Lệch batch', t.g2, 'var(--amber)']]
+  $('kk-kpis').innerHTML = [['Tổng mã', t.items, 'var(--pri)'], ['Khớp', t.g3, 'var(--green)'], ['Lệch tổng SL', t.g1, 'var(--red)'], ['Lệch batch', t.g2, 'var(--amber)'],
+      ['Chờ đếm lại', t.pending != null ? t.pending : s.mismatches.length, 'var(--red)'], ['Đã đếm lại', t.recounted || 0, 'var(--pri)']]
     .map(k => `<div class="kpi-mini"><b style="color:${k[2]}">${fmt(k[1])}</b><small>${k[0]}</small></div>`).join('');
-  $('kk-mis').innerHTML = `<div class="muted" style="font-size:12.5px;margin:0 4px 8px">${fmt(s.counted)} dòng đếm · tổng hợp lúc ${esc(s.at)} · chi tiết ở sheet BC Kiem ke</div>` +
+  $('kk-mis').innerHTML = `<div class="muted" style="font-size:12.5px;margin:0 4px 8px">${fmt(s.counted)} dòng đếm · tổng hợp lúc ${esc(s.at)} · chi tiết ở sheet BC Kiem ke<br>Danh sách chỉ còn các mã lệch <b>chưa đếm lại</b> – mỗi mã chỉ được đếm lại 1 lần.</div>` +
     (s.mismatches.length ? s.mismatches.map((m, i) => `<div class="card mis ${m.group === 1 ? 'g1' : 'g2'}">
       <div style="display:flex;justify-content:space-between;gap:10px">
         <div><div class="line-code">${esc(m.item)} <span class="badge ${m.group === 1 ? 'st-cancel' : 'st-wait'}">${m.group === 1 ? 'Lệch tổng' : 'Lệch batch'}</span>
@@ -1583,29 +1737,30 @@ function renderKkSummary(){
       ${dataTable(['Batch', 'Thực tế', 'Hệ thống', 'Lệch'], m.batches.map(b => [esc(b.b), fmt(b.act), fmt(b.sys),
         `<b style="color:${b.act === b.sys ? 'var(--green)' : 'var(--red)'}">${b.act - b.sys > 0 ? '+' : ''}${fmt(b.act - b.sys)}</b>`]))}
       ${kkOpen() ? `<button class="btn ghost" data-recount="${i}" style="margin-top:10px;width:100%">Đếm lại lần 2</button>` : ''}
-    </div>`).join('') : '<div class="card empty">Không có mã lệch 🎉 Tất cả đều khớp.</div>');
+    </div>`).join('') : `<div class="card empty">${(t.recounted || 0) ? 'Đã đếm lại xong tất cả mã lệch 🎉' : 'Không có mã lệch 🎉 Tất cả đều khớp.'}</div>`);
 }
 $('kk-mis').addEventListener('click', e => {
   const b = e.target.closest('[data-recount]'); if (!b) return;
   openRecount(KK.summary.mismatches[+b.dataset.recount]);
 });
-function openRecount(m){
-  const prev2 = m.round === 2;
-  const rows = m.batches.map(x => ({ b: x.b, a1: x.a1 || 0, a2: x.a2 || 0 }));
-  const rowHtml = (r, i) => `<div class="rc-row"><span class="bn">${esc(r.b)}</span><span class="old">${fmt(r.a1)}${prev2 ? `<div style="font-size:11px">L2: ${fmt(r.a2)}</div>` : ''}</span>
-    <input class="qty-in rc-q" inputmode="decimal" data-i="${i}" value="${prev2 ? r.a2 : r.a1}"></div>`;
+function openRecount(m, keep){
+  // keep = số đã nhập (khi bấm "Quay lại sửa" ở bước xác nhận)
+  const rows = m.batches.map(x => ({ b: x.b, sys: x.sys || 0, a1: x.a1 || 0 }));
+  const val = (b, d) => { const k = keep && keep.find(e => e.batchNumber === b); return k ? k.qty : d; };
+  const extra = keep ? keep.filter(e => !rows.some(r => r.b === e.batchNumber)) : [];
+  const rowHtml = (r, i) => `<div class="rc-row"><span class="bn">${esc(r.b)}</span><span class="old">${fmt(r.a1)}</span>
+    <input class="qty-in rc-q" inputmode="decimal" data-i="${i}" value="${val(r.b, r.a1)}"></div>`;
+  const newRow = e => `<div class="rc-row"><input class="bn-in" placeholder="Batch mới" value="${e ? esc(e.batchNumber) : ''}"><span class="old">–</span>
+      <input class="qty-in rc-q" inputmode="decimal" placeholder="0" value="${e ? e.qty : ''}"></div>`;
   modal(`<h3>Đếm lại lần 2 – ${esc(m.item)}</h3>
-    <div class="muted" style="font-size:13.5px;margin-bottom:8px">${esc(m.name)}<br>Kiểm tra lại <b>tất cả batch</b>, sửa số lượng thực tế. Khi lưu, số mới sẽ <b>ghi đè</b> số cũ của mã này.</div>
+    <div class="muted" style="font-size:13.5px;margin-bottom:8px">${esc(m.name)}<br>Kiểm tra lại <b>tất cả batch</b>, nhập số lượng thực tế. Mỗi mã <b>chỉ được đếm lại 1 lần</b>.</div>
     <div class="rc-row head"><span>Batch number</span><span style="text-align:center">Đã đếm lần 1</span><span style="text-align:center">Số mới</span></div>
-    <div id="rc-list">${rows.map(rowHtml).join('')}</div>
+    <div id="rc-list">${rows.map(rowHtml).join('')}${extra.map(newRow).join('')}</div>
     <button class="btn ghost" id="rc-add" type="button" style="margin-top:10px;width:100%">+ Thêm batch khác</button>
     <div class="err" id="rc-err"></div>
     <div class="modal-actions"><button class="btn light" onclick="closeModal()">Hủy</button><button class="btn" id="rc-save">Lưu đếm lại (ghi đè)</button></div>`);
-  $('rc-add').onclick = () => {
-    $('rc-list').insertAdjacentHTML('beforeend', `<div class="rc-row"><input class="bn-in" placeholder="Batch mới"><span class="old">–</span>
-      <input class="qty-in rc-q" inputmode="decimal" placeholder="0"></div>`);
-  };
-  $('rc-save').onclick = async () => {
+  $('rc-add').onclick = () => $('rc-list').insertAdjacentHTML('beforeend', newRow());
+  $('rc-save').onclick = () => {
     const entries = [];
     document.querySelectorAll('#rc-list .rc-row').forEach(rw => {
       const q = parseFloat(String(rw.querySelector('.rc-q').value).replace(',', '.'));
@@ -1615,14 +1770,35 @@ function openRecount(m){
       entries.push({ batchNumber: bn, qty: q > 0 ? q : 0 });
     });
     if (!entries.length) { $('rc-err').textContent = 'Chưa có batch nào.'; return; }
+    confirmRecount(m, rows, entries);
+  };
+}
+function confirmRecount(m, rows, entries){
+  const lines = entries.map(e => { const r = rows.find(x => x.b === e.batchNumber) || { sys: 0, a1: 0 }; return { b: e.batchNumber, sys: r.sys, a1: r.a1, n: e.qty }; });
+  const tot = k => lines.reduce((s, l) => s + l[k], 0);
+  const cell = (v, ref) => `<b style="color:${v === ref ? 'var(--green)' : 'var(--red)'}">${fmt(v)}</b>`;
+  modal(`<h3>Xác nhận đếm lại – ${esc(m.item)}</h3>
+    <div class="muted" style="font-size:13.5px;margin-bottom:8px">${esc(m.name)}</div>
+    ${dataTable(['Batch', 'Tồn hệ thống', 'Đã đếm lần 1', 'Số mới'],
+      lines.map(l => [esc(l.b), fmt(l.sys), fmt(l.a1), cell(l.n, l.sys)])
+        .concat([['<b>Tổng</b>', '<b>' + fmt(tot('sys')) + '</b>', '<b>' + fmt(tot('a1')) + '</b>', cell(tot('n'), tot('sys'))]]))}
+    <p style="font-size:14px;margin:12px 0 0">Bạn có chắc chắn lưu số mới? Sau khi xác nhận, mã này <b>không được đếm lại nữa</b> và sẽ ẩn khỏi danh sách đếm lại.</p>
+    <div class="err" id="rc-err"></div>
+    <div class="modal-actions"><button class="btn light" id="rc-back">Quay lại sửa</button><button class="btn" id="rc-ok">Xác nhận lưu</button></div>`);
+  $('rc-back').onclick = () => openRecount(m, entries);
+  $('rc-ok').onclick = async () => {
     const it = S.master && S.master.items.find(x => x.i.toUpperCase() === m.item.toUpperCase());
-    $('rc-save').disabled = true; loading(true);
+    $('rc-ok').disabled = true; loading(true);
     try {
       await api('kkSave', { round: 2, location: $('kk-loc').value.trim(), requestId: reqId('KK2'),
         data: [{ itemNumber: m.item, productName: m.name, barcode: it && it.b[0] || '', entries: entries }] });
       beep('saved'); closeModal(); toast('✔ Đã lưu đếm lại lần 2 cho ' + m.item);
-      kkSummary();
-    } catch (x) { beep('err'); $('rc-err').textContent = x.message; const s = $('rc-save'); if (s) s.disabled = false; }
+      // ẩn ngay mã vừa đếm, sau đó tổng hợp lại
+      KK.summary.mismatches = KK.summary.mismatches.filter(x => x !== m);
+      KK.summary.totals.recounted = (KK.summary.totals.recounted || 0) + 1;
+      KK.summary.totals.pending = KK.summary.mismatches.length;
+      renderKkSummary(); kkSummary();
+    } catch (x) { beep('err'); $('rc-err').textContent = x.message; const s = $('rc-ok'); if (s) s.disabled = false; }
     finally { loading(false); }
   };
 }
@@ -1821,6 +1997,239 @@ async function adminImportStock(kind){
   } catch (e) { toast(e.message, 5000); }
   finally { loading(false); }
 }
+
+/* ========= CHỨNG TỪ CHỜ HOÀN TRẢ ========= */
+async function loadDocs(){
+  $('dc-note').textContent = 'Đang tải...';
+  try {
+    const d = await api('docsPending');
+    setBadge('docs', d.mine.length);
+    $('dc-note').textContent = `${d.mine.length} chứng từ · cập nhật ${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
+    // Gom theo người gửi để bấm "Hoàn trả" 1 lần cho cả nhóm
+    const by = {};
+    d.mine.forEach(x => (by[x.from] = by[x.from] || { name: x.fromName, list: [] }).list.push(x));
+    $('dc-mine').innerHTML = d.mine.length ? Object.keys(by).map(k => `<div style="margin-top:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>Nhận từ ${esc(by[k].name)} (${by[k].list.length})</b>
+        <button class="btn" data-hoback="${esc(k)}" style="padding:8px 12px;font-size:13.5px;flex:none">Hoàn trả</button></div>
+      ${dataTable(['Mã chứng từ', 'Nhận lúc', 'Số ngày'], by[k].list.map(x => ['<b>' + esc(x.code) + '</b>', esc(x.time),
+        `<span class="${x.days >= 3 ? 'tag-od' : ''}">${x.days}</span>`]))}</div>`).join('')
+      : '<div class="empty">Không có chứng từ nào cần hoàn trả 🎉</div>';
+    $('dc-wait').innerHTML = d.waiting.length ? dataTable(['Mã chứng từ', 'Đang ở', 'Giao lúc', 'Số ngày'], d.waiting.map(x => ['<b>' + esc(x.code) + '</b>',
+      esc(x.toName), esc(x.time), `<span class="${x.days >= 3 ? 'tag-od' : ''}">${x.days}</span>`]), 1) : '<div class="empty">Không có</div>';
+  } catch (e) { $('dc-note').textContent = e.message; }
+}
+$('dc-reload').addEventListener('click', loadDocs);
+$('dc-new').addEventListener('click', () => { go('scan'); qrOpen('BAN_GIAO'); });
+$('dc-mine').addEventListener('click', e => {
+  const b = e.target.closest('[data-hoback]'); if (!b) return;
+  go('scan'); qrOpen('BAN_GIAO', { from: S.user.username, to: b.dataset.hoback, ret: false });
+});
+
+/* ========= CÔNG NỢ ========= */
+const DB = { data: null, tab: '', sel: {} };
+async function loadDebt(force){
+  $('db-note').textContent = 'Đang tải...';
+  loading(true);
+  try { DB.data = await api('debtReport', { force: !!force }); DB.sel = {}; renderDebt(); setBadge('congno', DB.data.count); }
+  catch (e) { $('db-note').textContent = e.message; }
+  finally { loading(false); }
+}
+$('db-reload').addEventListener('click', () => loadDebt(true));
+function renderDebt(){
+  const d = DB.data;
+  $('db-title').textContent = d.canEdit ? 'Công nợ đến hạn nhắc' : 'Đơn cần thu nợ';
+  $('db-note').textContent = `${d.count} đơn · cập nhật ${d.at}` + (d.canEdit && d.start ? ` · tính từ đơn giao ngày ${d.start.split('-').reverse().join('/')}` : '');
+  const groups = d.groups.filter(g => d.canEdit || g.items.length);
+  if (!groups.find(g => g.term === DB.tab)) DB.tab = (groups.find(g => g.items.length) || groups[0] || {}).term || '';
+  $('db-kpis').innerHTML = groups.map(g => `<div class="kpi-mini"><b style="color:${g.items.length ? 'var(--red)' : 'var(--green)'}">${g.items.length}</b><small>${esc(g.term)} · ${fmt(g.total)}đ</small></div>`).join('');
+  $('db-tabs').innerHTML = groups.map(g => `<button data-dt="${esc(g.term)}" class="${g.term === DB.tab ? 'on' : ''}">${esc(g.term)} (${g.items.length})</button>`).join('');
+  const g = groups.find(x => x.term === DB.tab);
+  const ed = d.canEdit;
+  const st = s => `<span class="badge ${s === 'Yêu cầu thu nợ' ? 'st-cancel' : 'st-wait'}">${esc(s)}</span>`;
+  $('db-list').innerHTML = !g || !g.items.length ? '<div class="card empty">Không có đơn nào đến hạn 🎉</div>' :
+    `<div class="card" style="padding-top:6px">${dataTable(
+      (ed ? ['<input type="checkbox" id="db-all">'] : []).concat(['Khách hàng', 'Mã đơn', 'Ngày giao', 'Hạn thu', 'Quá hạn', 'Số tiền', 'Sale', 'Trạng thái']),
+      g.items.map((x, i) => (ed ? [`<input type="checkbox" data-ds="${i}" ${DB.sel[x.so] ? 'checked' : ''}>`] : []).concat([
+        `<b>${esc(x.name)}</b><div class="muted" style="font-size:12px">${esc(x.acc)}${x.balance != null ? ' · Dư nợ: ' + fmt(x.balance) : ''}</div>`,
+        esc(x.so), esc(x.date), esc(x.due), x.overdue > 0 ? `<span class="tag-od">${x.overdue} ngày</span>` : (x.overdue === 0 ? 'Hôm nay' : `còn ${-x.overdue} ngày`),
+        `<b>${fmt(x.amount)}</b>${x.src === 'Thực tế' ? '' : '<div class="muted" style="font-size:11px">tham khảo</div>'}`, esc(x.sale),
+        st(x.status) + (x.by ? `<div class="muted" style="font-size:11px">${esc(x.by)} ${esc(x.at)}</div>` : '')])), ed ? 1 : 0)}
+      <div style="text-align:right;margin-top:8px;font-weight:700">Tổng: ${fmt(g.total)}đ</div></div>`;
+  $('db-bar').classList.toggle('hidden', !ed);
+  $('db-admin').classList.toggle('hidden', !d.isAdmin);
+  const m = d.custMeta;
+  $('db-cust').innerHTML = m ? `Đã có <b>${fmt(m.rows)}</b> khách hàng · cập nhật ${esc(m.at)} bởi ${esc(m.by)}<br>` +
+    Object.keys(m.terms).map(k => `${esc(k)}: ${m.terms[k]}`).join(' · ') : '<span style="color:var(--red)">Chưa có danh sách khách hàng – hãy cập nhật file Payment term.</span>';
+  dbSelCount();
+}
+function dbSelCount(){ $('db-sel').textContent = `Đã chọn ${Object.keys(DB.sel).length} đơn`; }
+$('db-tabs').addEventListener('click', e => { const b = e.target.closest('[data-dt]'); if (b) { DB.tab = b.dataset.dt; DB.sel = {}; renderDebt(); } });
+$('db-list').addEventListener('change', e => {
+  const g = DB.data.groups.find(x => x.term === DB.tab); if (!g) return;
+  if (e.target.id === 'db-all') {
+    DB.sel = {}; if (e.target.checked) g.items.forEach(x => DB.sel[x.so] = 1);
+    document.querySelectorAll('[data-ds]').forEach(c => c.checked = e.target.checked);
+  } else if (e.target.dataset.ds != null) {
+    const x = g.items[+e.target.dataset.ds];
+    if (e.target.checked) DB.sel[x.so] = 1; else delete DB.sel[x.so];
+  }
+  dbSelCount();
+});
+async function dbAction(action){
+  const sos = Object.keys(DB.sel);
+  if (!sos.length) { toast('Hãy tick chọn đơn trước.'); return; }
+  const lbl = action === 'done' ? 'Hoàn thành (không nhắc nữa)' : 'Yêu cầu thu nợ (hiện cho Manager, Sale, CS)';
+  modal(`<h3>${action === 'done' ? 'Hoàn thành công nợ?' : 'Yêu cầu thu nợ?'}</h3><p>Chuyển <b>${sos.length}</b> đơn sang <b>${lbl}</b>.</p>
+    <div class="modal-actions"><button class="btn light" onclick="closeModal()">Hủy</button><button class="btn" id="db-ok">Đồng ý</button></div>`);
+  $('db-ok').onclick = async () => {
+    closeModal(); loading(true);
+    try { const r = await api('debtSetStatus', sos, action); toast(`Đã cập nhật ${r.updated} đơn: ${r.status}`); await loadDebt(); }
+    catch (e) { toast(e.message, 4000); }
+    finally { loading(false); }
+  };
+}
+$('db-done').addEventListener('click', () => dbAction('done'));
+$('db-ask').addEventListener('click', () => dbAction('ask'));
+$('db-import').addEventListener('click', async () => {
+  const f = $('db-file').files[0];
+  if (!f) { toast('Hãy chọn file Payment term.'); return; }
+  loading(true);
+  try {
+    await loadXlsx();
+    const wb = XLSX.read(await f.arrayBuffer(), { type: 'array' });
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: '' });
+    const m = await api('adminImportCustomers', { name: f.name, rows: rows });
+    toast(`Đã cập nhật ${fmt(m.rows)} khách hàng.`, 4000);
+    $('db-file').value = ''; await loadDebt(true);
+  } catch (e) { toast(e.message, 5000); }
+  finally { loading(false); }
+});
+
+/* ========= BÁO CÁO SOẠN HÀNG ========= */
+const BCS = { photos: [], code: '', canRecord: null, cache: {} };
+async function initBcs(){
+  if (BCS.canRecord === null) {
+    try { const r = await api('bcsSearch', ''); BCS.canRecord = r.canRecord; BCS.last = r.rows; } catch (e) { toast(e.message); return; }
+  }
+  $('bcs-tabs').classList.toggle('hidden', !BCS.canRecord);
+  bcsTab(BCS.canRecord ? (BCS.tab || 'rec') : 'find');
+}
+function bcsTab(t){
+  BCS.tab = t;
+  document.querySelectorAll('#bcs-tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  $('bcs-rec').classList.toggle('hidden', t !== 'rec'); $('bcs-find').classList.toggle('hidden', t !== 'find');
+  if (t === 'find' && !$('bcs-res').innerHTML) bcsFind();
+}
+$('bcs-tabs').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (b) bcsTab(b.dataset.t); });
+$('bcs-scan').addEventListener('click', async () => { const c = await scanOnce('Quét mã đơn'); if (c) $('bcs-code').value = c; });
+$('bcs-qscan').addEventListener('click', async () => { const c = await scanOnce('Quét mã đơn'); if (c) { $('bcs-q').value = c; bcsFind(); } });
+function bcsNeedCode(){
+  const c = $('bcs-code').value.trim();
+  if (!c) { toast('Hãy quét hoặc nhập mã đơn trước.'); $('bcs-code').focus(); return ''; }
+  return c;
+}
+$('bcs-photo-btn').addEventListener('click', () => {
+  const c = bcsNeedCode(); if (!c) return;
+  if (c !== BCS.code) { BCS.photos = []; BCS.doneIds = []; BCS.code = c; }
+  $('bcs-file').click();
+});
+$('bcs-more').addEventListener('click', () => $('bcs-file').click());
+// Nén ảnh ngay trên trình duyệt (cạnh dài tối đa 1600px) rồi giữ trong bộ nhớ – không lưu vào máy
+function compressImg(file, max, q){
+  return new Promise((ok, fail) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const cv = document.createElement('canvas'); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url); ok(cv.toDataURL('image/jpeg', q));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); fail(new Error('Không đọc được ảnh')); };
+    img.src = url;
+  });
+}
+$('bcs-file').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try { BCS.photos.push(await compressImg(f, 1600, 0.8)); bcsRenderPhotos(); }
+  catch (x) { toast(x.message); }
+});
+function bcsRenderPhotos(){
+  $('bcs-photo-card').classList.toggle('hidden', !BCS.photos.length);
+  $('bcs-photo-code').textContent = BCS.code;
+  $('bcs-photos').innerHTML = BCS.photos.map((p, i) => `<div class="ph"><img src="${p}" data-big="${i}"><button class="del" data-del="${i}">×</button></div>`).join('');
+}
+$('bcs-photos').addEventListener('click', e => {
+  const d = e.target.closest('[data-del]'); if (d) { BCS.photos.splice(+d.dataset.del, 1); bcsRenderPhotos(); return; }
+  const b = e.target.closest('[data-big]'); if (b) bcsShowBig(b.src);
+});
+function bcsShowBig(src){ modal(`<img class="bcs-big" src="${src}"><div class="modal-actions"><button class="btn" onclick="closeModal()">Đóng</button></div>`); }
+function bcsAddHist(code, type, n){
+  $('bcs-hist-card').classList.remove('hidden');
+  $('bcs-hist').insertAdjacentHTML('afterbegin', `<div class="hrow"><b>${esc(code)}</b> · ${esc(type)}${n ? ' · ' + n + ' ảnh' : ''}
+    <div class="muted">${new Date().toLocaleTimeString('vi-VN', { hour12: false })}</div></div>`);
+}
+$('bcs-save').addEventListener('click', async () => {
+  if (!BCS.photos.length && !(BCS.doneIds || []).length) return;
+  const btn = $('bcs-save'); btn.disabled = true;
+  const ids = [], prev = BCS.doneIds || [];
+  try {
+    for (let i = 0; i < BCS.photos.length; i++) {
+      $('bcs-prog').textContent = `Đang tải ảnh ${i + 1}/${BCS.photos.length}...`;
+      const r = await api('bcsUpload', BCS.code, { n: prev.length + i + 1, mime: 'image/jpeg', base64: BCS.photos[i].split(',')[1] });
+      ids.push(r.id);
+    }
+    $('bcs-prog').textContent = 'Đang lưu báo cáo...';
+    await api('bcsSave', { code: BCS.code, type: 'photo', ids: prev.concat(ids), note: $('bcs-note').value.trim(), requestId: reqId('BCS') });
+    beep('saved'); toast('✔ Đã lưu ' + (prev.length + ids.length) + ' ảnh cho đơn ' + BCS.code);
+    bcsAddHist(BCS.code, 'Chụp ảnh', prev.length + ids.length);
+    BCS.doneIds = []; BCS.photos = []; BCS.code = ''; $('bcs-code').value = ''; $('bcs-note').value = ''; $('bcs-res').innerHTML = '';
+    bcsRenderPhotos();
+  } catch (e) {
+    beep('err'); toast(e.message, 4000);
+    BCS.photos.splice(0, ids.length);   // ảnh đã tải lên thì bỏ khỏi danh sách để không tải trùng
+    if (ids.length) toast(`Đã tải ${ids.length} ảnh nhưng chưa lưu xong – bấm lại để tiếp tục.`, 5000);
+    BCS.doneIds = (BCS.doneIds || []).concat(ids);
+  } finally { btn.disabled = false; $('bcs-prog').textContent = ''; }
+});
+$('bcs-cctv-btn').addEventListener('click', async () => {
+  const c = bcsNeedCode(); if (!c) return;
+  loading(true);
+  try {
+    await api('bcsSave', { code: c, type: 'cctv', requestId: reqId('BCS') });
+    beep('saved'); toast('✔ Đã ghi nhận đơn ' + c + ' – Ghi hình CCTV');
+    bcsAddHist(c, 'Ghi hình CCTV'); $('bcs-code').value = ''; $('bcs-res').innerHTML = '';
+  } catch (e) { beep('err'); toast(e.message, 4000); }
+  finally { loading(false); }
+});
+async function bcsFind(){
+  $('bcs-res').innerHTML = '<div class="card empty">Đang tìm...</div>';
+  try {
+    const r = await api('bcsSearch', $('bcs-q').value.trim());
+    $('bcs-res').innerHTML = r.rows.length ? r.rows.map(x => `<div class="card">
+      <div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:15.5px">${esc(x.code)}</b>
+        <span class="badge ${x.type === 'Chụp ảnh' ? 'st-done' : 'st-other'}">${esc(x.type)}</span></div>
+      <div class="muted" style="font-size:13px">${esc(x.time)} · ${esc(x.user)}${x.cctv ? ' · CCTV: ' + esc(x.cctv) : ''}${x.note ? ' · ' + esc(x.note) : ''}</div>
+      ${x.ids.length ? `<div class="ph-grid">${x.ids.map(id => `<div class="ph" data-ph="${esc(id)}">Đang tải...</div>`).join('')}</div>` : ''}
+    </div>`).join('') : '<div class="card empty">Không tìm thấy báo cáo soạn hàng</div>';
+    bcsLoadPhotos();
+  } catch (e) { $('bcs-res').innerHTML = `<div class="card empty">${esc(e.message)}</div>`; }
+}
+async function bcsLoadPhotos(){
+  const els = Array.from(document.querySelectorAll('#bcs-res [data-ph]'));
+  for (let i = 0; i < els.length; i += 3) {     // tải 3 ảnh một lượt
+    await Promise.all(els.slice(i, i + 3).map(async el => {
+      const id = el.dataset.ph;
+      try {
+        if (!BCS.cache[id]) BCS.cache[id] = await api('bcsPhoto', id);
+        el.innerHTML = `<img src="${BCS.cache[id]}" data-bigsrc="1">`;
+      } catch (e) { el.textContent = 'Lỗi ảnh'; }
+    }));
+  }
+}
+$('bcs-res').addEventListener('click', e => { const im = e.target.closest('[data-bigsrc]'); if (im) bcsShowBig(im.src); });
+$('bcs-qbtn').addEventListener('click', bcsFind);
+$('bcs-q').addEventListener('keydown', e => { if (e.key === 'Enter') bcsFind(); });
 
 /* ========= TRA CỨU ========= */
 async function doLookup(){
