@@ -761,6 +761,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 
     <!-- CÀI ĐẶT -->
     <div class="view hidden" id="v-settings">
+      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 02/11/2026-c</div>
       <div class="card" id="force-note" style="background:var(--amber-l)">
         <b style="color:var(--amber)">Bạn đang dùng mật khẩu mặc định.</b>
         <div style="font-size:14px;margin-top:4px">Vui lòng đổi mật khẩu để tiếp tục sử dụng ứng dụng.</div>
@@ -1021,6 +1022,8 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-go]'
 
 function go(view){
   if (view === 'install') { showInstall(); return; }
+  if (scanCleanup) closeModal();          // đang mở cửa sổ quét → đóng & tắt camera
+  setTimeout(stopAllCams, 0);
   if (S.view === 'scan' && view !== 'scan') qrStop();
   if (S.view === 'bcsoan' && view !== 'bcsoan' && typeof bcsCamStop === 'function') bcsCamStop();
   if (S.user && S.user.mustChange && view !== 'settings') { toast('Vui lòng đổi mật khẩu trước khi sử dụng.'); view = 'settings'; }
@@ -1263,6 +1266,21 @@ function barDetector(){
   })();
   return BAR_LOADING;
 }
+/* ---- Quản lý camera: ghi nhận mọi luồng camera đã mở để tắt hẳn khi không quét (tiết kiệm pin) ---- */
+const CAM_STREAMS = new Set();
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  const _gum = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+  navigator.mediaDevices.getUserMedia = async c => {
+    const s = await _gum(c);
+    if (c && c.video) { CAM_STREAMS.add(s); s.getTracks().forEach(t => t.addEventListener('ended', () => { if (!s.getTracks().some(x => x.readyState === 'live')) CAM_STREAMS.delete(s); })); }
+    return s;
+  };
+}
+function stopAllCams(){
+  CAM_STREAMS.forEach(s => s.getTracks().forEach(t => { try { t.stop(); } catch (e) {} }));
+  CAM_STREAMS.clear();
+  document.querySelectorAll('video').forEach(v => { if (v.srcObject) { try { v.pause(); } catch (e) {} v.srcObject = null; } });
+}
 async function camStart(elId, onCode){
   const Q = await qsLib();
   const el = $(elId);
@@ -1274,7 +1292,10 @@ async function camStart(elId, onCode){
                    { preferredCamera: 'environment', highlightScanRegion: false, highlightCodeOutline: false });
   await sc.start();
   const cam = { isScanning: true, timer: 0, busy: false,
-    stop() { this.isScanning = false; clearTimeout(this.timer); try { sc.stop(); } catch (e) {} },
+    stop() { this.isScanning = false; clearTimeout(this.timer); try { sc.stop(); } catch (e) {}
+      const s = video.srcObject;   // tắt camera ngay lập tức
+      if (s && s.getTracks) { s.getTracks().forEach(t => t.stop()); CAM_STREAMS.delete(s); }
+      video.srcObject = null; },
     clear() { try { sc.destroy(); } catch (e) {} el.innerHTML = ''; } };
   // Đèn flash (nếu máy có)
   sc.hasFlash().then(has => {
@@ -1356,7 +1377,12 @@ function scanOnce(title){
       .then(c => {
         cam = c; if (done) { camStop(c); return; }
       })
-      .catch(err => { $('scan-msg').innerHTML = esc(camBlockedMsg(err)).replace(/\n/g, '<br>') + '<br>Bấm <b>Chụp ảnh mã</b> để quét bằng ảnh.'; });
+      .catch(err => {
+        if (done) return;
+        if (!retried) { retried = true; setTimeout(() => { if (!done) startCam(); }, 700); return; }
+        $('scan-msg').innerHTML = esc(camBlockedMsg(err)).replace(/\n/g, '<br>') + '<br>Bấm <b>Chụp ảnh mã</b> để quét bằng ảnh.';
+      });
+    let retried = false;
     startCam();
   });
 }
@@ -1472,9 +1498,9 @@ $('qr-change').addEventListener('click', qrShowPick);
 function qrSetStatus(text, type){ const el = $('qr-status'); el.textContent = text; el.className = 'qr-status ' + (type || ''); }
 function qrCamMsg(html){ const m = $('qr-cam-msg'); m.innerHTML = html || ''; m.classList.toggle('hidden', !html); }
 
-async function qrOpen(mode, preset){
+async function qrOpen(mode, preset, resume){
   if (QR.opening) return;
-  if (mode === 'BAN_GIAO' && !(await hoSetup(preset))) return;
+  if (mode === 'BAN_GIAO' && !(resume && QR.ho) && !(await hoSetup(preset))) return;
   QR.opening = true;
   await qrStopAsync();
   QR.mode = mode; unlockAudio();
@@ -1568,7 +1594,22 @@ async function qrFlush(){
 }
 setInterval(qrFlush, 15000);
 window.addEventListener('online', () => { QR.backoff = 0; qrFlush(); });
-document.addEventListener('visibilitychange', () => { if (!document.hidden) qrFlush(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    CAM_RESUME = S.view === 'scan' && QR.mode && !$('qr-run').classList.contains('hidden') ? 'qr'
+               : S.view === 'bcsoan' && !$('bcs-s3').classList.contains('hidden') ? 'bcs3' : '';
+    if (scanCleanup) closeModal();
+    if (CAM_RESUME === 'qr') qrStop();
+    if (typeof bcsCamStop === 'function') bcsCamStop();
+    stopAllCams();
+  } else {
+    qrFlush();
+    if (CAM_RESUME === 'qr' && S.view === 'scan') qrOpen(QR.mode, null, true);
+    else if (CAM_RESUME === 'bcs3' && S.view === 'bcsoan') bcsCamStart();
+    CAM_RESUME = '';
+  }
+});
+let CAM_RESUME = '';
 
 function qrRender(){
   const list = QR.items.filter(i => i.mode === QR.mode);
@@ -2164,11 +2205,11 @@ $('bcs-qscan').addEventListener('click', async () => { const c = await scanOnce(
 function bcsStep(n, autoScan){
   if (n !== 3) bcsCamStop();
   [1, 2, 3].forEach(i => $('bcs-s' + i).classList.toggle('hidden', i !== n));
-  if (n === 1) { $('bcs-code').value = ''; if (autoScan) setTimeout(bcsScan, 150); }
+  if (n === 1) { $('bcs-code').value = ''; if (autoScan) { clearTimeout(BCS.scanT); BCS.scanT = setTimeout(bcsScan, 500); } }
   if (n === 2) $('bcs-s2-code').textContent = BCS.code;
 }
 async function bcsScan(){
-  if (S.view !== 'bcsoan' || BCS.tab !== 'rec' || $('bcs-s1').classList.contains('hidden')) return;
+  if (S.view !== 'bcsoan' || BCS.tab !== 'rec' || $('bcs-s1').classList.contains('hidden') || scanCleanup || document.hidden) return;
   const c = await scanOnce('Quét mã đơn hàng');
   if (c) bcsSetCode(c);
 }
@@ -2199,7 +2240,7 @@ async function bcsCamStart(){
   }
 }
 function bcsCamStop(){
-  if (BCS.stream) { BCS.stream.getTracks().forEach(t => t.stop()); BCS.stream = null; }
+  if (BCS.stream) { BCS.stream.getTracks().forEach(t => t.stop()); CAM_STREAMS.delete(BCS.stream); BCS.stream = null; }
   const v = $('bcs-video'); if (v) v.srcObject = null;
 }
 function bcsSnap(){
