@@ -225,6 +225,15 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .amt-in:focus{border-color:var(--pri);outline:none}
 .db-ic{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:5px 9px;font-size:14px;cursor:pointer;white-space:nowrap}
 .db-ic.on{border-color:var(--pri);background:var(--pri-l);color:var(--pri);font-weight:700}
+.inl-cell{min-width:200px;max-width:260px;white-space:normal}
+.lm{display:flex;align-items:flex-start;gap:6px;margin-bottom:5px}
+.lm-t{flex:1;font-size:12.5px;line-height:1.35;color:var(--text);background:#f1f3f6;border-radius:8px;padding:5px 8px}
+.db-clock{flex:none;border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:4px 7px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.inl{display:flex;gap:4px}
+.inl-in{flex:1;min-width:0;width:100%;padding:7px 8px;border:1.5px solid var(--line);border-radius:8px;font-size:13px}
+.inl-in:focus{border-color:var(--pri);outline:none}
+.inl-go{flex:none;width:34px;border:0;border-radius:8px;background:var(--pri);color:#fff;font-size:14px;cursor:pointer}
+.inl-st{font-size:11px;margin-top:2px;min-height:13px}
 .modal.wide{max-width:980px;width:calc(100vw - 24px)}
 .grid-wrap{overflow:auto;max-height:52vh;margin-top:10px;border:1px solid var(--line);border-radius:10px}
 table.grid{border-collapse:collapse;width:100%;min-width:640px;font-size:13.5px}
@@ -844,7 +853,7 @@ table.grid tr.bad td{background:#fdecea}
 
     <!-- CÀI ĐẶT -->
     <div class="view hidden" id="v-settings">
-      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 02/11/2026-g · máy chủ <span id="s-ver">?</span></div>
+      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 02/11/2026-i · máy chủ <span id="s-ver">?</span></div>
       <div class="card" id="force-note" style="background:var(--amber-l)">
         <b style="color:var(--amber)">Bạn đang dùng mật khẩu mặc định.</b>
         <div style="font-size:14px;margin-top:4px">Vui lòng đổi mật khẩu để tiếp tục sử dụng ứng dụng.</div>
@@ -2231,7 +2240,7 @@ function renderDebt(){
   const ico = (i, k, n, on) => `<button class="db-ic ${on ? 'on' : ''}" data-th="${i}" data-k="${k}">${k === 'files' ? '📎' : k === 'msgs' ? '💬' : '📝'}${n ? ' ' + n : ''}</button>`;
   $('db-list').innerHTML = !g || !g.items.length ? '<div class="card empty">Không có đơn nào đến hạn 🎉</div>' :
     `<div class="card" style="padding-top:6px">${dataTable(
-      (ed ? ['<input type="checkbox" id="db-all">'] : []).concat(['Khách hàng', 'Mã đơn', 'Ngày giao', 'Hạn thu', 'Quá hạn', 'Số tiền', 'Sale', 'Trạng thái', 'Đính kèm', 'Lời nhắn', 'Ghi chú riêng']),
+      (ed ? ['<input type="checkbox" id="db-all">'] : []).concat(['Khách hàng', 'Mã đơn', 'Ngày giao', 'Hạn thu', 'Quá hạn', 'Số tiền', 'Sale', 'Trạng thái', 'Đính kèm', 'Lời nhắn', 'Ghi chú riêng 🔒']),
       g.items.map((x, i) => (ed ? [`<input type="checkbox" data-ds="${i}" ${DB.sel[x.so] ? 'checked' : ''}>`] : []).concat([
         `<b>${esc(x.name)}</b><div class="muted" style="font-size:12px">${esc(x.acc)} · Dư nợ: ${fmt(x.balance)}</div>`,
         esc(x.so) + (x.note ? `<div style="font-size:11px;color:var(--amber)">${esc(x.note)}</div>` : ''), esc(x.date || '?'), esc(x.due || '?'),
@@ -2239,8 +2248,10 @@ function renderDebt(){
         ed ? `<input class="amt-in" data-amt="${i}" inputmode="numeric" value="${fmt(x.amount)}"><div class="muted" style="font-size:11px">${x.src === 'Thực tế' ? '✔ số thực tế' : 'tham khảo · ' + esc(x.src || '')}</div>`
            : `<b>${fmt(x.amount)}</b>${x.src === 'Thực tế' ? '' : '<div class="muted" style="font-size:11px">tham khảo</div>'}`,
         esc(x.sale), st(x.status) + (x.by ? `<div class="muted" style="font-size:11px">${esc(x.by)} ${esc(x.at)}</div>` : ''),
-        ico(i, 'files', x.files, x.files), ico(i, 'msgs', x.msgs, x.msgs) + (x.lastMsg ? `<div class="muted" style="font-size:11px;max-width:160px;white-space:normal">${esc(x.lastMsg)}</div>` : ''),
-        ico(i, 'note', 0, x.myNote) + (x.myNote ? `<div class="muted" style="font-size:11px;max-width:160px;white-space:normal">${esc(x.myNote.slice(0, 60))}</div>` : '')])), ed ? 1 : 0)}
+        ico(i, 'files', x.files, x.files),
+        `<div class="inl-cell">${x.lastMsg ? `<div class="lm"><span class="lm-t">${esc(x.lastMsg)}</span><button class="db-clock" data-th="${i}" data-k="msgs" title="Xem lịch sử trao đổi">🕘 ${x.msgs}</button></div>` : ''}
+          <div class="inl"><input class="inl-in" data-msg="${i}" placeholder="Nhập lời nhắn..." enterkeyhint="send"><button class="inl-go" data-send="${i}" title="Gửi">➤</button></div></div>`,
+        `<div class="inl-cell"><input class="inl-in" data-note="${i}" value="${esc(x.myNote || '')}" placeholder="Ghi chú riêng (chỉ mình bạn thấy)" enterkeyhint="done"><div class="muted inl-st" id="ns-${i}"></div></div>`])), ed ? 1 : 0)}
       <div style="text-align:right;margin-top:8px;font-weight:700">Tổng: ${fmt(g.total)}đ</div></div>`;
   $('db-bar').classList.toggle('hidden', !ed);
   dbSelCount();
@@ -2256,6 +2267,13 @@ $('db-list').addEventListener('change', async e => {
   } else if (e.target.dataset.ds != null) {
     const x = items[+e.target.dataset.ds];
     if (e.target.checked) DB.sel[x.so] = 1; else delete DB.sel[x.so];
+  } else if (e.target.dataset.note != null) {         // ghi chú riêng: lưu ngay khi rời ô / bấm Enter
+    const i = +e.target.dataset.note, x = items[i], v = e.target.value.trim(), st = $('ns-' + i);
+    if (v === (x.myNote || '')) return;
+    st.textContent = 'Đang lưu...';
+    try { const r = await api('debtSaveNote', x.so, v); x.myNote = r.note; st.textContent = '✔ Đã lưu'; setTimeout(() => { if (st.isConnected) st.textContent = ''; }, 2000); }
+    catch (err) { st.textContent = '✖ ' + err.message; }
+    return;
   } else if (e.target.dataset.amt != null) {          // kế toán sửa số tiền thực tế
     const x = items[+e.target.dataset.amt], raw = e.target.value.trim();
     const v = raw === '' ? '' : Number(raw.replace(/[^\d]/g, ''));
@@ -2270,8 +2288,27 @@ $('db-list').addEventListener('change', async e => {
   }
   dbSelCount();
 });
-$('db-list').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset.amt != null) e.target.blur(); });
-$('db-list').addEventListener('click', e => { const b = e.target.closest('[data-th]'); if (b) openThread(dbItems()[+b.dataset.th], b.dataset.k); });
+$('db-list').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (e.target.dataset.amt != null || e.target.dataset.note != null) e.target.blur();
+  if (e.target.dataset.msg != null) { e.preventDefault(); dbSendMsg(+e.target.dataset.msg); }
+});
+$('db-list').addEventListener('click', e => {
+  const s = e.target.closest('[data-send]'); if (s) { dbSendMsg(+s.dataset.send); return; }
+  const b = e.target.closest('[data-th]'); if (b) openThread(dbItems()[+b.dataset.th], b.dataset.k);
+});
+/* Gửi lời nhắn ngay trong bảng: hiện dòng mới nhất + 🕘 để xem lịch sử trao đổi */
+async function dbSendMsg(i){
+  const inp = document.querySelector(`[data-msg="${i}"]`), x = dbItems()[i];
+  const v = inp ? inp.value.trim() : ''; if (!v || !x) return;
+  inp.disabled = true;
+  try {
+    const t = await api('debtPostMsg', x.so, v);
+    const m = t.msgs[t.msgs.length - 1];
+    x.msgs = t.msgs.length; x.lastMsg = m ? m.by + ': ' + m.text.slice(0, 60) : '';
+    toast('✔ Đã gửi lời nhắn – ' + x.so); renderDebt();
+  } catch (err) { toast(err.message, 4000); inp.disabled = false; }
+}
 async function dbAction(action){
   const sos = Object.keys(DB.sel);
   if (!sos.length) { toast('Hãy tick chọn đơn trước.'); return; }
@@ -2471,6 +2508,44 @@ function openGrid(o){
   };
 }
 
+/* --- Camera chụp ảnh trong app (dùng chung): trả về danh sách ảnh đã chụp khi bấm Gửi, [] khi Hủy --- */
+function camCapture(title){
+  return new Promise(resolve => {
+    const shots = [];
+    let stream = null, done = false;
+    modal(`<h3>${esc(title)}</h3>
+      <div class="bcs-cam"><video id="cc-video" muted playsinline autoplay></video><div class="cam-msg hidden" id="cc-msg"></div><div class="bcs-flash" id="cc-flash"></div></div>
+      <div class="bcs-shots" id="cc-shots"></div>
+      <div class="bcs-ctl"><button class="btn light" id="cc-cancel">Hủy</button><button class="bcs-shutter" id="cc-shoot" aria-label="Chụp"></button><button class="btn" id="cc-send" disabled>Gửi</button></div>
+      <input type="file" id="cc-file" accept="image/*" capture="environment" class="hidden">`);
+    const stop = () => { if (stream) { stream.getTracks().forEach(t => t.stop()); CAM_STREAMS.delete(stream); stream = null; } };
+    const finish = list => { if (done) return; done = true; scanCleanup = null; stop(); $('modal-root').innerHTML = ''; resolve(list); };
+    scanCleanup = () => finish([]);          // đóng modal / chuyển màn hình / ẩn app → tắt camera
+    const draw = () => {
+      $('cc-shots').innerHTML = shots.map((p, i) => `<div class="ph"><img src="${p}"><button class="del" data-ccd="${i}">×</button></div>`).join('');
+      $('cc-send').disabled = !shots.length; $('cc-send').textContent = shots.length ? `Gửi (${shots.length})` : 'Gửi';
+      const s = $('cc-shots'); s.scrollLeft = s.scrollWidth;
+    };
+    $('cc-shots').onclick = e => { const d = e.target.closest('[data-ccd]'); if (d) { shots.splice(+d.dataset.ccd, 1); draw(); } };
+    $('cc-cancel').onclick = () => finish([]);
+    $('cc-send').onclick = () => finish(shots.slice());
+    $('cc-file').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (f) { shots.push(await compressImg(f, 1800, 0.85)); draw(); } };
+    $('cc-shoot').onclick = () => {
+      const v = $('cc-video');
+      if (!stream || !v.videoWidth) { $('cc-file').click(); return; }
+      const k = Math.min(1, 1800 / Math.max(v.videoWidth, v.videoHeight));
+      const cv = document.createElement('canvas'); cv.width = Math.round(v.videoWidth * k); cv.height = Math.round(v.videoHeight * k);
+      cv.getContext('2d').drawImage(v, 0, 0, cv.width, cv.height);
+      shots.push(cv.toDataURL('image/jpeg', 0.85));
+      const fl = $('cc-flash'); fl.classList.add('on'); setTimeout(() => fl.classList.remove('on'), 60);
+      beep('ok'); draw();
+    };
+    navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 } } })
+      .then(s => { if (done) { s.getTracks().forEach(t => t.stop()); return; } stream = s; const v = $('cc-video'); v.srcObject = s; v.play().catch(() => {}); })
+      .catch(e => { const m = $('cc-msg'); if (!m) return; m.innerHTML = `<div>${esc(camBlockedMsg(e))}</div><button class="btn" onclick="$('cc-file').click()">Mở camera của máy</button>`; m.classList.remove('hidden'); });
+  });
+}
+
 /* --- Đính kèm / Lời nhắn / Ghi chú riêng của từng đơn --- */
 async function openThread(x, tab){
   loading(true);
@@ -2478,8 +2553,9 @@ async function openThread(x, tab){
   try { t = await api('debtThread', x.so); } catch (e) { toast(e.message); return; } finally { loading(false); }
   const render = () => {
     const body = { files: () => `
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="th-cam">Chụp ảnh bill</button><button class="btn light" id="th-pick">Tải tệp lên</button></div>
-        <input type="file" id="th-cin" accept="image/*" capture="environment" class="hidden"><input type="file" id="th-fin" class="hidden">
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="th-cam">Chụp ảnh</button><button class="btn light" id="th-pick">Tải tệp lên</button></div>
+        <input type="file" id="th-fin" class="hidden" multiple accept="application/pdf,.pdf,image/*,.xml,text/xml,application/xml">
+        <div class="muted" style="font-size:12px;margin-top:4px">Tải tệp: PDF, hình ảnh hoặc XML (tối đa 20MB/tệp).</div>
         <div class="muted" id="th-prog" style="font-size:13px;margin-top:6px"></div>
         ${t.files.length ? t.files.map((f, i) => `<div class="hrow"><a href="#" data-fo="${i}"><b>${esc(f.name)}</b></a><div class="muted">${esc(f.by)} · ${esc(f.time)}</div></div>`).join('') : '<div class="empty">Chưa có tệp đính kèm</div>'}`,
       msgs: () => `<div class="chat" id="th-chat">${t.msgs.length ? t.msgs.map(m => `<div class="msg ${m.mine ? 'me' : ''}"><div class="who">${esc(m.by)} · ${esc(m.time)}</div>${esc(m.text).replace(/\n/g, '<br>')}</div>`).join('') : '<div class="empty">Chưa có lời nhắn</div>'}</div>
@@ -2496,18 +2572,33 @@ async function openThread(x, tab){
     if (tab === 'files') {
       const up = async f => {
         if (!f) return;
+        if (!/^image\//.test(f.type) && !/\.(pdf|xml|jpe?g|png|heic|webp)$/i.test(f.name || '')) { toast('Chỉ nhận tệp PDF, hình ảnh hoặc XML.'); return; }
         if (f.size > 20 * 1024 * 1024) { toast('Tệp quá lớn (tối đa 20MB).'); return; }
         $('th-prog').textContent = 'Đang tải lên ' + f.name + '...';
         try {
-          let data, mime = f.type || 'application/octet-stream', name = f.name || 'file';
+          let data, mime = f.type || (/\.xml$/i.test(f.name) ? 'application/xml' : /\.pdf$/i.test(f.name) ? 'application/pdf' : 'application/octet-stream'), name = f.name || 'file';
           if (/^image\//.test(mime)) { data = (await compressImg(f, 1800, 0.85)).split(',')[1]; mime = 'image/jpeg'; if (!/\.jpe?g$/i.test(name)) name = name.replace(/\.\w+$/, '') + '.jpg'; }
           else data = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = no; r.readAsDataURL(f); });
           t = await api('debtUpload', x.so, { name: name, mime: mime, base64: data });
           toast('✔ Đã tải lên ' + name); sync(); render();
         } catch (e) { $('th-prog').textContent = e.message; }
       };
-      $('th-cam').onclick = () => $('th-cin').click(); $('th-pick').onclick = () => $('th-fin').click();
-      $('th-cin').onchange = e => up(e.target.files[0]); $('th-fin').onchange = e => up(e.target.files[0]);
+      // Chụp ảnh: mở camera ngay trong app, chụp xong bấm Gửi → đẩy thẳng lên Drive (không lưu vào máy)
+      $('th-cam').onclick = async () => {
+        const shots = await camCapture('Chụp ảnh – ' + x.so);
+        render();
+        for (let i = 0; i < shots.length; i++) {
+          $('th-prog').textContent = `Đang gửi ảnh ${i + 1}/${shots.length} lên Drive...`;
+          try {
+            const name = x.so + '_anh' + (t.files.length + 1) + '.jpg';
+            t = await api('debtUpload', x.so, { name: name, mime: 'image/jpeg', base64: shots[i].split(',')[1] });
+            sync(); render();
+          } catch (e) { $('th-prog').textContent = 'Lỗi gửi ảnh ' + (i + 1) + ': ' + e.message; return; }
+        }
+        if (shots.length) { beep('saved'); toast('✔ Đã gửi ' + shots.length + ' ảnh lên Drive'); }
+      };
+      $('th-pick').onclick = () => $('th-fin').click();
+      $('th-fin').onchange = async e => { const fs = Array.from(e.target.files || []); for (const f of fs) await up(f); };
       document.querySelectorAll('[data-fo]').forEach(a => a.onclick = async ev => {
         ev.preventDefault();
         const f = t.files[+a.dataset.fo]; $('th-prog').textContent = 'Đang mở ' + f.name + '...';
