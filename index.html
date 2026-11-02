@@ -180,6 +180,17 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .bar b{font-size:10.5px;color:var(--text)}
 .bar small{font-size:9.5px;color:var(--muted);white-space:nowrap}
 .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.mn-hero{background:linear-gradient(135deg,#3d7a57,#182e22);color:#fff}
+.mn-hero .muted{color:rgba(255,255,255,.75)}
+.mn-money{font-size:34px;font-weight:800;margin:2px 0 8px}
+.mn-split{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 6px;vertical-align:-1px}
+.dot.dt{background:#24573c}.dot.db{background:#f9a825}
+.mn-hero .dot.dt{background:#a5d6a7}
+.bar .stk{width:100%;display:flex;flex-direction:column;justify-content:flex-end;flex:1}
+.bar .stk i.bk{background:linear-gradient(180deg,#fbc02d,#f9a825);border-radius:5px 5px 0 0}
+.bar .stk i.tk{border-radius:0 0 2px 2px}
+.bar .stk i.tk:first-child{border-radius:5px 5px 2px 2px}
 .kpi-mini{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:12px 6px;text-align:center}
 .kpi-mini b{display:block;font-size:24px;color:var(--pri)}
 .kpi-mini small{font-size:12px;color:var(--muted);font-weight:600}
@@ -210,6 +221,23 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .hrow .muted{font-size:12px}
 .kk-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
 .ho-box{padding:12px 14px}
+.amt-in{width:120px;padding:7px 8px;border:1.5px solid var(--line);border-radius:8px;font-weight:700;text-align:right;font-size:14px}
+.amt-in:focus{border-color:var(--pri);outline:none}
+.db-ic{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:5px 9px;font-size:14px;cursor:pointer;white-space:nowrap}
+.db-ic.on{border-color:var(--pri);background:var(--pri-l);color:var(--pri);font-weight:700}
+.modal.wide{max-width:980px;width:calc(100vw - 24px)}
+.grid-wrap{overflow:auto;max-height:52vh;margin-top:10px;border:1px solid var(--line);border-radius:10px}
+table.grid{border-collapse:collapse;width:100%;min-width:640px;font-size:13.5px}
+table.grid th{position:sticky;top:0;background:#eef1f6;padding:8px 6px;text-align:left;font-size:12.5px;z-index:1;white-space:nowrap}
+table.grid td{border-top:1px solid #edf0f4;padding:0}
+table.grid td.ln{width:34px;text-align:center;color:var(--muted);font-size:12px;background:#fafbfc}
+table.grid input{width:100%;border:0;padding:8px 6px;font-size:13.5px;background:transparent;min-width:90px}
+table.grid input:focus{outline:2px solid var(--pri);outline-offset:-2px;background:#fff}
+table.grid tr.bad td{background:#fdecea}
+.chat{max-height:46vh;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:10px;padding:2px}
+.msg{background:#f1f3f6;border-radius:12px;padding:8px 11px;font-size:14px;max-width:85%;align-self:flex-start}
+.msg.me{background:var(--pri-l);align-self:flex-end}
+.msg .who{font-size:11.5px;color:var(--muted);margin-bottom:2px}
 .debt-bar{position:sticky;bottom:0;z-index:5;display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:10px 12px;margin-top:10px}
 .debt-bar .n{flex:1;font-size:13.5px;font-weight:700;min-width:120px}
 .tbl input[type=checkbox]{width:18px;height:18px;accent-color:var(--pri)}
@@ -505,15 +533,19 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 
     <!-- ĐƠN CỦA TÔI -->
     <div class="view hidden" id="v-mine">
-      <div class="card hidden" id="mn-pick"><label class="f" style="margin-top:0">Nhân viên giao hàng</label><select class="inp" id="mn-man"></select></div>
-      <div class="kpi-row">
-        <div class="kpi-mini"><b id="mn-today">0</b><small>Giao hôm nay</small></div>
-        <div class="kpi-mini"><b id="mn-month">0</b><small>Giao trong tháng</small></div>
-        <div class="kpi-mini"><b id="mn-avg">0</b><small>TB / ngày</small></div>
+      <div class="card"><div class="row2">
+        <div id="mn-pick" class="hidden"><label class="f" style="margin-top:0">Nhân viên giao hàng</label><select class="inp" id="mn-man"></select></div>
+        <div><label class="f" style="margin-top:0">Tháng</label><select class="inp" id="mn-month"></select></div>
+      </div></div>
+      <div class="card mn-hero" id="mn-today-card">
+        <div class="muted" style="font-size:13px" id="mn-today-lbl">Hôm nay</div>
+        <div class="mn-money" id="mn-today-money">0đ</div>
+        <div class="mn-split"><span><i class="dot dt"></i>Xe tải <b id="mn-today-truck">0</b></span><span><i class="dot db"></i>Xe máy <b id="mn-today-bike">0</b></span><span>Tổng <b id="mn-today-total">0</b> đơn</span></div>
       </div>
-      <div class="card"><h4>Số đơn giao theo ngày (tháng này)</h4><div class="bars" id="mn-chart"></div></div>
-      <div class="card"><h4>Đã giao hôm nay</h4><div id="mn-list-today"></div></div>
-      <div class="card"><h4>Đơn đã giao trong tháng (KPI) <span class="muted" id="mn-kpi-n" style="font-weight:600"></span></h4><div id="mn-list-kpi"></div></div>
+      <div class="kk-kpis" id="mn-kpis"></div>
+      <div class="card"><h4>Số đơn giao theo ngày <span class="muted" style="font-weight:600;font-size:12px"><i class="dot dt"></i>Xe tải <i class="dot db"></i>Xe máy</span></h4><div class="bars" id="mn-chart"></div></div>
+      <div class="card"><h4>Chi tiết theo ngày</h4><div id="mn-days"></div></div>
+      <div class="card"><h4>Đơn đã giao <span class="muted" id="mn-n" style="font-weight:600"></span></h4><div id="mn-orders"></div></div>
     </div>
 
     <!-- KIỂM KÊ -->
@@ -574,31 +606,67 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 
     <!-- CÔNG NỢ -->
     <div class="view hidden" id="v-congno">
-      <div class="card">
-        <div class="grp-head"><div><div class="t" id="db-title">Công nợ đến hạn nhắc</div>
-          <div class="note" id="db-note">Đang tải...</div></div><button class="btn ghost" id="db-reload" style="padding:8px 12px;white-space:nowrap;flex:none">Tải lại</button></div>
+      <div class="seg" id="db-mtabs" style="margin-bottom:12px"><button data-m="remind" class="on">Nhắc nợ</button><button data-m="cust">Khách hàng</button><button data-m="open" class="hidden" id="db-mt-open">Đơn nợ</button></div>
+
+      <!-- Nhắc nợ -->
+      <div id="db-remind">
+        <div class="card">
+          <div class="grp-head"><div><div class="t" id="db-title">Công nợ đến hạn nhắc</div><div class="note" id="db-note">Đang tải...</div></div>
+            <div style="display:flex;gap:6px;flex:none"><button class="btn light" id="db-xls" style="padding:8px 10px">Xuất Excel</button><button class="btn ghost" id="db-reload" style="padding:8px 10px">Tải lại</button></div></div>
+          <div id="db-salebox" class="hidden" style="margin-top:10px"><select class="inp" id="db-sale"></select></div>
+        </div>
+        <div class="kk-kpis" id="db-kpis"></div>
+        <div class="seg" id="db-tabs" style="margin-bottom:12px;overflow-x:auto"></div>
+        <div id="db-list"></div>
+        <div class="debt-bar hidden" id="db-bar">
+          <span class="n" id="db-sel">Đã chọn 0 đơn</span>
+          <button class="btn ghost" id="db-ask" style="padding:9px 12px">Yêu cầu thu nợ</button>
+          <button class="btn" id="db-done" style="padding:9px 12px">Hoàn thành</button>
+          <button class="btn light" id="db-del" style="padding:9px 12px;color:var(--red)">Xóa khỏi danh sách</button>
+        </div>
       </div>
-      <div class="kk-kpis" id="db-kpis"></div>
-      <div class="seg" id="db-tabs" style="margin-bottom:12px;overflow-x:auto"></div>
-      <div id="db-list"></div>
-      <div class="debt-bar hidden" id="db-bar">
-        <span class="n" id="db-sel">Đã chọn 0 đơn</span>
-        <button class="btn ghost" id="db-ask" style="padding:9px 12px">Yêu cầu thu nợ</button>
-        <button class="btn" id="db-done" style="padding:9px 12px">Hoàn thành</button>
-        <button class="btn light" id="db-del" style="padding:9px 12px;color:var(--red)">Xóa khỏi danh sách</button>
+
+      <!-- Khách hàng -->
+      <div id="db-cust" class="hidden">
+        <div class="card">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input class="inp" id="dc-q" placeholder="Tìm mã / tên khách hàng" style="flex:1;min-width:160px">
+            <select class="inp hidden" id="dc-sale" style="flex:1;min-width:140px"></select>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <button class="btn ghost hidden" id="dc-add">+ Thêm / dán từ Excel</button>
+            <button class="btn light" id="dc-xls">Xuất Excel</button>
+          </div>
+          <div class="muted" style="font-size:12.5px;margin-top:8px">Dư nợ được hệ thống tự cộng: đơn nợ trước 01/11/2026 (danh sách Đơn nợ) + đơn giao từ 01/11/2026, trừ các đơn đã Hoàn thành / đã xóa khỏi danh sách.
+            Payment term <b>000</b> = khách quản lý ở báo cáo khác, không đưa vào nhắc nợ.</div>
+        </div>
+        <div class="card" style="padding-top:6px"><div class="muted" id="dc-count" style="font-size:13px;margin:6px 2px"></div><div id="dc-list"></div></div>
       </div>
-      <div class="card hidden" id="db-admin">
-        <h4 style="margin-top:0">Danh sách khách hàng (Payment term)</h4>
-        <div class="muted" id="db-cust" style="font-size:13px"></div>
-        <input type="file" id="db-file" accept=".xlsx,.xls,.csv" class="inp" style="margin-top:8px">
-        <button class="btn block ghost" id="db-import">Cập nhật danh sách khách hàng</button>
-        <div class="muted" style="font-size:12.5px;margin-top:6px">File cần có cột: Customer Account, Customer Name, invoice account, Sales in charge, Payment term, Balance due.</div>
-        <h4 style="margin-top:20px;padding-top:14px;border-top:1px solid var(--line)">Danh sách đơn nợ phải thu (trước 01/11/2026)</h4>
-        <div class="muted" id="db-open" style="font-size:13px"></div>
-        <input type="file" id="db-ofile" accept=".xlsx,.xls,.csv" class="inp" style="margin-top:8px">
-        <button class="btn block ghost" id="db-oimport">Cập nhật danh sách đơn nợ phải thu</button>
-        <div class="muted" style="font-size:12.5px;margin-top:6px">Bắt buộc có cột mã đơn (Sales order / Mã đơn). Nên có thêm: Customer account, Customer name, Sale, Ngày giao, Số tiền nợ.
-          Các đơn trong danh sách này luôn được nhắc nợ dù giao trước 01/11/2026. Mỗi lần cập nhật sẽ thay toàn bộ danh sách cũ.</div>
+
+      <!-- Đơn nợ (kế toán / admin) -->
+      <div id="db-open" class="hidden">
+        <div class="card">
+          <h4 style="margin-top:0">Thêm đơn nợ phải thu (trước 01/11/2026)</h4>
+          <div class="muted" style="font-size:13px">Nhập tay, dán từ Excel hoặc import file. Bắt buộc đủ: <b>Mã đơn, Mã KH, Tên KH, Số tiền nợ, Sale phụ trách</b>. Có dòng sai → hệ thống báo lỗi, chưa lưu gì.
+            Đơn đã có trong hệ thống sẽ được bỏ qua và báo trùng. Mỗi lần nhập là <b>thêm vào</b> danh sách, không xóa dữ liệu cũ.</div>
+          <button class="btn block" id="do-add">Nhập / dán / import đơn nợ</button>
+        </div>
+        <div class="card">
+          <h4 style="margin-top:0">Xuất Excel chi tiết nợ</h4>
+          <div class="row2">
+            <div><label class="f" style="margin-top:0">Xuất theo</label><select class="inp" id="dx-by"><option value="order">Từng đơn hàng</option><option value="customer">Tổng theo khách hàng</option></select></div>
+            <div><label class="f" style="margin-top:0">Trạng thái</label><select class="inp" id="dx-st"><option value="open">Còn nợ</option><option value="all">Tất cả</option><option value="done">Đã hoàn thành</option></select></div>
+          </div>
+          <div class="row2">
+            <div><label class="f">Giao từ ngày</label><input type="date" class="inp" id="dx-from"></div>
+            <div><label class="f">Đến ngày</label><input type="date" class="inp" id="dx-to"></div>
+          </div>
+          <div class="row2">
+            <div><label class="f">Sale phụ trách</label><select class="inp" id="dx-sale"><option value="">Tất cả</option></select></div>
+            <div><label class="f">Khách hàng / mã đơn</label><input class="inp" id="dx-q" placeholder="Để trống = tất cả"></div>
+          </div>
+          <button class="btn block ghost" id="dx-go">Xuất file Excel</button>
+        </div>
       </div>
     </div>
 
@@ -621,7 +689,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
             <div style="font-size:22px;font-weight:800;word-break:break-all" id="bcs-s2-code"></div></div>
           <div class="qr-modes">
             <button class="qr-mode" id="bcs-photo-btn" style="background:linear-gradient(135deg,#3d7a57,#182e22)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/></svg>CHỤP ẢNH<small>Chụp & gửi ảnh lên Drive</small></button>
-            <button class="qr-mode" id="bcs-cctv-btn" style="background:linear-gradient(135deg,#1e88e5,#0d47a1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>GHI HÌNH CCTV<small>Ghi nhận mã đơn & thời gian</small></button>
+            <button class="qr-mode" id="bcs-cctv-btn" style="background:linear-gradient(135deg,#1e88e5,#0d47a1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>GHI HÌNH CCTV<small>Quét mã vị trí CCTV là xong</small></button>
           </div>
           <button class="btn light block" id="bcs-back1">Quét đơn khác</button>
         </div>
@@ -692,7 +760,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 
     <!-- QUẢN TRỊ (admin) -->
     <div class="view hidden" id="v-admin">
-      <div class="seg" id="ad-tabs" style="margin-bottom:14px"><button data-t="users" class="on">Người dùng</button><button data-t="sched">Lịch giao</button><button data-t="kk">Kiểm kê</button></div>
+      <div class="seg" id="ad-tabs" style="margin-bottom:14px"><button data-t="users" class="on">Người dùng</button><button data-t="sched">Lịch giao</button><button data-t="kk">Kiểm kê</button><button data-t="cctv">CCTV</button></div>
       <div id="ad-users">
         <div class="card" style="display:flex;gap:8px;align-items:center">
           <input class="inp" id="ad-q" placeholder="Tìm theo tên, username, vai trò...">
@@ -702,6 +770,15 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
         <div class="card" style="padding:4px 14px" id="ad-list"></div>
       </div>
       <div id="ad-kk" class="hidden"><div id="akk-box"></div></div>
+      <div id="ad-cctv" class="hidden">
+        <div class="card">
+          <h4 style="margin-top:0">Danh sách mã CCTV (dùng cho BC Soạn hàng)</h4>
+          <div class="muted" style="font-size:13px">Mỗi vị trí CCTV dán 1 mã QR (nội dung QR = Mã CCTV). Thủ kho quét mã đơn → Ghi hình CCTV → quét mã này là hoàn tất.
+            Danh sách được tải về điện thoại khi mở tính năng, nên quét được cả khi mất mạng.</div>
+          <button class="btn block" id="cc-edit">Thêm / sửa danh sách CCTV</button>
+        </div>
+        <div class="card" id="cc-list"><div class="empty">Đang tải...</div></div>
+      </div>
       <div id="ad-sched" class="hidden">
         <div class="card">
           <h4>Chọn ngày cần sửa</h4>
@@ -767,7 +844,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 
     <!-- CÀI ĐẶT -->
     <div class="view hidden" id="v-settings">
-      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 02/11/2026-f · máy chủ <span id="s-ver">?</span></div>
+      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 02/11/2026-g · máy chủ <span id="s-ver">?</span></div>
       <div class="card" id="force-note" style="background:var(--amber-l)">
         <b style="color:var(--amber)">Bạn đang dùng mật khẩu mặc định.</b>
         <div style="font-size:14px;margin-top:4px">Vui lòng đổi mật khẩu để tiếp tục sử dụng ứng dụng.</div>
@@ -1650,30 +1727,41 @@ async function loadWaiting(){
 $('wt-reload').addEventListener('click', loadWaiting);
 
 /* ========= ĐƠN CỦA TÔI ========= */
-async function loadMine(who){
+const vnd = n => fmt(n) + 'đ';
+async function loadMine(){
   loading(true);
   try {
-    const d = await api('getMyDelivery', who || '');
-    if (S.user.perms.deliveryAll) {
+    const who = $('mn-pick').classList.contains('hidden') ? '' : $('mn-man').value;
+    const d = await api('getMyDelivery', who, $('mn-month').value || '');
+    if (d.men.length) {
       $('mn-pick').classList.remove('hidden');
-      const men = d.men.indexOf(d.name) === -1 ? [d.name].concat(d.men) : d.men;
-      $('mn-man').innerHTML = men.map(m => `<option ${m === d.name ? 'selected' : ''}>${esc(m)}</option>`).join('');
+      $('mn-man').innerHTML = d.men.map(m => `<option value="${esc(m.u)}" ${m.u === d.man.u ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
     }
-    const days = d.chart.length;
-    $('mn-today').textContent = d.deliveredToday.length;
-    $('mn-month').textContent = d.kpi.length;
-    $('mn-kpi-n').textContent = `(Tổng: ${d.kpi.length} đơn)`;
-    $('mn-avg').textContent = days ? (d.kpi.length / days).toFixed(1).replace('.', ',') : 0;
-    const max = Math.max(1, ...d.chart.map(x => x.n));
-    $('mn-chart').innerHTML = days ? d.chart.map(x => `<div class="bar"><b>${x.n}</b><i style="height:${Math.round(x.n / max * 80)}%"></i><small>${x.day.slice(0, 2)}</small></div>`).join('')
-      : '<div class="empty" style="width:100%">Chưa có dữ liệu tháng này</div>';
-    $('mn-list-today').innerHTML = d.deliveredToday.length ? dataTable(H_WAIT, d.deliveredToday.map(waitRow), 3) : '<div class="empty">Chưa giao đơn nào hôm nay</div>';
-    $('mn-list-kpi').innerHTML = d.kpi.length ? dataTable(H_KPI, d.kpi.slice(0, 300).map(o => [esc(o.date), '<b>' + esc(o.so) + '</b>', esc(o.req || '-'),
-      esc(o.customer || '-'), `<span class="badge ${statusClass(o.status)}">${esc(o.status)}</span>`]), 3) : '<div class="empty">Chưa có đơn giao trong tháng</div>';
+    $('mn-month').innerHTML = d.months.map(m => `<option value="${m}" ${m === d.month ? 'selected' : ''}>Tháng ${m.slice(5)}/${m.slice(0, 4)}</option>`).join('');
+    $('mn-today-card').classList.toggle('hidden', !d.isCurrent);
+    $('mn-today-lbl').textContent = `Hôm nay – ${d.man.name}`;
+    $('mn-today-money').textContent = vnd(d.today.money);
+    $('mn-today-truck').textContent = d.today.truck; $('mn-today-bike').textContent = d.today.bike; $('mn-today-total').textContent = d.today.total;
+    const t = d.total;
+    $('mn-kpis').innerHTML = [['Thu nhập tháng', vnd(t.money), 'var(--pri)'], ['Tổng đơn', fmt(t.total), 'var(--pri)'], ['TB / ngày', t.days ? (t.total / t.days).toFixed(1).replace('.', ',') : 0, 'var(--muted)'],
+      [`Xe tải × ${fmt(d.rates.truck)}đ`, fmt(t.truck), '#24573c'], [`Xe máy × ${fmt(d.rates.bike)}đ`, fmt(t.bike), '#f9a825'], ['Ngày đi giao', t.days, 'var(--muted)']]
+      .map(k => `<div class="kpi-mini"><b style="color:${k[2]};font-size:${String(k[1]).length > 9 ? 16 : 22}px">${k[1]}</b><small>${k[0]}</small></div>`).join('');
+    const max = Math.max(1, ...d.days.map(x => x.total));
+    $('mn-chart').innerHTML = d.days.length ? d.days.map(x => `<div class="bar"><b>${x.total}</b><div class="stk">
+        ${x.bike ? `<i class="bk" style="height:${x.bike / max * 100}%"></i>` : ''}${x.truck ? `<i class="tk" style="height:${x.truck / max * 100}%"></i>` : ''}</div>
+        <small>${x.day.slice(0, 2)}</small></div>`).join('') : '<div class="empty" style="width:100%">Chưa có đơn giao trong tháng</div>';
+    $('mn-days').innerHTML = d.days.length ? dataTable(['Ngày', 'Xe tải', 'Xe máy', 'Tổng đơn', 'Thành tiền'],
+      d.days.slice().reverse().map(x => [esc(x.day), fmt(x.truck), fmt(x.bike), '<b>' + fmt(x.total) + '</b>', '<b>' + vnd(x.money) + '</b>'])
+        .concat([['<b>Cả tháng</b>', '<b>' + fmt(t.truck) + '</b>', '<b>' + fmt(t.bike) + '</b>', '<b>' + fmt(t.total) + '</b>', '<b>' + vnd(t.money) + '</b>']])) : '<div class="empty">Chưa có dữ liệu</div>';
+    $('mn-n').textContent = `(${fmt(d.orders.length)})`;
+    $('mn-orders').innerHTML = d.orders.length ? dataTable(['Thời gian', 'Sales order', 'Khách hàng', 'Loại xe'],
+      d.orders.map(o => [esc(o.time), '<b>' + esc(o.so) + '</b>', esc(o.customer || '-'),
+        `<span class="badge ${o.vehicle === 'Xe máy' ? 'st-wait' : 'st-done'}">${o.vehicle}</span>`]), 2) : '<div class="empty">Chưa có đơn</div>';
   } catch (e) { toast(e.message); }
   finally { loading(false); }
 }
-$('mn-man').addEventListener('change', e => loadMine(e.target.value));
+$('mn-month').addEventListener('change', () => loadMine());
+$('mn-man').addEventListener('change', () => loadMine());
 
 /* ========= KHO: DANH MỤC HÀNG (tải 1 lần, tìm tức thì trên máy) ========= */
 async function loadMaster(force){
@@ -2106,66 +2194,90 @@ $('dc-mine').addEventListener('click', e => {
 });
 
 /* ========= CÔNG NỢ ========= */
-const DB = { data: null, tab: '', sel: {} };
+const DB = { data: null, tab: '', sel: {}, mtab: 'remind', sale: '', cust: null };
+const DEBT_TERMS = ['COD', 'TBD', 'N7', 'N15', 'N20', '000'];
+function dbMTab(m){
+  DB.mtab = m;
+  document.querySelectorAll('#db-mtabs button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  ['remind', 'cust', 'open'].forEach(k => $('db-' + k).classList.toggle('hidden', k !== m));
+  if (m === 'cust' && !DB.cust) loadCust();
+  if (m === 'open') dxInit();
+}
+$('db-mtabs').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (b) dbMTab(b.dataset.m); });
 async function loadDebt(force){
   $('db-note').textContent = 'Đang tải...';
   loading(true);
-  try { DB.data = await api('debtReport', { force: !!force }); DB.sel = {}; renderDebt(); setBadge('congno', DB.data.count); }
-  catch (e) { $('db-note').textContent = e.message; }
+  try {
+    DB.data = await api('debtReport', { force: !!force, sale: DB.sale });
+    DB.sel = {}; renderDebt(); if (!DB.sale) setBadge('congno', DB.data.count);
+    $('db-mt-open').classList.toggle('hidden', !DB.data.canEdit);
+  } catch (e) { $('db-note').textContent = e.message; }
   finally { loading(false); }
 }
 $('db-reload').addEventListener('click', () => loadDebt(true));
+$('db-sale').addEventListener('change', e => { DB.sale = e.target.value; loadDebt(); });
 function renderDebt(){
-  const d = DB.data;
-  $('db-title').textContent = d.canEdit ? 'Công nợ đến hạn nhắc' : 'Đơn cần thu nợ';
-  $('db-note').textContent = `${d.count} đơn · cập nhật ${d.at}` + (d.canEdit && d.start ? ` · tính từ đơn giao ngày ${d.start.split('-').reverse().join('/')}` : '');
-  const groups = d.groups.filter(g => d.canEdit || g.items.length);
+  const d = DB.data, ed = d.canEdit;
+  $('db-title').textContent = ed ? 'Công nợ đến hạn nhắc' : 'Đơn cần thu nợ';
+  $('db-note').textContent = `${d.count} đơn · cập nhật ${d.at}`;
+  $('db-salebox').classList.toggle('hidden', !d.canPick);
+  if (d.canPick) $('db-sale').innerHTML = '<option value="">Tất cả sale</option>' + d.sales.map(s => `<option ${s === DB.sale ? 'selected' : ''}>${esc(s)}</option>`).join('');
+  const groups = d.groups.filter(g => ed || g.items.length);
   if (!groups.find(g => g.term === DB.tab)) DB.tab = (groups.find(g => g.items.length) || groups[0] || {}).term || '';
   $('db-kpis').innerHTML = groups.map(g => `<div class="kpi-mini"><b style="color:${g.items.length ? 'var(--red)' : 'var(--green)'}">${g.items.length}</b><small>${esc(g.term)} · ${fmt(g.total)}đ</small></div>`).join('');
   $('db-tabs').innerHTML = groups.map(g => `<button data-dt="${esc(g.term)}" class="${g.term === DB.tab ? 'on' : ''}">${esc(g.term)} (${g.items.length})</button>`).join('');
   const g = groups.find(x => x.term === DB.tab);
-  const ed = d.canEdit;
   const st = s => `<span class="badge ${s === 'Yêu cầu thu nợ' ? 'st-cancel' : 'st-wait'}">${esc(s)}</span>`;
+  const ico = (i, k, n, on) => `<button class="db-ic ${on ? 'on' : ''}" data-th="${i}" data-k="${k}">${k === 'files' ? '📎' : k === 'msgs' ? '💬' : '📝'}${n ? ' ' + n : ''}</button>`;
   $('db-list').innerHTML = !g || !g.items.length ? '<div class="card empty">Không có đơn nào đến hạn 🎉</div>' :
     `<div class="card" style="padding-top:6px">${dataTable(
-      (ed ? ['<input type="checkbox" id="db-all">'] : []).concat(['Khách hàng', 'Mã đơn', 'Ngày giao', 'Hạn thu', 'Quá hạn', 'Số tiền', 'Sale', 'Trạng thái']),
+      (ed ? ['<input type="checkbox" id="db-all">'] : []).concat(['Khách hàng', 'Mã đơn', 'Ngày giao', 'Hạn thu', 'Quá hạn', 'Số tiền', 'Sale', 'Trạng thái', 'Đính kèm', 'Lời nhắn', 'Ghi chú riêng']),
       g.items.map((x, i) => (ed ? [`<input type="checkbox" data-ds="${i}" ${DB.sel[x.so] ? 'checked' : ''}>`] : []).concat([
-        `<b>${esc(x.name)}</b><div class="muted" style="font-size:12px">${esc(x.acc)}${x.balance != null ? ' · Dư nợ: ' + fmt(x.balance) : ''}</div>`,
-        esc(x.so) + (x.note ? `<div style="font-size:11px;color:var(--amber)">${esc(x.note)}</div>` : ''), esc(x.date || '?'), esc(x.due || '?'), x.overdue > 0 ? `<span class="tag-od">${x.overdue} ngày</span>` : (x.overdue === 0 ? 'Hôm nay' : `còn ${-x.overdue} ngày`),
-        `<b>${fmt(x.amount)}</b>${x.src === 'Thực tế' ? '' : '<div class="muted" style="font-size:11px">tham khảo</div>'}`, esc(x.sale),
-        st(x.status) + (x.by ? `<div class="muted" style="font-size:11px">${esc(x.by)} ${esc(x.at)}</div>` : '')])), ed ? 1 : 0)}
+        `<b>${esc(x.name)}</b><div class="muted" style="font-size:12px">${esc(x.acc)} · Dư nợ: ${fmt(x.balance)}</div>`,
+        esc(x.so) + (x.note ? `<div style="font-size:11px;color:var(--amber)">${esc(x.note)}</div>` : ''), esc(x.date || '?'), esc(x.due || '?'),
+        x.overdue > 0 ? `<span class="tag-od">${x.overdue} ngày</span>` : (x.overdue === 0 ? 'Hôm nay' : `còn ${-x.overdue} ngày`),
+        ed ? `<input class="amt-in" data-amt="${i}" inputmode="numeric" value="${fmt(x.amount)}"><div class="muted" style="font-size:11px">${x.src === 'Thực tế' ? '✔ số thực tế' : 'tham khảo · ' + esc(x.src || '')}</div>`
+           : `<b>${fmt(x.amount)}</b>${x.src === 'Thực tế' ? '' : '<div class="muted" style="font-size:11px">tham khảo</div>'}`,
+        esc(x.sale), st(x.status) + (x.by ? `<div class="muted" style="font-size:11px">${esc(x.by)} ${esc(x.at)}</div>` : ''),
+        ico(i, 'files', x.files, x.files), ico(i, 'msgs', x.msgs, x.msgs) + (x.lastMsg ? `<div class="muted" style="font-size:11px;max-width:160px;white-space:normal">${esc(x.lastMsg)}</div>` : ''),
+        ico(i, 'note', 0, x.myNote) + (x.myNote ? `<div class="muted" style="font-size:11px;max-width:160px;white-space:normal">${esc(x.myNote.slice(0, 60))}</div>` : '')])), ed ? 1 : 0)}
       <div style="text-align:right;margin-top:8px;font-weight:700">Tổng: ${fmt(g.total)}đ</div></div>`;
   $('db-bar').classList.toggle('hidden', !ed);
-  $('db-admin').classList.toggle('hidden', !d.isAdmin);
-  const m = d.custMeta;
-  $('db-cust').innerHTML = m ? `Đã có <b>${fmt(m.rows)}</b> khách hàng · cập nhật ${esc(m.at)} bởi ${esc(m.by)}<br>` +
-    Object.keys(m.terms).map(k => `${esc(k)}: ${m.terms[k]}`).join(' · ') : '<span style="color:var(--red)">Chưa có danh sách khách hàng – hãy cập nhật file Payment term.</span>';
-  const om = d.openMeta;
-  $('db-open').innerHTML = om ? `Đang theo dõi <b>${fmt(om.rows)}</b> đơn · cập nhật ${esc(om.at)} bởi ${esc(om.by)}` +
-    (om.noDate ? `<br><span style="color:var(--amber)">${om.noDate} đơn không có ngày giao → nhắc ngay</span>` : '') +
-    `<br>Cột đọc được: ${esc((om.cols || []).join(', '))}` : 'Chưa có danh sách.';
   dbSelCount();
 }
+function dbItems(){ const g = DB.data.groups.find(x => x.term === DB.tab); return g ? g.items : []; }
 function dbSelCount(){ $('db-sel').textContent = `Đã chọn ${Object.keys(DB.sel).length} đơn`; }
 $('db-tabs').addEventListener('click', e => { const b = e.target.closest('[data-dt]'); if (b) { DB.tab = b.dataset.dt; DB.sel = {}; renderDebt(); } });
-$('db-list').addEventListener('change', e => {
-  const g = DB.data.groups.find(x => x.term === DB.tab); if (!g) return;
+$('db-list').addEventListener('change', async e => {
+  const items = dbItems();
   if (e.target.id === 'db-all') {
-    DB.sel = {}; if (e.target.checked) g.items.forEach(x => DB.sel[x.so] = 1);
+    DB.sel = {}; if (e.target.checked) items.forEach(x => DB.sel[x.so] = 1);
     document.querySelectorAll('[data-ds]').forEach(c => c.checked = e.target.checked);
   } else if (e.target.dataset.ds != null) {
-    const x = g.items[+e.target.dataset.ds];
+    const x = items[+e.target.dataset.ds];
     if (e.target.checked) DB.sel[x.so] = 1; else delete DB.sel[x.so];
+  } else if (e.target.dataset.amt != null) {          // kế toán sửa số tiền thực tế
+    const x = items[+e.target.dataset.amt], raw = e.target.value.trim();
+    const v = raw === '' ? '' : Number(raw.replace(/[^\d]/g, ''));
+    if (v !== '' && !(v >= 0)) { toast('Số tiền không hợp lệ'); return; }
+    e.target.disabled = true;
+    try {
+      const r = await api('debtSetAmount', x.so, v);
+      const diff = r.amount - x.amount; x.amount = r.amount; x.src = r.src;
+      DB.data.groups.forEach(g => { if (g.items.indexOf(x) !== -1) g.total += diff; g.items.forEach(y => { if (y.acc === x.acc) y.balance += diff; }); });
+      toast('✔ Đã lưu số tiền ' + fmt(r.amount) + 'đ cho đơn ' + x.so); renderDebt();
+    } catch (err) { toast(err.message, 4000); e.target.disabled = false; }
   }
   dbSelCount();
 });
+$('db-list').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset.amt != null) e.target.blur(); });
+$('db-list').addEventListener('click', e => { const b = e.target.closest('[data-th]'); if (b) openThread(dbItems()[+b.dataset.th], b.dataset.k); });
 async function dbAction(action){
   const sos = Object.keys(DB.sel);
   if (!sos.length) { toast('Hãy tick chọn đơn trước.'); return; }
-  const T = { done: ['Hoàn thành công nợ?', 'Hoàn thành (không nhắc nữa)'], ask: ['Yêu cầu thu nợ?', 'Yêu cầu thu nợ (hiện cho Manager, Sale, CS)'],
+  const T = { done: ['Hoàn thành công nợ?', 'Hoàn thành (không nhắc nữa)'], ask: ['Yêu cầu thu nợ?', 'Yêu cầu thu nợ (hiện cho Manager, Sale)'],
               remove: ['Xóa khỏi danh sách?', 'Đã xóa khỏi danh sách (không hiện trong báo cáo công nợ nữa)'] }[action];
-  const lbl = T[1];
-  modal(`<h3>${T[0]}</h3><p>Chuyển <b>${sos.length}</b> đơn sang <b>${lbl}</b>.</p>
+  modal(`<h3>${T[0]}</h3><p>Chuyển <b>${sos.length}</b> đơn sang <b>${T[1]}</b>.</p>
     <div class="modal-actions"><button class="btn light" onclick="closeModal()">Hủy</button><button class="btn" id="db-ok">Đồng ý</button></div>`);
   $('db-ok').onclick = async () => {
     closeModal(); loading(true);
@@ -2177,41 +2289,264 @@ async function dbAction(action){
 $('db-done').addEventListener('click', () => dbAction('done'));
 $('db-ask').addEventListener('click', () => dbAction('ask'));
 $('db-del').addEventListener('click', () => dbAction('remove'));
-$('db-oimport').addEventListener('click', async () => {
-  const f = $('db-ofile').files[0];
-  if (!f) { toast('Hãy chọn file danh sách đơn nợ phải thu.'); return; }
-  loading(true);
-  try {
-    await loadXlsx();
-    const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, dateNF: 'dd/mm/yyyy', defval: '' });
-    const m = await api('adminImportOpenDebts', { name: f.name, rows: rows });
-    toast(`Đã cập nhật ${fmt(m.rows)} đơn nợ phải thu.`, 4000);
-    $('db-ofile').value = ''; await loadDebt(true);
-  } catch (e) { toast(e.message, 5000); }
-  finally { loading(false); }
+
+/* --- Xuất Excel --- */
+async function xlsDownload(name, head, rows, numCols){
+  await loadXlsx();
+  const ws = XLSX.utils.aoa_to_sheet([head].concat(rows));
+  ws['!cols'] = head.map((h, i) => ({ wch: Math.min(40, Math.max(String(h).length + 2, ...rows.slice(0, 200).map(r => String(r[i] == null ? '' : r[i]).length + 1))) }));
+  (numCols || []).forEach(ci => rows.forEach((r, ri) => { const a = XLSX.utils.encode_cell({ r: ri + 1, c: ci }); if (ws[a] && ws[a].t === 'n') ws[a].z = '#,##0'; }));
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Data');
+  XLSX.writeFile(wb, name + '_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+}
+$('db-xls').addEventListener('click', () => {
+  if (!DB.data) return;
+  const rows = [];
+  DB.data.groups.forEach(g => g.items.forEach(x => rows.push([g.term, x.acc, x.name, x.so, x.date, x.due, x.overdue, x.amount, x.src, x.sale, x.status, x.balance, x.note])));
+  if (!rows.length) { toast('Danh sách đang trống.'); return; }
+  xlsDownload('NhacNo', ['Nhóm', 'Mã KH', 'Tên KH', 'Mã đơn', 'Ngày giao', 'Hạn thu', 'Quá hạn (ngày)', 'Số tiền', 'Nguồn số tiền', 'Sale', 'Trạng thái', 'Dư nợ KH', 'Ghi chú'], rows, [7, 11]).catch(e => toast(e.message));
 });
-$('db-import').addEventListener('click', async () => {
-  const f = $('db-file').files[0];
-  if (!f) { toast('Hãy chọn file Payment term.'); return; }
+
+/* --- Khách hàng --- */
+async function loadCust(){
+  $('dc-count').textContent = 'Đang tải...';
+  try {
+    DB.cust = await api('debtCustList');
+    $('dc-add').classList.toggle('hidden', !DB.cust.canEdit);
+    $('dc-sale').classList.toggle('hidden', !DB.cust.canPick);
+    $('dc-sale').innerHTML = '<option value="">Tất cả sale</option>' + DB.cust.sales.map(s => `<option>${esc(s)}</option>`).join('');
+    renderCust();
+  } catch (e) { $('dc-count').textContent = e.message; }
+}
+function custFiltered(){
+  const q = norm($('dc-q').value), s = $('dc-sale').value;
+  return DB.cust.rows.filter(r => (!s || r.sale === s) && (!q || norm(r.acc + ' ' + r.name).indexOf(q) !== -1))
+    .sort((a, b) => b.bal - a.bal || a.name.localeCompare(b.name));
+}
+function renderCust(){
+  const rows = custFiltered(), ed = DB.cust.canEdit;
+  $('dc-count').textContent = `${fmt(rows.length)} khách hàng · tổng dư nợ ${fmt(rows.reduce((s, r) => s + r.bal, 0))}đ`;
+  $('dc-list').innerHTML = rows.length ? dataTable(['Mã KH', 'Tên KH', 'Sale phụ trách', 'Payment term', 'Số đơn nợ', 'Dư nợ (tự tính)'].concat(ed ? [''] : []),
+    rows.slice(0, 500).map(r => [esc(r.acc), esc(r.name), esc(r.sale),
+      r.term === '000' ? '<span class="badge st-other">000 · bỏ qua</span>' : `<b>${esc(r.term)}</b>`, fmt(r.orders), `<b>${fmt(r.bal)}</b>`]
+      .concat(ed ? [`<button class="btn light" data-ce="${esc(r.acc)}" style="padding:5px 10px;font-size:12.5px">Sửa</button>`] : [])), 1)
+    + (rows.length > 500 ? '<div class="muted" style="font-size:12px;margin-top:6px">Hiển thị 500 khách đầu – dùng ô tìm kiếm để lọc.</div>' : '')
+    : '<div class="empty">Chưa có khách hàng</div>';
+}
+$('dc-q').addEventListener('input', () => DB.cust && renderCust());
+$('dc-sale').addEventListener('change', () => DB.cust && renderCust());
+$('dc-xls').addEventListener('click', () => {
+  if (!DB.cust) return;
+  xlsDownload('DanhSachKhachHang', ['Customer Account', 'Customer Name', 'Invoice account', 'Sales in charge', 'Payment term', 'Số đơn nợ', 'Balance due'],
+    custFiltered().map(r => [r.acc, r.name, r.inv, r.sale, r.term, r.orders, r.bal]), [6]).catch(e => toast(e.message));
+});
+const CUST_COLS = [['acc', 'Customer Account', ['customer account', 'ma kh', 'ma khach hang', 'account']], ['name', 'Customer Name', ['customer name', 'ten kh', 'ten khach hang']],
+  ['inv', 'Invoice account', ['invoice account']], ['sale', 'Sales in charge', ['sales in charge', 'sales responsible', 'sale phu trach', 'sale']], ['term', 'Payment term', ['payment term', 'dieu khoan']]];
+$('dc-add').addEventListener('click', () => openGrid({ title: 'Danh sách khách hàng – thêm / cập nhật', cols: CUST_COLS,
+  hint: 'Khách đã có (trùng Customer Account) sẽ được cập nhật. Payment term chỉ nhận: ' + DEBT_TERMS.join(', ') + ' (000 = bỏ qua khỏi báo cáo nhắc nợ).',
+  save: async rows => { const r = await api('debtCustSave', rows); if (r.ok) { toast(`✔ Thêm ${r.added}, cập nhật ${r.updated} khách hàng`, 4000); DB.cust = null; loadCust(); } return r; } }));
+$('dc-list').addEventListener('click', e => {
+  const b = e.target.closest('[data-ce]'); if (!b) return;
+  const r = DB.cust.rows.find(x => x.acc === b.dataset.ce);
+  openGrid({ title: 'Sửa khách hàng ' + r.acc, cols: CUST_COLS, rows: [r], minRows: 1,
+    extra: `<button class="btn light" id="gd-delc" style="color:var(--red)">Xóa khách hàng</button>`,
+    onOpen: () => { $('gd-delc').onclick = async () => { loading(true); try { await api('debtCustDelete', [r.acc]); closeModal(); toast('Đã xóa ' + r.acc); DB.cust = null; loadCust(); } catch (x) { toast(x.message); } finally { loading(false); } }; },
+    save: async rows => { const res = await api('debtCustSave', rows); if (res.ok) { toast('✔ Đã lưu'); DB.cust = null; loadCust(); } return res; } });
+});
+
+/* --- Đơn nợ --- */
+const OPEN_COLS_UI = [['so', 'Mã đơn', ['sales order', 'ma don', 'ma don hang', 'so don', 'so don hang']], ['acc', 'Mã KH', ['customer account', 'ma kh', 'ma khach hang']],
+  ['name', 'Tên KH', ['customer name', 'ten kh', 'ten khach hang', 'khach hang']], ['amt', 'Số tiền nợ', ['so tien no', 'so tien', 'balance due', 'balance', 'amount', 'con lai', 'so tien con lai']],
+  ['sale', 'Sale phụ trách', ['sale phu trach', 'sales in charge', 'sales responsible', 'sale']], ['date', 'Ngày giao', ['ngay giao', 'delivery date', 'ngay hoa don', 'invoice date', 'ngay']],
+  ['note', 'Ghi chú', ['ghi chu', 'note']]];
+$('do-add').addEventListener('click', () => openGrid({ title: 'Thêm đơn nợ phải thu', cols: OPEN_COLS_UI,
+  hint: 'Bắt buộc: Mã đơn, Mã KH, Tên KH, Số tiền nợ, Sale phụ trách. Ngày giao (dd/mm/yyyy) không bắt buộc – để trống thì nhắc ngay.',
+  save: async rows => {
+    const r = await api('debtOpenSave', rows);
+    if (r.ok) {
+      toast(`✔ Đã thêm ${r.added} đơn` + (r.dups.length ? ` · bỏ qua ${r.dups.length} đơn trùng` : ''), 5000);
+      if (r.dups.length) setTimeout(() => modal(`<h3>Đơn trùng – đã bỏ qua (${r.dups.length})</h3>
+        ${dataTable(['Mã đơn', 'Lý do'], r.dups.map(x => [esc(x.so), esc(x.msg)]))}
+        <div class="modal-actions"><button class="btn" onclick="closeModal()">Đã hiểu</button></div>`), 50);
+      DB.cust = null; loadDebt();
+    }
+    return r;
+  } }));
+function dxInit(){
+  const sales = (DB.data && DB.data.sales) || [];
+  if ($('dx-sale').options.length <= 1) $('dx-sale').innerHTML = '<option value="">Tất cả</option>' + sales.map(s => `<option>${esc(s)}</option>`).join('');
+}
+$('dx-go').addEventListener('click', async () => {
   loading(true);
   try {
-    await loadXlsx();
-    const wb = XLSX.read(await f.arrayBuffer(), { type: 'array' });
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: '' });
-    const m = await api('adminImportCustomers', { name: f.name, rows: rows });
-    toast(`Đã cập nhật ${fmt(m.rows)} khách hàng.`, 4000);
-    $('db-file').value = ''; await loadDebt(true);
-  } catch (e) { toast(e.message, 5000); }
+    const p = { by: $('dx-by').value, status: $('dx-st').value, from: $('dx-from').value, to: $('dx-to').value, sale: $('dx-sale').value, q: $('dx-q').value.trim() };
+    const r = await api('debtExport', p);
+    if (!r.rows.length) { toast('Không có dữ liệu phù hợp điều kiện.'); return; }
+    await xlsDownload(p.by === 'customer' ? 'CongNo_TheoKhachHang' : 'CongNo_TheoDonHang', r.head, r.rows, p.by === 'customer' ? [5, 6] : [8]);
+    toast(`Đã xuất ${fmt(r.rows.length)} dòng`);
+  } catch (e) { toast(e.message, 4000); }
   finally { loading(false); }
 });
 
+/* --- Bảng nhập liệu kiểu Excel: gõ tay, dán (Ctrl+V) từ Excel, hoặc nạp file --- */
+function openGrid(o){
+  const nk = s => norm(String(s == null ? '' : s).trim()).replace(/\s+/g, ' ');
+  const cols = o.cols, nRows = Math.max(o.minRows || 8, (o.rows || []).length);
+  const cell = (r, k) => r && r[k] != null ? esc(r[k]) : '';
+  const rowHtml = (r, i) => `<tr data-line="${i + 1}"><td class="ln">${i + 1}</td>${cols.map(c => `<td><input data-c="${c[0]}" value="${cell(r, c[0])}"></td>`).join('')}</tr>`;
+  modal(`<h3>${esc(o.title)}</h3>
+    <div class="muted" style="font-size:13px">${esc(o.hint || '')}<br>💡 Copy vùng dữ liệu trong Excel rồi bấm vào ô đầu tiên và dán (Ctrl+V). Có dòng tiêu đề cũng được, hệ thống tự nhận cột.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+      <button class="btn light" id="gd-file" style="padding:8px 12px">Nạp file Excel</button><input type="file" id="gd-fin" accept=".xlsx,.xls,.csv" class="hidden">
+      <button class="btn light" id="gd-more" style="padding:8px 12px">+ 10 dòng</button><button class="btn light" id="gd-clear" style="padding:8px 12px">Xóa hết</button>${o.extra || ''}</div>
+    <div class="grid-wrap"><table class="grid"><thead><tr><th>#</th>${cols.map(c => `<th>${esc(c[1])}</th>`).join('')}</tr></thead>
+      <tbody id="gd-body">${Array.from({ length: nRows }, (_, i) => rowHtml((o.rows || [])[i], i)).join('')}</tbody></table></div>
+    <div id="gd-err"></div>
+    <div class="modal-actions"><button class="btn light" onclick="closeModal()">Đóng</button><button class="btn" id="gd-save">Kiểm tra & lưu</button></div>`);
+  document.querySelector('.modal').classList.add('wide');
+  const body = $('gd-body');
+  const addRows = n => { const s = body.children.length; body.insertAdjacentHTML('beforeend', Array.from({ length: n }, (_, i) => rowHtml(null, s + i)).join('')); };
+  const fill = (matrix, startRow, startCol) => {
+    // dòng đầu là tiêu đề? → map theo tên cột
+    let map = null;
+    const h = (matrix[0] || []).map(x => nk(x));
+    const hit = h.map(x => { const c = cols.find(c2 => c2[2].indexOf(x) !== -1 || norm(c2[1]) === x); return c ? c[0] : null; });
+    if (hit.filter(Boolean).length >= 2) { map = hit; matrix = matrix.slice(1); startCol = 0; }
+    matrix = matrix.filter(r => r.some(x => String(x).trim() !== ''));
+    if (startRow + matrix.length > body.children.length) addRows(startRow + matrix.length - body.children.length);
+    matrix.forEach((r, i) => {
+      const tr = body.children[startRow + i];
+      r.forEach((v, j) => {
+        const key = map ? map[j] : (cols[startCol + j] || [])[0]; if (!key) return;
+        const inp = tr.querySelector(`[data-c="${key}"]`); if (inp) inp.value = String(v == null ? '' : v).trim();
+      });
+    });
+    toast(`Đã đưa ${matrix.length} dòng vào bảng – kiểm tra rồi bấm Lưu`);
+  };
+  body.addEventListener('paste', e => {
+    const t = (e.clipboardData || window.clipboardData).getData('text');
+    if (!t || (t.indexOf('\t') === -1 && t.indexOf('\n') === -1)) return;     // dán 1 ô → để trình duyệt tự xử lý
+    e.preventDefault();
+    const inp = e.target.closest('input'); if (!inp) return;
+    const tr = inp.closest('tr');
+    fill(t.replace(/\r/g, '').replace(/\n$/, '').split('\n').map(l => l.split('\t')),
+      Array.prototype.indexOf.call(body.children, tr), cols.findIndex(c => c[0] === inp.dataset.c));
+  });
+  $('gd-more').onclick = () => addRows(10);
+  $('gd-clear').onclick = () => body.querySelectorAll('input').forEach(i => i.value = '');
+  $('gd-file').onclick = () => $('gd-fin').click();
+  $('gd-fin').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    loading(true);
+    try {
+      await loadXlsx();
+      const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
+      let rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, dateNF: 'dd/mm/yyyy', defval: '' });
+      const hr = rows.findIndex((r, i) => i < 15 && r.filter(x => cols.some(c => c[2].indexOf(nk(x)) !== -1)).length >= 2);
+      if (hr === -1) throw new Error('Không tìm thấy dòng tiêu đề phù hợp trong file.');
+      body.querySelectorAll('input').forEach(i => i.value = '');
+      fill(rows.slice(hr), 0, 0);
+    } catch (x) { toast(x.message, 4000); }
+    finally { loading(false); e.target.value = ''; }
+  };
+  if (o.onOpen) o.onOpen();
+  $('gd-save').onclick = async () => {
+    const rows = Array.from(body.children).map(tr => {
+      const r = { line: +tr.dataset.line };
+      tr.querySelectorAll('input').forEach(i => r[i.dataset.c] = i.value.trim());
+      return r;
+    }).filter(r => cols.some(c => r[c[0]]));
+    body.querySelectorAll('tr').forEach(tr => tr.classList.remove('bad'));
+    if (!rows.length) { $('gd-err').innerHTML = '<div class="err">Bảng đang trống.</div>'; return; }
+    $('gd-save').disabled = true; loading(true);
+    try {
+      const r = await o.save(rows);
+      if (r && r.ok === false) {
+        r.errors.forEach(x => { const tr = body.querySelector(`tr[data-line="${x.line}"]`); if (tr) tr.classList.add('bad'); });
+        $('gd-err').innerHTML = `<div class="err" style="margin-top:10px"><b>Chưa lưu – có ${r.errors.length} lỗi, vui lòng sửa:</b><br>` +
+          r.errors.slice(0, 30).map(x => `Dòng ${x.line}${x.so ? ' (' + esc(x.so) + ')' : ''}: ${esc(x.msg)}`).join('<br>') + (r.errors.length > 30 ? '<br>…' : '') + '</div>';
+      } else closeModal();
+    } catch (x) { $('gd-err').innerHTML = `<div class="err">${esc(x.message)}</div>`; }
+    finally { loading(false); const s = $('gd-save'); if (s) s.disabled = false; }
+  };
+}
+
+/* --- Đính kèm / Lời nhắn / Ghi chú riêng của từng đơn --- */
+async function openThread(x, tab){
+  loading(true);
+  let t;
+  try { t = await api('debtThread', x.so); } catch (e) { toast(e.message); return; } finally { loading(false); }
+  const render = () => {
+    const body = { files: () => `
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="th-cam">Chụp ảnh bill</button><button class="btn light" id="th-pick">Tải tệp lên</button></div>
+        <input type="file" id="th-cin" accept="image/*" capture="environment" class="hidden"><input type="file" id="th-fin" class="hidden">
+        <div class="muted" id="th-prog" style="font-size:13px;margin-top:6px"></div>
+        ${t.files.length ? t.files.map((f, i) => `<div class="hrow"><a href="#" data-fo="${i}"><b>${esc(f.name)}</b></a><div class="muted">${esc(f.by)} · ${esc(f.time)}</div></div>`).join('') : '<div class="empty">Chưa có tệp đính kèm</div>'}`,
+      msgs: () => `<div class="chat" id="th-chat">${t.msgs.length ? t.msgs.map(m => `<div class="msg ${m.mine ? 'me' : ''}"><div class="who">${esc(m.by)} · ${esc(m.time)}</div>${esc(m.text).replace(/\n/g, '<br>')}</div>`).join('') : '<div class="empty">Chưa có lời nhắn</div>'}</div>
+        <textarea class="inp" id="th-msg" rows="2" placeholder="Nhắn cho kế toán / sale / manager liên quan..."></textarea>
+        <button class="btn block" id="th-send">Gửi lời nhắn</button>`,
+      note: () => `<div class="muted" style="font-size:13px;margin-bottom:6px">🔒 Ghi chú riêng – chỉ mình bạn xem được.</div>
+        <textarea class="inp" id="th-note" rows="5">${esc(t.note)}</textarea><button class="btn block" id="th-nsave">Lưu ghi chú</button>` }[tab]();
+    modal(`<h3>${esc(x.so)} · ${esc(x.name)}</h3>
+      <div class="seg" id="th-tabs" style="margin-bottom:12px"><button data-tt="files" class="${tab === 'files' ? 'on' : ''}">Đính kèm (${t.files.length})</button>
+        <button data-tt="msgs" class="${tab === 'msgs' ? 'on' : ''}">Lời nhắn (${t.msgs.length})</button><button data-tt="note" class="${tab === 'note' ? 'on' : ''}">Ghi chú riêng</button></div>
+      ${body}<div class="modal-actions"><button class="btn light" onclick="closeModal()">Đóng</button></div>`);
+    $('th-tabs').onclick = e => { const b = e.target.closest('[data-tt]'); if (b) { tab = b.dataset.tt; render(); } };
+    const sync = () => { x.files = t.files.length; x.msgs = t.msgs.length; x.myNote = t.note; const m = t.msgs[t.msgs.length - 1]; x.lastMsg = m ? m.by + ': ' + m.text.slice(0, 60) : ''; renderDebt(); };
+    if (tab === 'files') {
+      const up = async f => {
+        if (!f) return;
+        if (f.size > 20 * 1024 * 1024) { toast('Tệp quá lớn (tối đa 20MB).'); return; }
+        $('th-prog').textContent = 'Đang tải lên ' + f.name + '...';
+        try {
+          let data, mime = f.type || 'application/octet-stream', name = f.name || 'file';
+          if (/^image\//.test(mime)) { data = (await compressImg(f, 1800, 0.85)).split(',')[1]; mime = 'image/jpeg'; if (!/\.jpe?g$/i.test(name)) name = name.replace(/\.\w+$/, '') + '.jpg'; }
+          else data = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = no; r.readAsDataURL(f); });
+          t = await api('debtUpload', x.so, { name: name, mime: mime, base64: data });
+          toast('✔ Đã tải lên ' + name); sync(); render();
+        } catch (e) { $('th-prog').textContent = e.message; }
+      };
+      $('th-cam').onclick = () => $('th-cin').click(); $('th-pick').onclick = () => $('th-fin').click();
+      $('th-cin').onchange = e => up(e.target.files[0]); $('th-fin').onchange = e => up(e.target.files[0]);
+      document.querySelectorAll('[data-fo]').forEach(a => a.onclick = async ev => {
+        ev.preventDefault();
+        const f = t.files[+a.dataset.fo]; $('th-prog').textContent = 'Đang mở ' + f.name + '...';
+        try {
+          const r = await api('debtFile', x.so, f.id);
+          if (r.url) { window.open(r.url, '_blank'); return; }
+          if (/^image\//.test(r.mime)) { modal(`<h3>${esc(r.name)}</h3><img class="bcs-big" src="${r.data}"><div class="modal-actions"><button class="btn light" id="th-back">Quay lại</button><a class="btn" href="${r.data}" download="${esc(r.name)}">Tải về</a></div>`); $('th-back').onclick = render; }
+          else { const a2 = document.createElement('a'); a2.href = r.data; a2.download = r.name; document.body.appendChild(a2); a2.click(); a2.remove(); $('th-prog').textContent = ''; }
+        } catch (e) { $('th-prog').textContent = e.message; }
+      });
+    }
+    if (tab === 'msgs') {
+      const ch = $('th-chat'); ch.scrollTop = ch.scrollHeight;
+      $('th-send').onclick = async () => {
+        const v = $('th-msg').value.trim(); if (!v) return;
+        $('th-send').disabled = true;
+        try { t = await api('debtPostMsg', x.so, v); sync(); render(); } catch (e) { toast(e.message); $('th-send').disabled = false; }
+      };
+    }
+    if (tab === 'note') $('th-nsave').onclick = async () => {
+      try { const r = await api('debtSaveNote', x.so, $('th-note').value); t.note = r.note; sync(); toast('✔ Đã lưu ghi chú riêng'); } catch (e) { toast(e.message); }
+    };
+  };
+  render();
+}
+
 /* ========= BÁO CÁO SOẠN HÀNG ========= */
 const BCS = { photos: [], code: '', canRecord: null, cache: {}, queue: [], busy: false, stream: null };
+const bcsQKey = () => 'annt_bcs_q_' + (S.user ? S.user.username : '');
 async function initBcs(){
   if (BCS.canRecord === null) {
-    try { const r = await api('bcsSearch', ''); BCS.canRecord = r.canRecord; } catch (e) { toast(e.message); return; }
+    // quyền ghi nhận xét ngay trên máy (không cần mạng)
+    BCS.canRecord = ['admin', 'storekeeper'].indexOf(S.user.role) !== -1 || (S.user.features || []).indexOf('soanhang') !== -1;
+    // nạp lại các báo cáo CCTV còn chờ gửi (lưu trên máy khi mất mạng)
+    const saved = store.get(bcsQKey()) || [];
+    saved.forEach(j => { if (!BCS.queue.some(x => x.id === j.id)) { j.state = 'pending'; j.photos = []; BCS.queue.push(j); } });
+    if (saved.length) { bcsRenderHist(); bcsPump(); }
   }
+  bcsLoadCctv();
   $('bcs-tabs').classList.toggle('hidden', !BCS.canRecord);
   bcsTab(BCS.canRecord ? (BCS.tab || 'rec') : 'find');
 }
@@ -2317,14 +2652,37 @@ $('bcs-send').addEventListener('click', () => {
   BCS.photos = []; toast('Đang gửi ảnh đơn ' + BCS.code + ' lên Drive...');
   bcsStep(1, true);
 });
-$('bcs-cctv-btn').addEventListener('click', () => {
-  bcsEnqueue({ code: BCS.code, type: 'cctv', photos: [], ids: [] });
-  beep('saved'); toast('✔ Ghi hình CCTV – ' + BCS.code);
-  bcsStep(1, true);
+/* --- Danh sách CCTV: tải về máy ngay khi mở tính năng (dùng được cả khi mất mạng) --- */
+async function bcsLoadCctv(){
+  if (!BCS.cctv) BCS.cctv = store.get('annt_cctv') || null;
+  if (!BCS.canRecord) return;
+  try { const r = await api('cctvList'); BCS.cctv = r.list; store.set('annt_cctv', r.list); } catch (e) {}
+}
+const ck = s => String(s || '').trim().toUpperCase();
+$('bcs-cctv-btn').addEventListener('click', async () => {
+  if (!BCS.cctv || !BCS.cctv.length) { await bcsLoadCctv(); }
+  if (!BCS.cctv || !BCS.cctv.length) { beep('err'); toast('Chưa có danh sách mã CCTV – nhờ admin khai báo trong mục Quản trị.', 4000); return; }
+  const code = BCS.code;
+  for (;;) {
+    const c = await scanOnce('Quét mã CCTV – đơn ' + code);
+    if (!c) return;                                    // bấm Đóng → quay lại chọn Chụp ảnh / CCTV
+    const hit = BCS.cctv.find(x => ck(x.code) === ck(c));
+    if (hit) {
+      bcsEnqueue({ code: code, type: 'cctv', cctv: hit.code, cctvName: hit.name, photos: [], ids: [], ts: Date.now() });
+      beep('saved'); toast('✔ ' + code + ' · CCTV ' + (hit.name || hit.code));
+      bcsStep(1, true); return;
+    }
+    beep('err'); toast('Mã "' + c + '" không có trong danh sách CCTV – quét lại', 3000);
+    await new Promise(r => setTimeout(r, 700));
+  }
 });
+function bcsSaveQ(){ if (S.user) store.set(bcsQKey(), BCS.queue.filter(j => j.type === 'cctv' && j.state !== 'ok').map(j => ({ id: j.id, code: j.code, type: j.type, cctv: j.cctv, cctvName: j.cctvName, ts: j.ts, time: j.time, ids: [] }))); }
+const isNetErr = m => /kết nối|network|fetch|timeout|quá \d+ giây|failed/i.test(String(m || '')) || !navigator.onLine;
+setInterval(() => { if (BCS.queue.some(j => j.state === 'pending')) bcsPump(); }, 20000);
+window.addEventListener('online', () => bcsPump());
 function bcsEnqueue(job){
   job.id = reqId('BCS'); job.state = 'pending'; job.time = new Date().toLocaleTimeString('vi-VN', { hour12: false });
-  BCS.queue.unshift(job); bcsRenderHist(); bcsPump();
+  BCS.queue.unshift(job); bcsSaveQ(); bcsRenderHist(); bcsPump();
 }
 async function bcsPump(){
   if (BCS.busy) return;
@@ -2335,20 +2693,23 @@ async function bcsPump(){
       const r = await api('bcsUpload', job.code, { n: job.ids.length + 1, mime: 'image/jpeg', base64: job.photos[0].split(',')[1] });
       job.ids.push(r.id); job.photos.shift(); bcsRenderHist();
     }
-    await api('bcsSave', { code: job.code, type: job.type, ids: job.ids, requestId: job.id });
-    job.state = 'ok'; if (job.type === 'photo') beep('saved');
+    await api('bcsSave', { code: job.code, type: job.type, ids: job.ids, cctv: job.cctv || '', ts: job.ts, requestId: job.id });
+    job.state = 'ok'; job.msg = ''; if (job.type === 'photo') beep('saved');
   } catch (e) {
-    job.state = /đã được gửi/.test(e.message) ? 'ok' : 'err'; job.msg = e.message;
+    if (/đã được gửi/.test(e.message)) job.state = 'ok';
+    else if (isNetErr(e.message)) { job.state = 'pending'; job.msg = 'chờ có mạng'; job.wait = true; }   // mất mạng → giữ lại, tự gửi khi có mạng
+    else { job.state = 'err'; job.msg = e.message; }
   }
-  BCS.busy = false; bcsRenderHist();
-  if (BCS.queue.some(j => j.state === 'pending')) bcsPump();
+  BCS.busy = false; bcsSaveQ(); bcsRenderHist();
+  if (!job.wait && BCS.queue.some(j => j.state === 'pending')) bcsPump();
+  job.wait = false;
 }
 function bcsRenderHist(){
   $('bcs-hist-card').classList.toggle('hidden', !BCS.queue.length);
   const lbl = j => j.state === 'ok' ? '<span style="color:var(--green)">✔ Đã lưu</span>'
     : j.state === 'err' ? `<span style="color:var(--red)">✖ Lỗi – ${esc(j.msg || '')}</span> <button class="btn light" data-retry="${j.id}" style="padding:4px 10px;font-size:12.5px">Gửi lại</button>`
-    : `<span style="color:var(--amber)">⏳ Đang gửi${j.type === 'photo' ? ` ${j.ids.length}/${j.ids.length + j.photos.length} ảnh` : ''}</span>`;
-  $('bcs-hist').innerHTML = BCS.queue.slice(0, 50).map(j => `<div class="hrow"><b>${esc(j.code)}</b> · ${j.type === 'photo' ? 'Chụp ảnh' : 'Ghi hình CCTV'}
+    : `<span style="color:var(--amber)">⏳ ${j.msg === 'chờ có mạng' ? 'Chờ có mạng để gửi' : 'Đang gửi'}${j.type === 'photo' ? ` ${j.ids.length}/${j.ids.length + j.photos.length} ảnh` : ''}</span>`;
+  $('bcs-hist').innerHTML = BCS.queue.slice(0, 50).map(j => `<div class="hrow"><b>${esc(j.code)}</b> · ${j.type === 'photo' ? 'Chụp ảnh' : 'Ghi hình CCTV' + (j.cctvName || j.cctv ? ' – ' + esc(j.cctvName || j.cctv) : '')}
     <div class="muted">${j.time} · ${lbl(j)}</div></div>`).join('');
 }
 $('bcs-hist').addEventListener('click', e => {
@@ -2783,11 +3144,25 @@ function showAdminTab(t){
   $('ad-users').classList.toggle('hidden', t !== 'users');
   $('ad-sched').classList.toggle('hidden', t !== 'sched');
   $('ad-kk').classList.toggle('hidden', t !== 'kk');
+  $('ad-cctv').classList.toggle('hidden', t !== 'cctv');
+  if (t === 'cctv') loadAdminCctv();
   if (t === 'sched') initSchedEditor();
   if (t === 'kk') initAdminKK();
 }
 $('ad-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) showAdminTab(b.dataset.t); });
 
+const CCTV_COLS = [['code', 'Mã CCTV', ['ma cctv', 'ma', 'code']], ['name', 'Vị trí', ['vi tri', 'ten vi tri', 'location', 'ten']], ['note', 'Ghi chú', ['ghi chu', 'note']]];
+async function loadAdminCctv(){
+  try { AD.cctv = (await api('cctvList')).list; renderAdminCctv(); }
+  catch (e) { $('cc-list').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+function renderAdminCctv(){
+  $('cc-list').innerHTML = AD.cctv.length ? `<div class="muted" style="font-size:13px">${AD.cctv.length} vị trí CCTV</div>` +
+    dataTable(['Mã CCTV', 'Vị trí', 'Ghi chú'], AD.cctv.map(x => ['<b>' + esc(x.code) + '</b>', esc(x.name), esc(x.note)]), 1) : '<div class="empty">Chưa có mã CCTV nào</div>';
+}
+$('cc-edit').addEventListener('click', () => openGrid({ title: 'Danh sách mã CCTV', cols: CCTV_COLS, rows: AD.cctv || [], minRows: Math.max(6, (AD.cctv || []).length + 3),
+  hint: 'Danh sách này sẽ THAY THẾ danh sách cũ. Mã CCTV là nội dung của mã QR dán tại vị trí camera.',
+  save: async rows => { const r = await api('adminSaveCctv', rows); AD.cctv = r.list; store.set('annt_cctv', r.list); renderAdminCctv(); toast('✔ Đã lưu ' + r.list.length + ' mã CCTV'); return { ok: true }; } }));
 async function loadAdminUsers(){
   loading(true);
   try { AD.data = await api('adminListUsers'); renderAdminUsers(); }
