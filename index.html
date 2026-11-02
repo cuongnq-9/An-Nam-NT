@@ -593,6 +593,12 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
         <input type="file" id="db-file" accept=".xlsx,.xls,.csv" class="inp" style="margin-top:8px">
         <button class="btn block ghost" id="db-import">Cập nhật danh sách khách hàng</button>
         <div class="muted" style="font-size:12.5px;margin-top:6px">File cần có cột: Customer Account, Customer Name, invoice account, Sales in charge, Payment term, Balance due.</div>
+        <h4 style="margin-top:20px;padding-top:14px;border-top:1px solid var(--line)">Danh sách đơn nợ phải thu (trước 01/11/2026)</h4>
+        <div class="muted" id="db-open" style="font-size:13px"></div>
+        <input type="file" id="db-ofile" accept=".xlsx,.xls,.csv" class="inp" style="margin-top:8px">
+        <button class="btn block ghost" id="db-oimport">Cập nhật danh sách đơn nợ phải thu</button>
+        <div class="muted" style="font-size:12.5px;margin-top:6px">Bắt buộc có cột mã đơn (Sales order / Mã đơn). Nên có thêm: Customer account, Customer name, Sale, Ngày giao, Số tiền nợ.
+          Các đơn trong danh sách này luôn được nhắc nợ dù giao trước 01/11/2026. Mỗi lần cập nhật sẽ thay toàn bộ danh sách cũ.</div>
       </div>
     </div>
 
@@ -761,7 +767,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 
     <!-- CÀI ĐẶT -->
     <div class="view hidden" id="v-settings">
-      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 02/11/2026-c</div>
+      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 02/11/2026-f · máy chủ <span id="s-ver">?</span></div>
       <div class="card" id="force-note" style="background:var(--amber-l)">
         <b style="color:var(--amber)">Bạn đang dùng mật khẩu mặc định.</b>
         <div style="font-size:14px;margin-top:4px">Vui lòng đổi mật khẩu để tiếp tục sử dụng ứng dụng.</div>
@@ -974,7 +980,7 @@ function enterApp(){
   const d = new Date();
   const days = ['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'];
   $('hello-date').textContent = `${days[d.getDay()]}, ${d.toLocaleDateString('vi-VN')}`;
-  $('s-user').textContent = u.username; $('s-name').textContent = u.name;
+  $('s-user').textContent = u.username; $('s-name').textContent = u.name; $('s-ver').textContent = u.ver || 'bản cũ';
   renderHome();
   go(u.mustChange ? 'settings' : 'home');
   // Nạp lại hàng chờ quét còn dở (VD: phiên hết hạn trước đó) và gửi tiếp ở nền
@@ -2125,7 +2131,7 @@ function renderDebt(){
       (ed ? ['<input type="checkbox" id="db-all">'] : []).concat(['Khách hàng', 'Mã đơn', 'Ngày giao', 'Hạn thu', 'Quá hạn', 'Số tiền', 'Sale', 'Trạng thái']),
       g.items.map((x, i) => (ed ? [`<input type="checkbox" data-ds="${i}" ${DB.sel[x.so] ? 'checked' : ''}>`] : []).concat([
         `<b>${esc(x.name)}</b><div class="muted" style="font-size:12px">${esc(x.acc)}${x.balance != null ? ' · Dư nợ: ' + fmt(x.balance) : ''}</div>`,
-        esc(x.so), esc(x.date), esc(x.due), x.overdue > 0 ? `<span class="tag-od">${x.overdue} ngày</span>` : (x.overdue === 0 ? 'Hôm nay' : `còn ${-x.overdue} ngày`),
+        esc(x.so) + (x.note ? `<div style="font-size:11px;color:var(--amber)">${esc(x.note)}</div>` : ''), esc(x.date || '?'), esc(x.due || '?'), x.overdue > 0 ? `<span class="tag-od">${x.overdue} ngày</span>` : (x.overdue === 0 ? 'Hôm nay' : `còn ${-x.overdue} ngày`),
         `<b>${fmt(x.amount)}</b>${x.src === 'Thực tế' ? '' : '<div class="muted" style="font-size:11px">tham khảo</div>'}`, esc(x.sale),
         st(x.status) + (x.by ? `<div class="muted" style="font-size:11px">${esc(x.by)} ${esc(x.at)}</div>` : '')])), ed ? 1 : 0)}
       <div style="text-align:right;margin-top:8px;font-weight:700">Tổng: ${fmt(g.total)}đ</div></div>`;
@@ -2134,6 +2140,10 @@ function renderDebt(){
   const m = d.custMeta;
   $('db-cust').innerHTML = m ? `Đã có <b>${fmt(m.rows)}</b> khách hàng · cập nhật ${esc(m.at)} bởi ${esc(m.by)}<br>` +
     Object.keys(m.terms).map(k => `${esc(k)}: ${m.terms[k]}`).join(' · ') : '<span style="color:var(--red)">Chưa có danh sách khách hàng – hãy cập nhật file Payment term.</span>';
+  const om = d.openMeta;
+  $('db-open').innerHTML = om ? `Đang theo dõi <b>${fmt(om.rows)}</b> đơn · cập nhật ${esc(om.at)} bởi ${esc(om.by)}` +
+    (om.noDate ? `<br><span style="color:var(--amber)">${om.noDate} đơn không có ngày giao → nhắc ngay</span>` : '') +
+    `<br>Cột đọc được: ${esc((om.cols || []).join(', '))}` : 'Chưa có danh sách.';
   dbSelCount();
 }
 function dbSelCount(){ $('db-sel').textContent = `Đã chọn ${Object.keys(DB.sel).length} đơn`; }
@@ -2167,6 +2177,20 @@ async function dbAction(action){
 $('db-done').addEventListener('click', () => dbAction('done'));
 $('db-ask').addEventListener('click', () => dbAction('ask'));
 $('db-del').addEventListener('click', () => dbAction('remove'));
+$('db-oimport').addEventListener('click', async () => {
+  const f = $('db-ofile').files[0];
+  if (!f) { toast('Hãy chọn file danh sách đơn nợ phải thu.'); return; }
+  loading(true);
+  try {
+    await loadXlsx();
+    const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, dateNF: 'dd/mm/yyyy', defval: '' });
+    const m = await api('adminImportOpenDebts', { name: f.name, rows: rows });
+    toast(`Đã cập nhật ${fmt(m.rows)} đơn nợ phải thu.`, 4000);
+    $('db-ofile').value = ''; await loadDebt(true);
+  } catch (e) { toast(e.message, 5000); }
+  finally { loading(false); }
+});
 $('db-import').addEventListener('click', async () => {
   const f = $('db-file').files[0];
   if (!f) { toast('Hãy chọn file Payment term.'); return; }
@@ -2351,9 +2375,14 @@ async function bcsLoadPhotos(){
     await Promise.all(els.slice(i, i + 3).map(async el => {
       const id = el.dataset.ph;
       try {
-        if (!BCS.cache[id]) BCS.cache[id] = await api('bcsPhoto', id);
+        BCS.cache[id] = await api('bcsPhoto', id);    // luôn hỏi lại máy chủ: ảnh đã xóa trên Drive sẽ không hiện nữa
         el.innerHTML = `<img src="${BCS.cache[id]}" data-bigsrc="1">`;
-      } catch (e) { el.textContent = 'Lỗi ảnh'; }
+      } catch (e) {
+        if (/DELETED/.test(e.message)) {
+          const grid = el.parentNode; el.remove();
+          if (grid && !grid.children.length) grid.outerHTML = '<div class="muted" style="font-size:13px;margin-top:6px">Ảnh đã bị xóa khỏi Drive</div>';
+        } else el.textContent = 'Lỗi tải ảnh';
+      }
     }));
   }
 }
