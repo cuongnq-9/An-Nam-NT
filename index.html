@@ -223,6 +223,8 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .ho-box{padding:12px 14px}
 .amt-in{width:120px;padding:7px 8px;border:1.5px solid var(--line);border-radius:8px;font-weight:700;text-align:right;font-size:14px}
 .amt-in:focus{border-color:var(--pri);outline:none}
+.amt-in.ref{border-color:#f5b041;background:#fffaf0}
+.amt-in.dirty{border-color:#1565c0;background:#e8f1fd}
 .db-ic{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:5px 9px;font-size:14px;cursor:pointer;white-space:nowrap}
 .db-ic.on{border-color:var(--pri);background:var(--pri-l);color:var(--pri);font-weight:700}
 .inl-cell{min-width:200px;max-width:260px;white-space:normal}
@@ -615,14 +617,18 @@ table.grid tr.bad td{background:#fdecea}
 
     <!-- CÔNG NỢ -->
     <div class="view hidden" id="v-congno">
-      <div class="seg" id="db-mtabs" style="margin-bottom:12px"><button data-m="remind" class="on">Nhắc nợ</button><button data-m="cust">Khách hàng</button><button data-m="open" class="hidden" id="db-mt-open">Đơn nợ</button></div>
+      <div class="seg" id="db-mtabs" style="margin-bottom:12px"><button data-m="remind" class="on">Quản lý công nợ</button><button data-m="cust">Khách hàng</button><button data-m="open" class="hidden" id="db-mt-open">Đơn hàng</button></div>
 
       <!-- Nhắc nợ -->
       <div id="db-remind">
         <div class="card">
           <div class="grp-head"><div><div class="t" id="db-title">Công nợ đến hạn nhắc</div><div class="note" id="db-note">Đang tải...</div></div>
             <div style="display:flex;gap:6px;flex:none"><button class="btn light" id="db-xls" style="padding:8px 10px">Xuất Excel</button><button class="btn ghost" id="db-reload" style="padding:8px 10px">Tải lại</button></div></div>
-          <div id="db-salebox" class="hidden" style="margin-top:10px"><select class="inp" id="db-sale"></select></div>
+          <div class="seg" id="db-mode" style="margin-top:10px"><button data-md="due" class="on">Nợ đến hạn</button><button data-md="all">Tất cả</button></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <input class="inp" id="db-q" placeholder="Tìm tên KH (dùng * thay chuỗi bất kỳ) hoặc mã đơn" style="flex:2;min-width:200px">
+            <div id="db-salebox" class="hidden" style="flex:1;min-width:150px"><select class="inp" id="db-sale"></select></div>
+          </div>
         </div>
         <div class="kk-kpis" id="db-kpis"></div>
         <div class="seg" id="db-tabs" style="margin-bottom:12px;overflow-x:auto"></div>
@@ -630,6 +636,7 @@ table.grid tr.bad td{background:#fdecea}
         <div class="debt-bar hidden" id="db-bar">
           <span class="n" id="db-sel">Đã chọn 0 đơn</span>
           <button class="btn ghost" id="db-ask" style="padding:9px 12px">Yêu cầu thu nợ</button>
+          <button class="btn" id="db-save" style="padding:9px 12px;background:#1565c0">Lưu thay đổi</button>
           <button class="btn" id="db-done" style="padding:9px 12px">Hoàn thành</button>
           <button class="btn light" id="db-del" style="padding:9px 12px;color:var(--red)">Xóa khỏi danh sách</button>
         </div>
@@ -643,7 +650,7 @@ table.grid tr.bad td{background:#fdecea}
             <select class="inp hidden" id="dc-sale" style="flex:1;min-width:140px"></select>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-            <button class="btn ghost hidden" id="dc-add">+ Thêm / dán từ Excel</button>
+            <button class="btn ghost hidden" id="dc-add">Cập nhật thông tin KH</button>
             <button class="btn light" id="dc-xls">Xuất Excel</button>
           </div>
           <div class="muted" style="font-size:12.5px;margin-top:8px">Dư nợ được hệ thống tự cộng: đơn nợ trước 01/11/2026 (danh sách Đơn nợ) + đơn giao từ 01/11/2026, trừ các đơn đã Hoàn thành / đã xóa khỏi danh sách.
@@ -652,29 +659,32 @@ table.grid tr.bad td{background:#fdecea}
         <div class="card" style="padding-top:6px"><div class="muted" id="dc-count" style="font-size:13px;margin:6px 2px"></div><div id="dc-list"></div></div>
       </div>
 
-      <!-- Đơn nợ (kế toán / admin) -->
+      <!-- Đơn hàng (kế toán / admin) -->
       <div id="db-open" class="hidden">
         <div class="card">
-          <h4 style="margin-top:0">Thêm đơn nợ phải thu (trước 01/11/2026)</h4>
-          <div class="muted" style="font-size:13px">Nhập tay, dán từ Excel hoặc import file. Bắt buộc đủ: <b>Mã đơn, Mã KH, Tên KH, Số tiền nợ, Sale phụ trách</b>. Có dòng sai → hệ thống báo lỗi, chưa lưu gì.
-            Đơn đã có trong hệ thống sẽ được bỏ qua và báo trùng. Mỗi lần nhập là <b>thêm vào</b> danh sách, không xóa dữ liệu cũ.</div>
-          <button class="btn block" id="do-add">Nhập / dán / import đơn nợ</button>
-        </div>
-        <div class="card">
-          <h4 style="margin-top:0">Xuất Excel chi tiết nợ</h4>
           <div class="row2">
-            <div><label class="f" style="margin-top:0">Xuất theo</label><select class="inp" id="dx-by"><option value="order">Từng đơn hàng</option><option value="customer">Tổng theo khách hàng</option></select></div>
-            <div><label class="f" style="margin-top:0">Trạng thái</label><select class="inp" id="dx-st"><option value="open">Còn nợ</option><option value="all">Tất cả</option><option value="done">Đã hoàn thành</option></select></div>
+            <div><label class="f" style="margin-top:0">Giao từ ngày</label><input type="date" class="inp" id="dx-from"></div>
+            <div><label class="f" style="margin-top:0">Đến ngày</label><input type="date" class="inp" id="dx-to"></div>
           </div>
           <div class="row2">
-            <div><label class="f">Giao từ ngày</label><input type="date" class="inp" id="dx-from"></div>
-            <div><label class="f">Đến ngày</label><input type="date" class="inp" id="dx-to"></div>
-          </div>
-          <div class="row2">
+            <div><label class="f">Trạng thái</label><select class="inp" id="dx-st"><option value="all">Tất cả</option><option value="open">Còn nợ</option><option value="done">Đã hoàn thành</option></select></div>
             <div><label class="f">Sale phụ trách</label><select class="inp" id="dx-sale"><option value="">Tất cả</option></select></div>
-            <div><label class="f">Khách hàng / mã đơn</label><input class="inp" id="dx-q" placeholder="Để trống = tất cả"></div>
           </div>
-          <button class="btn block ghost" id="dx-go">Xuất file Excel</button>
+          <div class="row2">
+            <div><label class="f">Khách hàng / mã đơn</label><input class="inp" id="dx-q" placeholder="Tên KH (dùng *) hoặc mã đơn"></div>
+            <div><label class="f">Xem theo</label><select class="inp" id="dx-by"><option value="order">Từng đơn hàng</option><option value="customer">Tổng theo khách hàng</option></select></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+            <button class="btn" id="dx-go" style="flex:1">Xem danh sách</button>
+            <button class="btn ghost" id="do-add" style="flex:1">Import đơn nợ cũ</button>
+          </div>
+        </div>
+        <div class="card" style="padding-top:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px">
+            <div class="muted" id="dx-count" style="font-size:13px">Chọn điều kiện rồi bấm Xem danh sách</div>
+            <button class="btn light" id="dx-xls" style="padding:7px 12px;flex:none">⬇ Xuất Excel</button>
+          </div>
+          <div id="dx-list"></div>
         </div>
       </div>
     </div>
@@ -853,7 +863,7 @@ table.grid tr.bad td{background:#fdecea}
 
     <!-- CÀI ĐẶT -->
     <div class="view hidden" id="v-settings">
-      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 02/11/2026-i · máy chủ <span id="s-ver">?</span></div>
+      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 05/11/2026-b · máy chủ <span id="s-ver">?</span></div>
       <div class="card" id="force-note" style="background:var(--amber-l)">
         <b style="color:var(--amber)">Bạn đang dùng mật khẩu mặc định.</b>
         <div style="font-size:14px;margin-top:4px">Vui lòng đổi mật khẩu để tiếp tục sử dụng ứng dụng.</div>
@@ -2203,7 +2213,15 @@ $('dc-mine').addEventListener('click', e => {
 });
 
 /* ========= CÔNG NỢ ========= */
-const DB = { data: null, tab: '', sel: {}, mtab: 'remind', sale: '', cust: null };
+const DB = { data: null, tab: '', sel: {}, mtab: 'remind', sale: '', cust: null, mode: 'due', q: '', edit: {}, orders: null };
+/* Tìm theo tên KH (dấu * thay chuỗi bất kỳ, không phân biệt dấu) hoặc mã đơn / mã KH */
+function debtMatch(q){
+  q = norm(String(q || '').trim()); if (!q) return null;
+  const re = new RegExp(q.split('*').map(s => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*'));
+  const plain = q.replace(/\*/g, '');
+  return x => re.test(norm(x.name)) || norm(x.so).indexOf(plain) !== -1 || norm(x.acc) === q;
+}
+const numIn = s => { const t = String(s == null ? '' : s).replace(/[^\d]/g, ''); return t === '' ? null : Number(t); };
 const DEBT_TERMS = ['COD', 'TBD', 'N7', 'N15', 'N20', '000'];
 function dbMTab(m){
   DB.mtab = m;
@@ -2217,47 +2235,68 @@ async function loadDebt(force){
   $('db-note').textContent = 'Đang tải...';
   loading(true);
   try {
-    DB.data = await api('debtReport', { force: !!force, sale: DB.sale });
-    DB.sel = {}; renderDebt(); if (!DB.sale) setBadge('congno', DB.data.count);
+    DB.data = await api('debtReport', { force: !!force, sale: DB.sale, mode: DB.mode });
+    DB.sel = {}; DB.edit = {}; renderDebt(); if (!DB.sale && DB.mode === 'due') setBadge('congno', DB.data.count);
     $('db-mt-open').classList.toggle('hidden', !DB.data.canEdit);
   } catch (e) { $('db-note').textContent = e.message; }
   finally { loading(false); }
 }
 $('db-reload').addEventListener('click', () => loadDebt(true));
 $('db-sale').addEventListener('change', e => { DB.sale = e.target.value; loadDebt(); });
+$('db-mode').addEventListener('click', e => {
+  const b = e.target.closest('[data-md]'); if (!b || b.dataset.md === DB.mode) return;
+  if (Object.keys(DB.edit).length && !confirm('Có thay đổi chưa lưu – bỏ qua các thay đổi này?')) return;
+  DB.mode = b.dataset.md; document.querySelectorAll('#db-mode button').forEach(x => x.classList.toggle('on', x === b)); loadDebt();
+});
+let dbQT; $('db-q').addEventListener('input', e => { clearTimeout(dbQT); dbQT = setTimeout(() => { DB.q = e.target.value; DB.data && renderDebt(); }, 250); });
+function dbGroups(){
+  const m = debtMatch(DB.q);
+  return DB.data.groups.map(g => { const items = m ? g.items.filter(m) : g.items;
+    return { term: g.term, items: items, total: items.reduce((s, x) => s + x.amount, 0), remain: items.reduce((s, x) => s + x.remain, 0) }; });
+}
 function renderDebt(){
   const d = DB.data, ed = d.canEdit;
-  $('db-title').textContent = ed ? 'Công nợ đến hạn nhắc' : 'Đơn cần thu nợ';
+  $('db-title').textContent = d.mode === 'all' ? (ed ? 'Tất cả đơn còn nợ' : 'Tất cả đơn cần thu nợ') : (ed ? 'Công nợ đến hạn thu' : 'Đơn cần thu nợ đến hạn');
   $('db-note').textContent = `${d.count} đơn · cập nhật ${d.at}`;
   $('db-salebox').classList.toggle('hidden', !d.canPick);
   if (d.canPick) $('db-sale').innerHTML = '<option value="">Tất cả sale</option>' + d.sales.map(s => `<option ${s === DB.sale ? 'selected' : ''}>${esc(s)}</option>`).join('');
-  const groups = d.groups.filter(g => ed || g.items.length);
-  if (!groups.find(g => g.term === DB.tab)) DB.tab = (groups.find(g => g.items.length) || groups[0] || {}).term || '';
-  $('db-kpis').innerHTML = groups.map(g => `<div class="kpi-mini"><b style="color:${g.items.length ? 'var(--red)' : 'var(--green)'}">${g.items.length}</b><small>${esc(g.term)} · ${fmt(g.total)}đ</small></div>`).join('');
+  const groups = dbGroups().filter(g => ed || g.items.length || DB.q);
+  if (!groups.find(g => g.term === DB.tab) || (DB.q && !(groups.find(g => g.term === DB.tab) || {}).items.length))
+    DB.tab = (groups.find(g => g.items.length) || groups.find(g => g.term === DB.tab) || groups[0] || {}).term || '';
+  $('db-kpis').innerHTML = groups.map(g => `<div class="kpi-mini"><b style="color:${g.items.length ? 'var(--red)' : 'var(--green)'}">${g.items.length}</b><small>${esc(g.term)} · còn ${fmt(g.remain)}đ</small></div>`).join('');
   $('db-tabs').innerHTML = groups.map(g => `<button data-dt="${esc(g.term)}" class="${g.term === DB.tab ? 'on' : ''}">${esc(g.term)} (${g.items.length})</button>`).join('');
   const g = groups.find(x => x.term === DB.tab);
   const st = s => `<span class="badge ${s === 'Yêu cầu thu nợ' ? 'st-cancel' : 'st-wait'}">${esc(s)}</span>`;
   const ico = (i, k, n, on) => `<button class="db-ic ${on ? 'on' : ''}" data-th="${i}" data-k="${k}">${k === 'files' ? '📎' : k === 'msgs' ? '💬' : '📝'}${n ? ' ' + n : ''}</button>`;
-  $('db-list').innerHTML = !g || !g.items.length ? '<div class="card empty">Không có đơn nào đến hạn 🎉</div>' :
+  const ev = (x, k, def) => DB.edit[x.so] && DB.edit[x.so][k] !== undefined ? DB.edit[x.so][k] : def;
+  $('db-list').innerHTML = !g || !g.items.length ? `<div class="card empty">${DB.q ? 'Không tìm thấy đơn phù hợp' : d.mode === 'all' ? 'Không có đơn nào còn nợ 🎉' : 'Không có đơn nào đến hạn 🎉'}</div>` :
     `<div class="card" style="padding-top:6px">${dataTable(
-      (ed ? ['<input type="checkbox" id="db-all">'] : []).concat(['Khách hàng', 'Mã đơn', 'Ngày giao', 'Hạn thu', 'Quá hạn', 'Số tiền', 'Sale', 'Trạng thái', 'Đính kèm', 'Lời nhắn', 'Ghi chú riêng 🔒']),
-      g.items.map((x, i) => (ed ? [`<input type="checkbox" data-ds="${i}" ${DB.sel[x.so] ? 'checked' : ''}>`] : []).concat([
+      (ed ? ['<input type="checkbox" id="db-all">'] : []).concat(['Khách hàng', 'Mã đơn', 'Ngày giao', 'Hạn thu', 'Quá hạn', 'Số tiền', 'Đã thu', 'Còn lại', 'Sale', 'Trạng thái', 'Đính kèm', 'Lời nhắn', 'Ghi chú riêng 🔒']),
+      g.items.map((x, i) => {
+        const amt = ev(x, 'amount', x.amount), paid = ev(x, 'paid', x.paid), exact = x.exact || (DB.edit[x.so] && DB.edit[x.so].amount !== undefined);
+        const dA = DB.edit[x.so] && DB.edit[x.so].amount !== undefined, dP = DB.edit[x.so] && DB.edit[x.so].paid !== undefined;
+        return (ed ? [`<input type="checkbox" data-ds="${i}" ${DB.sel[x.so] ? 'checked' : ''}>`] : []).concat([
         `<b>${esc(x.name)}</b><div class="muted" style="font-size:12px">${esc(x.acc)} · Dư nợ: ${fmt(x.balance)}</div>`,
         esc(x.so) + (x.note ? `<div style="font-size:11px;color:var(--amber)">${esc(x.note)}</div>` : ''), esc(x.date || '?'), esc(x.due || '?'),
         x.overdue > 0 ? `<span class="tag-od">${x.overdue} ngày</span>` : (x.overdue === 0 ? 'Hôm nay' : `còn ${-x.overdue} ngày`),
-        ed ? `<input class="amt-in" data-amt="${i}" inputmode="numeric" value="${fmt(x.amount)}"><div class="muted" style="font-size:11px">${x.src === 'Thực tế' ? '✔ số thực tế' : 'tham khảo · ' + esc(x.src || '')}</div>`
-           : `<b>${fmt(x.amount)}</b>${x.src === 'Thực tế' ? '' : '<div class="muted" style="font-size:11px">tham khảo</div>'}`,
+        ed ? `<input class="amt-in ${dA ? 'dirty' : ''} ${exact ? '' : 'ref'}" data-amt="${i}" inputmode="numeric" value="${fmt(amt)}"><div style="font-size:11px" class="${exact ? 'muted' : 'tag-od'}">${exact ? '✔ số chính xác' : '⚠ tham khảo – cần nhập số chính xác'}</div>`
+           : `<b>${fmt(x.amount)}</b>${x.exact ? '' : '<div class="muted" style="font-size:11px">tham khảo</div>'}`,
+        ed ? `<input class="amt-in ${dP ? 'dirty' : ''}" data-paid="${i}" inputmode="numeric" value="${paid ? fmt(paid) : ''}" placeholder="0">` : fmt(x.paid),
+        `<b>${fmt(amt - (paid || 0))}</b>`,
         esc(x.sale), st(x.status) + (x.by ? `<div class="muted" style="font-size:11px">${esc(x.by)} ${esc(x.at)}</div>` : ''),
         ico(i, 'files', x.files, x.files),
         `<div class="inl-cell">${x.lastMsg ? `<div class="lm"><span class="lm-t">${esc(x.lastMsg)}</span><button class="db-clock" data-th="${i}" data-k="msgs" title="Xem lịch sử trao đổi">🕘 ${x.msgs}</button></div>` : ''}
           <div class="inl"><input class="inl-in" data-msg="${i}" placeholder="Nhập lời nhắn..." enterkeyhint="send"><button class="inl-go" data-send="${i}" title="Gửi">➤</button></div></div>`,
-        `<div class="inl-cell"><input class="inl-in" data-note="${i}" value="${esc(x.myNote || '')}" placeholder="Ghi chú riêng (chỉ mình bạn thấy)" enterkeyhint="done"><div class="muted inl-st" id="ns-${i}"></div></div>`])), ed ? 1 : 0)}
-      <div style="text-align:right;margin-top:8px;font-weight:700">Tổng: ${fmt(g.total)}đ</div></div>`;
+        `<div class="inl-cell"><input class="inl-in" data-note="${i}" value="${esc(x.myNote || '')}" placeholder="Ghi chú riêng (chỉ mình bạn thấy)" enterkeyhint="done"><div class="muted inl-st" id="ns-${i}"></div></div>`]); }), ed ? 1 : 0)}
+      <div style="text-align:right;margin-top:8px;font-weight:700">Tổng: ${fmt(g.total)}đ · Còn lại: ${fmt(g.remain)}đ</div></div>`;
   $('db-bar').classList.toggle('hidden', !ed);
   dbSelCount();
 }
-function dbItems(){ const g = DB.data.groups.find(x => x.term === DB.tab); return g ? g.items : []; }
-function dbSelCount(){ $('db-sel').textContent = `Đã chọn ${Object.keys(DB.sel).length} đơn`; }
+function dbItems(){ const g = dbGroups().find(x => x.term === DB.tab); return g ? g.items : []; }
+function dbSelCount(){
+  $('db-sel').textContent = `Đã chọn ${Object.keys(DB.sel).length} đơn`;
+  const n = Object.keys(DB.edit).length; $('db-save').textContent = n ? `Lưu thay đổi (${n})` : 'Lưu thay đổi';
+}
 $('db-tabs').addEventListener('click', e => { const b = e.target.closest('[data-dt]'); if (b) { DB.tab = b.dataset.dt; DB.sel = {}; renderDebt(); } });
 $('db-list').addEventListener('change', async e => {
   const items = dbItems();
@@ -2274,23 +2313,19 @@ $('db-list').addEventListener('change', async e => {
     try { const r = await api('debtSaveNote', x.so, v); x.myNote = r.note; st.textContent = '✔ Đã lưu'; setTimeout(() => { if (st.isConnected) st.textContent = ''; }, 2000); }
     catch (err) { st.textContent = '✖ ' + err.message; }
     return;
-  } else if (e.target.dataset.amt != null) {          // kế toán sửa số tiền thực tế
-    const x = items[+e.target.dataset.amt], raw = e.target.value.trim();
-    const v = raw === '' ? '' : Number(raw.replace(/[^\d]/g, ''));
-    if (v !== '' && !(v >= 0)) { toast('Số tiền không hợp lệ'); return; }
-    e.target.disabled = true;
-    try {
-      const r = await api('debtSetAmount', x.so, v);
-      const diff = r.amount - x.amount; x.amount = r.amount; x.src = r.src;
-      DB.data.groups.forEach(g => { if (g.items.indexOf(x) !== -1) g.total += diff; g.items.forEach(y => { if (y.acc === x.acc) y.balance += diff; }); });
-      toast('✔ Đã lưu số tiền ' + fmt(r.amount) + 'đ cho đơn ' + x.so); renderDebt();
-    } catch (err) { toast(err.message, 4000); e.target.disabled = false; }
+  } else if (e.target.dataset.amt != null || e.target.dataset.paid != null) {    // sửa Số tiền / Đã thu → chờ bấm "Lưu thay đổi"
+    const isAmt = e.target.dataset.amt != null, x = items[+(isAmt ? e.target.dataset.amt : e.target.dataset.paid)];
+    const v = numIn(e.target.value), ed = DB.edit[x.so] || {};
+    if (isAmt) { if (v === null || v === x.amount && x.exact) delete ed.amount; else ed.amount = v; }
+    else { if (v === (x.paid || null) || (v === null && !x.paid)) delete ed.paid; else ed.paid = v === null ? 0 : v; }
+    if (Object.keys(ed).length) DB.edit[x.so] = ed; else delete DB.edit[x.so];
+    renderDebt(); return;
   }
   dbSelCount();
 });
 $('db-list').addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
-  if (e.target.dataset.amt != null || e.target.dataset.note != null) e.target.blur();
+  if (e.target.dataset.amt != null || e.target.dataset.paid != null || e.target.dataset.note != null) e.target.blur();
   if (e.target.dataset.msg != null) { e.preventDefault(); dbSendMsg(+e.target.dataset.msg); }
 });
 $('db-list').addEventListener('click', e => {
@@ -2309,10 +2344,36 @@ async function dbSendMsg(i){
     toast('✔ Đã gửi lời nhắn – ' + x.so); renderDebt();
   } catch (err) { toast(err.message, 4000); inp.disabled = false; }
 }
+/* Lưu các ô Số tiền / Đã thu đã sửa */
+async function dbSaveEdits(silent){
+  const all = DB.data.groups.reduce((a, g) => a.concat(g.items), []);
+  const list = Object.keys(DB.edit).map(so => {
+    const e = DB.edit[so], x = all.find(y => y.so === so) || {};
+    return { so: so, amount: e.amount, paid: e.paid, exact: x.exact, cur: x.amount };
+  });
+  if (!list.length) { if (!silent) toast('Không có thay đổi nào.'); return true; }
+  const bad = list.filter(r => r.paid !== undefined && r.amount === undefined && !r.exact).map(r => r.so);
+  if (bad.length) { modal(`<h3>Cần nhập số tiền chính xác</h3><p>Các đơn sau đang dùng số tham khảo (Sales amount). Hãy nhập <b>Số tiền</b> chính xác trước khi nhập Đã thu:</p><p><b>${esc(bad.join(', '))}</b></p><div class="modal-actions"><button class="btn" onclick="closeModal()">Đã hiểu</button></div>`); return false; }
+  loading(true);
+  try {
+    const r = await api('debtSaveRows', list.map(x => ({ so: x.so, amount: x.amount, paid: x.paid })));
+    if (!r.ok) { modal(`<h3>Chưa lưu – có ${r.errors.length} lỗi</h3><div class="err">${r.errors.map(esc).join('<br>')}</div><div class="modal-actions"><button class="btn" onclick="closeModal()">Sửa lại</button></div>`); return false; }
+    toast(`✔ Đã lưu ${r.saved} đơn` + (r.done ? ` · ${r.done} đơn đã thu đủ → Hoàn thành` : ''), 4000);
+    await loadDebt(); return true;
+  } catch (e) { toast(e.message, 5000); return false; }
+  finally { loading(false); }
+}
+$('db-save').addEventListener('click', () => dbSaveEdits());
 async function dbAction(action){
   const sos = Object.keys(DB.sel);
   if (!sos.length) { toast('Hãy tick chọn đơn trước.'); return; }
-  const T = { done: ['Hoàn thành công nợ?', 'Hoàn thành (không nhắc nữa)'], ask: ['Yêu cầu thu nợ?', 'Yêu cầu thu nợ (hiện cho Manager, Sale)'],
+  if (Object.keys(DB.edit).length && !(await dbSaveEdits(true))) return;     // lưu số vừa sửa trước
+  if (action === 'done') {
+    const all = DB.data.groups.reduce((a, g) => a.concat(g.items), []);
+    const bad = Object.keys(DB.sel).filter(so => { const x = all.find(y => y.so === so); return x && !x.exact; });
+    if (bad.length) { modal(`<h3>Cần nhập số tiền chính xác</h3><p>Hoàn thành = đã thu 100% số tiền nợ, nên đơn phải có số tiền chính xác (không dùng số tham khảo). Hãy nhập Số tiền rồi bấm Lưu thay đổi cho các đơn:</p><p><b>${esc(bad.join(', '))}</b></p><div class="modal-actions"><button class="btn" onclick="closeModal()">Đã hiểu</button></div>`); return; }
+  }
+  const T = { done: ['Hoàn thành công nợ?', 'Hoàn thành – đã thu 100% số tiền nợ (không nhắc nữa)'], ask: ['Yêu cầu thu nợ?', 'Yêu cầu thu nợ (hiện cho Manager, Sale)'],
               remove: ['Xóa khỏi danh sách?', 'Đã xóa khỏi danh sách (không hiện trong báo cáo công nợ nữa)'] }[action];
   modal(`<h3>${T[0]}</h3><p>Chuyển <b>${sos.length}</b> đơn sang <b>${T[1]}</b>.</p>
     <div class="modal-actions"><button class="btn light" onclick="closeModal()">Hủy</button><button class="btn" id="db-ok">Đồng ý</button></div>`);
@@ -2339,9 +2400,9 @@ async function xlsDownload(name, head, rows, numCols){
 $('db-xls').addEventListener('click', () => {
   if (!DB.data) return;
   const rows = [];
-  DB.data.groups.forEach(g => g.items.forEach(x => rows.push([g.term, x.acc, x.name, x.so, x.date, x.due, x.overdue, x.amount, x.src, x.sale, x.status, x.balance, x.note])));
+  dbGroups().forEach(g => g.items.forEach(x => rows.push([g.term, x.acc, x.name, x.so, x.date, x.due, x.overdue, x.amount, x.exact ? 'Chính xác' : 'Tham khảo', x.paid, x.remain, x.sale, x.status, x.balance, x.note])));
   if (!rows.length) { toast('Danh sách đang trống.'); return; }
-  xlsDownload('NhacNo', ['Nhóm', 'Mã KH', 'Tên KH', 'Mã đơn', 'Ngày giao', 'Hạn thu', 'Quá hạn (ngày)', 'Số tiền', 'Nguồn số tiền', 'Sale', 'Trạng thái', 'Dư nợ KH', 'Ghi chú'], rows, [7, 11]).catch(e => toast(e.message));
+  xlsDownload(DB.mode === 'all' ? 'CongNo_TatCa' : 'CongNo_DenHan', ['Nhóm', 'Mã KH', 'Tên KH', 'Mã đơn', 'Ngày giao', 'Hạn thu', 'Quá hạn (ngày)', 'Số tiền', 'Loại số tiền', 'Đã thu', 'Còn lại', 'Sale', 'Trạng thái', 'Dư nợ KH', 'Ghi chú'], rows, [7, 9, 10, 13]).catch(e => toast(e.message));
 });
 
 /* --- Khách hàng --- */
@@ -2396,8 +2457,8 @@ const OPEN_COLS_UI = [['so', 'Mã đơn', ['sales order', 'ma don', 'ma don hang
   ['name', 'Tên KH', ['customer name', 'ten kh', 'ten khach hang', 'khach hang']], ['amt', 'Số tiền nợ', ['so tien no', 'so tien', 'balance due', 'balance', 'amount', 'con lai', 'so tien con lai']],
   ['sale', 'Sale phụ trách', ['sale phu trach', 'sales in charge', 'sales responsible', 'sale']], ['date', 'Ngày giao', ['ngay giao', 'delivery date', 'ngay hoa don', 'invoice date', 'ngay']],
   ['note', 'Ghi chú', ['ghi chu', 'note']]];
-$('do-add').addEventListener('click', () => openGrid({ title: 'Thêm đơn nợ phải thu', cols: OPEN_COLS_UI,
-  hint: 'Bắt buộc: Mã đơn, Mã KH, Tên KH, Số tiền nợ, Sale phụ trách. Ngày giao (dd/mm/yyyy) không bắt buộc – để trống thì nhắc ngay.',
+$('do-add').addEventListener('click', () => openGrid({ title: 'Import đơn nợ cũ (trước 01/11/2026)', cols: OPEN_COLS_UI,
+  hint: 'Bắt buộc: Mã đơn, Mã KH, Tên KH, Số tiền nợ, Sale phụ trách. Ngày giao ghi dạng ngày/tháng/năm (dd/mm/yyyy), không bắt buộc – để trống thì nhắc ngay.',
   save: async rows => {
     const r = await api('debtOpenSave', rows);
     if (r.ok) {
@@ -2405,24 +2466,47 @@ $('do-add').addEventListener('click', () => openGrid({ title: 'Thêm đơn nợ 
       if (r.dups.length) setTimeout(() => modal(`<h3>Đơn trùng – đã bỏ qua (${r.dups.length})</h3>
         ${dataTable(['Mã đơn', 'Lý do'], r.dups.map(x => [esc(x.so), esc(x.msg)]))}
         <div class="modal-actions"><button class="btn" onclick="closeModal()">Đã hiểu</button></div>`), 50);
-      DB.cust = null; loadDebt();
+      DB.cust = null; DB.orders = null; loadDebt(); if (DB.mtab === 'open') loadOrders();
     }
     return r;
   } }));
-function dxInit(){
-  const sales = (DB.data && DB.data.sales) || [];
-  if ($('dx-sale').options.length <= 1) $('dx-sale').innerHTML = '<option value="">Tất cả</option>' + sales.map(s => `<option>${esc(s)}</option>`).join('');
+function dxInit(){ if (!DB.orders) loadOrders(); }
+function dxView(){
+  const o = DB.orders; if (!o) return null;
+  if ($('dx-by').value !== 'customer') return { head: ['Mã KH', 'Tên KH', 'Ngày giao', 'Mã đơn hàng', 'Tổng thanh toán', 'Đã thanh toán', 'Còn lại'],
+    rows: o.rows.map(x => [x.acc, x.name, x.date, x.so, x.total, x.paid, x.remain]), num: [4, 5, 6], src: o.rows };
+  const m = {};
+  o.rows.forEach(x => { const k = x.acc || x.name; const g = m[k] || (m[k] = { acc: x.acc, name: x.name, n: 0, total: 0, paid: 0, remain: 0 }); g.n++; g.total += x.total; g.paid += x.paid; g.remain += x.remain; });
+  const g = Object.keys(m).map(k => m[k]).sort((a, b) => b.remain - a.remain);
+  return { head: ['Mã KH', 'Tên KH', 'Số đơn', 'Tổng thanh toán', 'Đã thanh toán', 'Còn lại'], rows: g.map(x => [x.acc, x.name, x.n, x.total, x.paid, x.remain]), num: [3, 4, 5] };
 }
-$('dx-go').addEventListener('click', async () => {
-  loading(true);
+async function loadOrders(){
+  $('dx-count').textContent = 'Đang tải...';
   try {
-    const p = { by: $('dx-by').value, status: $('dx-st').value, from: $('dx-from').value, to: $('dx-to').value, sale: $('dx-sale').value, q: $('dx-q').value.trim() };
-    const r = await api('debtExport', p);
-    if (!r.rows.length) { toast('Không có dữ liệu phù hợp điều kiện.'); return; }
-    await xlsDownload(p.by === 'customer' ? 'CongNo_TheoKhachHang' : 'CongNo_TheoDonHang', r.head, r.rows, p.by === 'customer' ? [5, 6] : [8]);
-    toast(`Đã xuất ${fmt(r.rows.length)} dòng`);
-  } catch (e) { toast(e.message, 4000); }
-  finally { loading(false); }
+    DB.orders = await api('debtOrders', { from: $('dx-from').value, to: $('dx-to').value, status: $('dx-st').value, sale: $('dx-sale').value, q: $('dx-q').value.trim() });
+    const cur = $('dx-sale').value;
+    $('dx-sale').innerHTML = '<option value="">Tất cả</option>' + DB.orders.sales.map(s => `<option ${s === cur ? 'selected' : ''}>${esc(s)}</option>`).join('');
+    renderOrders();
+  } catch (e) { $('dx-count').textContent = e.message; }
+}
+function renderOrders(){
+  const v = dxView(), s = DB.orders.sum;
+  $('dx-count').textContent = `${fmt(DB.orders.rows.length)} đơn` + ($('dx-by').value === 'customer' ? ` · ${fmt(v.rows.length)} khách hàng` : '');
+  if (!v.rows.length) { $('dx-list').innerHTML = '<div class="empty">Không có đơn phù hợp</div>'; return; }
+  const cells = v.rows.slice(0, 1000).map((r, i) => r.map((x, j) => v.num.indexOf(j) !== -1 ? `<span style="font-weight:${j === r.length - 1 ? 800 : 600}">${fmt(x)}</span>`
+    : j === 3 && v.src ? `<b>${esc(x)}</b>${v.src[i].status === 'Hoàn thành' ? ' <span class="badge st-done">Hoàn thành</span>' : ''}` : esc(x)));
+  const pad = v.head.length - 3;
+  cells.push([`<b>TỔNG CỘNG</b>`].concat(Array(pad - 1).fill('')).concat([`<b>${fmt(s.total)}</b>`, `<b>${fmt(s.paid)}</b>`, `<b style="color:var(--red)">${fmt(s.remain)}</b>`]));
+  $('dx-list').innerHTML = dataTable(v.head, cells, 1) + (v.rows.length > 1000 ? '<div class="muted" style="font-size:12px;margin-top:6px">Hiển thị 1.000 dòng đầu – file Excel có đầy đủ.</div>' : '');
+}
+$('dx-go').addEventListener('click', loadOrders);
+$('dx-q').addEventListener('keydown', e => { if (e.key === 'Enter') loadOrders(); });
+$('dx-by').addEventListener('change', () => DB.orders && renderOrders());
+$('dx-xls').addEventListener('click', () => {
+  const v = dxView(); if (!v || !v.rows.length) { toast('Hãy bấm Xem danh sách trước.'); return; }
+  const s = DB.orders.sum;
+  const rows = v.rows.concat([['TỔNG CỘNG'].concat(Array(v.head.length - 4).fill('')).concat([s.total, s.paid, s.remain])]);
+  xlsDownload($('dx-by').value === 'customer' ? 'CongNo_TheoKhachHang' : 'CongNo_DonHang', v.head, rows, v.num).catch(e => toast(e.message));
 });
 
 /* --- Bảng nhập liệu kiểu Excel: gõ tay, dán (Ctrl+V) từ Excel, hoặc nạp file --- */
@@ -2478,7 +2562,10 @@ function openGrid(o){
     try {
       await loadXlsx();
       const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
-      let rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, dateNF: 'dd/mm/yyyy', defval: '' });
+      // Ô ngày trong Excel → luôn đổi sang dd/mm/yyyy (không dùng kiểu hiển thị của file, tránh nhầm ngày/tháng)
+      const p2 = n => String(n).padStart(2, '0');
+      let rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: '' })
+        .map(r => r.map(x => x instanceof Date ? p2(x.getDate()) + '/' + p2(x.getMonth() + 1) + '/' + x.getFullYear() : x));
       const hr = rows.findIndex((r, i) => i < 15 && r.filter(x => cols.some(c => c[2].indexOf(nk(x)) !== -1)).length >= 2);
       if (hr === -1) throw new Error('Không tìm thấy dòng tiêu đề phù hợp trong file.');
       body.querySelectorAll('input').forEach(i => i.value = '');
@@ -2741,7 +2828,7 @@ $('bcs-send').addEventListener('click', () => {
   if (!BCS.photos.length) return;
   bcsEnqueue({ code: BCS.code, type: 'photo', photos: BCS.photos.slice(), ids: [] });
   BCS.photos = []; toast('Đang gửi ảnh đơn ' + BCS.code + ' lên Drive...');
-  bcsStep(1, true);
+  bcsStep(1);      // về màn hình đầu (nút Quét mã đơn), không tự mở camera
 });
 /* --- Danh sách CCTV: tải về máy ngay khi mở tính năng (dùng được cả khi mất mạng) --- */
 async function bcsLoadCctv(){
@@ -2761,7 +2848,7 @@ $('bcs-cctv-btn').addEventListener('click', async () => {
     if (hit) {
       bcsEnqueue({ code: code, type: 'cctv', cctv: hit.code, cctvName: hit.name, photos: [], ids: [], ts: Date.now() });
       beep('saved'); toast('✔ ' + code + ' · CCTV ' + (hit.name || hit.code));
-      bcsStep(1, true); return;
+      bcsStep(1); return;
     }
     beep('err'); toast('Mã "' + c + '" không có trong danh sách CCTV – quét lại', 3000);
     await new Promise(r => setTimeout(r, 700));
