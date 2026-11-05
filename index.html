@@ -621,10 +621,10 @@ table.grid tr.bad td{background:#fdecea}
 
       <!-- Nhắc nợ -->
       <div id="db-remind">
+        <div class="seg" id="db-mode" style="margin-bottom:12px"><button data-md="due" class="on">Nợ đến hạn</button><button data-md="all">Tất cả</button></div>
         <div class="card">
           <div class="grp-head"><div><div class="t" id="db-title">Công nợ đến hạn nhắc</div><div class="note" id="db-note">Đang tải...</div></div>
             <div style="display:flex;gap:6px;flex:none"><button class="btn light" id="db-xls" style="padding:8px 10px">Xuất Excel</button><button class="btn ghost" id="db-reload" style="padding:8px 10px">Tải lại</button></div></div>
-          <div class="seg" id="db-mode" style="margin-top:10px"><button data-md="due" class="on">Nợ đến hạn</button><button data-md="all">Tất cả</button></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
             <input class="inp" id="db-q" placeholder="Tìm tên KH (dùng * thay chuỗi bất kỳ) hoặc mã đơn" style="flex:2;min-width:200px">
             <div id="db-salebox" class="hidden" style="flex:1;min-width:150px"><select class="inp" id="db-sale"></select></div>
@@ -635,8 +635,8 @@ table.grid tr.bad td{background:#fdecea}
         <div id="db-list"></div>
         <div class="debt-bar hidden" id="db-bar">
           <span class="n" id="db-sel">Đã chọn 0 đơn</span>
-          <button class="btn ghost" id="db-ask" style="padding:9px 12px">Yêu cầu thu nợ</button>
           <button class="btn" id="db-save" style="padding:9px 12px;background:#1565c0">Lưu thay đổi</button>
+          <button class="btn ghost" id="db-ask" style="padding:9px 12px">Gửi YC thu nợ</button>
           <button class="btn" id="db-done" style="padding:9px 12px">Hoàn thành</button>
           <button class="btn light" id="db-del" style="padding:9px 12px;color:var(--red)">Xóa khỏi danh sách</button>
         </div>
@@ -863,7 +863,7 @@ table.grid tr.bad td{background:#fdecea}
 
     <!-- CÀI ĐẶT -->
     <div class="view hidden" id="v-settings">
-      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 05/11/2026-b · máy chủ <span id="s-ver">?</span></div>
+      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 05/11/2026-c · máy chủ <span id="s-ver">?</span></div>
       <div class="card" id="force-note" style="background:var(--amber-l)">
         <b style="color:var(--amber)">Bạn đang dùng mật khẩu mặc định.</b>
         <div style="font-size:14px;margin-top:4px">Vui lòng đổi mật khẩu để tiếp tục sử dụng ứng dụng.</div>
