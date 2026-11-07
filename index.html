@@ -70,6 +70,16 @@ label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:1
 /* ---------- APP SHELL ---------- */
 .topbar{padding-top:max(12px,env(safe-area-inset-top))!important;position:sticky;top:0;z-index:50;background:linear-gradient(135deg,var(--pri),var(--pri-d));color:#fff;display:flex;align-items:center;gap:8px;padding:12px 14px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
 .topbar h2{flex:1;margin:0;font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-bell{position:relative;flex:none;margin-left:auto;margin-right:8px}
+.tb-bell.ring svg{animation:ring .9s ease 2}
+@keyframes ring{0%,100%{transform:rotate(0)}20%{transform:rotate(18deg)}40%{transform:rotate(-16deg)}60%{transform:rotate(10deg)}80%{transform:rotate(-6deg)}}
+.nt-badge{position:absolute;top:-4px;right:-4px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#e53935;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #182e22}
+.nt-item{display:flex;gap:10px;padding:11px 6px;border-bottom:1px solid var(--line);cursor:pointer;align-items:flex-start}
+.nt-item:hover{background:#f6f8f7}
+.nt-item .ic{font-size:20px;flex:none;line-height:1.2}
+.nt-item .tx{flex:1;font-size:14px;line-height:1.4}
+.nt-item.unread .tx{font-weight:700}
+.nt-item .dot2{width:9px;height:9px;border-radius:50%;background:#e53935;flex:none;margin-top:6px}
 .tb-btn{background:rgba(255,255,255,.14);border:0;color:#fff;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .user-chip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.14);border:0;color:#fff;padding:5px 10px 5px 5px;border-radius:999px;cursor:pointer;max-width:55%}
 .avatar{width:28px;height:28px;border-radius:50%;background:#fff;color:var(--pri);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex:none}
@@ -234,6 +244,8 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .inl{display:flex;gap:4px}
 .inl-in{flex:1;min-width:0;width:100%;padding:7px 8px;border:1.5px solid var(--line);border-radius:8px;font-size:13px}
 .inl-in:focus{border-color:var(--pri);outline:none}
+.inl-ta{resize:none;min-height:46px;line-height:1.35;font-family:inherit}
+.inl-cell{min-width:240px}
 .inl-go{flex:none;width:34px;border:0;border-radius:8px;background:var(--pri);color:#fff;font-size:14px;cursor:pointer}
 .inl-st{font-size:11px;margin-top:2px;min-height:13px}
 .modal.wide{max-width:980px;width:calc(100vw - 24px)}
@@ -452,6 +464,7 @@ table.grid tr.bad td{background:#fdecea}
     <button class="tb-btn hidden" id="btn-back" title="Quay lại"></button>
     <div class="tb-logo" id="tb-logo"><img src="data:image/png;base64,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" alt="Annam"></div>
     <h2 id="view-title">Trang chủ</h2>
+    <button class="tb-btn tb-bell" id="nt-bell" title="Thông báo"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="nt-badge hidden" id="nt-n"></span></button>
     <button class="user-chip" id="btn-user"><div class="avatar" id="u-avatar">A</div><span id="u-name"></span></button>
   </header>
   <main id="views">
@@ -863,7 +876,7 @@ table.grid tr.bad td{background:#fdecea}
 
     <!-- CÀI ĐẶT -->
     <div class="view hidden" id="v-settings">
-      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 05/11/2026-c · máy chủ <span id="s-ver">?</span></div>
+      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 07/11/2026-a · máy chủ <span id="s-ver">?</span></div>
       <div class="card" id="force-note" style="background:var(--amber-l)">
         <b style="color:var(--amber)">Bạn đang dùng mật khẩu mặc định.</b>
         <div style="font-size:14px;margin-top:4px">Vui lòng đổi mật khẩu để tiếp tục sử dụng ứng dụng.</div>
@@ -1041,7 +1054,7 @@ $('lg-ping').addEventListener('click', async e => {
 });
 
 function localLogout(msg){
-  S.staff = null; QR.ho = null; if (typeof BCS !== 'undefined') { BCS.canRecord = null; BCS.photos = []; BCS.cache = {}; }
+  S.staff = null; QR.ho = null; NT.data = null; NT.pendingSound = false; setBell(0); if (typeof BCS !== 'undefined') { BCS.canRecord = null; BCS.photos = []; BCS.cache = {}; }
   S.master = null; S.schedule = null; if (typeof AD !== 'undefined') { AD.data = null; AD.draft = null; }
   qrStop(); QR.loaded = false; QR.items = [];
   store.del('annt_token');
@@ -1066,6 +1079,14 @@ async function boot(){
   finally { loading(false); }
 }
 
+/* Màn hình được mở lại sau khi làm mới trang: chỉ những màn hình người dùng có quyền (có ô chức năng trên trang chủ) */
+function restoreView(){
+  let v = '';
+  try { v = decodeURIComponent((location.hash || '').slice(1)) || sessionStorage.getItem('annt_view') || ''; } catch (e) {}
+  if (!v || v === 'home' || !VIEWS[v] || v === 'install') return 'home';
+  const ok = v === 'settings' || v === 'docs' || !!document.querySelector('#v-home [data-go="' + v + '"]');
+  return ok ? v : 'home';
+}
 function enterApp(){
   $('screen-login').classList.add('hidden');
   $('screen-app').classList.remove('hidden');
@@ -1078,11 +1099,71 @@ function enterApp(){
   $('hello-date').textContent = `${days[d.getDay()]}, ${d.toLocaleDateString('vi-VN')}`;
   $('s-user').textContent = u.username; $('s-name').textContent = u.name; $('s-ver').textContent = u.ver || 'bản cũ';
   renderHome();
-  go(u.mustChange ? 'settings' : 'home');
+  go(u.mustChange ? 'settings' : restoreView());
   // Nạp lại hàng chờ quét còn dở (VD: phiên hết hạn trước đó) và gửi tiếp ở nền
   QR.authErr = false; QR.netErr = ''; QR.backoff = 0;
   if (!QR.loaded) { QR.items = store.get(qrKey()) || []; QR.loaded = true; }
   if (!u.mustChange) qrSchedule(500);
+  NT.data = null; setTimeout(checkNotif, 800);      // kiểm tra thông báo ngay khi mở app
+}
+
+/* ========= THÔNG BÁO 🔔 ========= */
+const NT = { data: null, pendingSound: false };
+const ntKey = () => 'annt_nt_seen_' + (S.user ? S.user.username : '');
+function setBell(n){
+  const b = $('nt-n'); b.classList.toggle('hidden', !n); b.textContent = n > 99 ? '99+' : n;
+}
+function playNotif(n){
+  unlockAudio();
+  const go2 = () => { beep('notify'); $('nt-bell').classList.add('ring'); setTimeout(() => $('nt-bell').classList.remove('ring'), 2000); };
+  if (audioCtx && audioCtx.state === 'running') go2();
+  else NT.pendingSound = true;          // trình duyệt chặn âm thanh trước lần chạm đầu tiên → phát ngay khi người dùng chạm màn hình
+  toast(`🔔 Bạn có ${n} thông báo mới – bấm chuông để xem`, 4500);
+}
+['click', 'touchstart'].forEach(ev => document.addEventListener(ev, () => {
+  if (!NT.pendingSound) return; NT.pendingSound = false;
+  setTimeout(() => { if (audioCtx && audioCtx.state === 'running') { beep('notify'); $('nt-bell').classList.add('ring'); setTimeout(() => $('nt-bell').classList.remove('ring'), 2000); } }, 60);
+}, { passive: true }));
+async function checkNotif(){
+  if (!S.user || S.user.mustChange || document.hidden) return;
+  try {
+    const d = await api('notifList'); NT.data = d; setBell(d.unread);
+    const newest = Math.max(0, ...d.items.filter(x => !x.read).map(x => x.t));
+    if (newest > (store.get(ntKey()) || 0)) { store.set(ntKey(), newest); playNotif(d.unread); }
+  } catch (e) {}
+}
+setInterval(checkNotif, 60000);                                   // app đang mở: 1 phút kiểm tra 1 lần
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkNotif(); });
+function renderNotif(){
+  const d = NT.data || { items: [], unread: 0 };
+  modal(`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3 style="margin:0">Thông báo</h3>
+      ${d.unread ? '<button class="btn light" id="nt-all" style="padding:6px 10px;font-size:12.5px">Đánh dấu đã đọc hết</button>' : ''}</div>
+    <div style="margin-top:8px;max-height:65vh;overflow:auto">${d.items.length ? d.items.map((x, i) => `<div class="nt-item ${x.read ? '' : 'unread'}" data-nt="${i}">
+      <span class="ic">${x.type === 'ask' ? '💰' : '💬'}</span><div class="tx">${esc(x.text)}<div class="muted" style="font-size:12px;font-weight:400;margin-top:2px">${esc(x.time)}</div></div>${x.read ? '' : '<span class="dot2"></span>'}</div>`).join('')
+      : '<div class="empty">Chưa có thông báo nào</div>'}</div>
+    <div class="modal-actions"><button class="btn light" onclick="closeModal()">Đóng</button></div>`);
+  if ($('nt-all')) $('nt-all').onclick = async () => { try { NT.data = await api('notifRead', 'all'); setBell(NT.data.unread); renderNotif(); } catch (e) { toast(e.message); } };
+  document.querySelectorAll('[data-nt]').forEach(el => el.onclick = () => openNotif(d.items[+el.dataset.nt]));
+}
+$('nt-bell').addEventListener('click', async () => {
+  if (!NT.data) { loading(true); try { NT.data = await api('notifList'); setBell(NT.data.unread); } catch (e) { toast(e.message); return; } finally { loading(false); } }
+  renderNotif();
+});
+/* Bấm 1 thông báo → mở đúng danh sách / đơn hàng */
+async function openNotif(x){
+  closeModal();
+  if (!x.read) { x.read = true; NT.data.unread = Math.max(0, NT.data.unread - 1); setBell(NT.data.unread); api('notifRead', [x.id]).catch(() => {}); }
+  if ((S.user.features || []).indexOf('congno') === -1) return;
+  const sos = String(x.so || '').split(',').filter(Boolean);
+  DB.mode = 'all'; DB.sale = ''; DB.q = sos.length === 1 ? sos[0] : '';
+  document.querySelectorAll('#db-mode button').forEach(b => b.classList.toggle('on', b.dataset.md === 'all'));
+  $('db-q').value = DB.q;
+  go('congno'); dbMTab('remind');
+  await DB.loading;
+  if (x.type === 'msg' && sos.length === 1 && DB.data) {
+    const it = DB.data.groups.reduce((a, g) => a.concat(g.items), []).find(y => y.so === sos[0]);
+    if (it) openThread(it, 'msgs'); else toast('Đơn ' + sos[0] + ' không còn trong danh sách công nợ của bạn.');
+  }
 }
 
 /* ========= ĐIỀU HƯỚNG ========= */
@@ -1130,6 +1211,9 @@ function go(view){
   if (S.view === 'bcsoan' && view !== 'bcsoan' && typeof bcsCamStop === 'function') bcsCamStop();
   if (S.user && S.user.mustChange && view !== 'settings') { toast('Vui lòng đổi mật khẩu trước khi sử dụng.'); view = 'settings'; }
   S.view = view;
+  // Ghi nhớ màn hình đang mở → bấm làm mới (F5 / kéo xuống) vẫn ở lại đúng màn hình này
+  try { history.replaceState(null, '', view === 'home' ? location.pathname + location.search : '#' + view); } catch (e) {}
+  try { sessionStorage.setItem('annt_view', view); } catch (e) {}
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
   $('v-' + view).classList.remove('hidden');
   $('view-title').textContent = VIEWS[view].title;
@@ -1147,7 +1231,7 @@ function go(view){
   if (view === 'huyhang') initHuyhang();
   if (view === 'soanhang') initSoanhang();
   if (view === 'docs') loadDocs();
-  if (view === 'congno') loadDebt();
+  if (view === 'congno') DB.loading = loadDebt();
   if (view === 'bcsoan') initBcs();
   if (view === 'bank') renderBank();
   if (view === 'schedule') loadSchedule();
@@ -1218,6 +1302,7 @@ $('pw-form').addEventListener('submit', async e => {
 });
 $('btn-logout').addEventListener('click', async () => {
   try { await run('logout', S.token); } catch (e) {}
+  try { sessionStorage.removeItem('annt_view'); history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
   localLogout('');
 });
 
@@ -1552,9 +1637,10 @@ const SOUNDS = {
   ok:    [{ f: 1500, d: 0.09, type: 'square' }],
   saved: [{ f: 1046, d: 0.12, type: 'sine' }, { f: 1568, d: 0.22, type: 'sine', gap: 0.03 }],
   warn:  [{ f: 520, d: 0.15, type: 'square' }, { f: 520, d: 0.15, type: 'square', gap: 0.08 }],
-  err:   [{ f: 220, d: 0.5, type: 'sawtooth' }]
+  err:   [{ f: 220, d: 0.5, type: 'sawtooth' }],
+  notify:[{ f: 880, d: 0.18, type: 'sine' }, { f: 1175, d: 0.18, type: 'sine', gap: 0.04 }, { f: 1568, d: 0.32, type: 'sine', gap: 0.04 }]
 };
-const VIBRATE = { ok: 60, saved: [40, 40, 40], warn: [150, 80, 150], err: [400] };
+const VIBRATE = { ok: 60, saved: [40, 40, 40], warn: [150, 80, 150], err: [400], notify: [120, 80, 120] };
 let audioCtx = null;
 function unlockAudio(){ try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); } catch (e) {} }
 document.addEventListener('click', unlockAudio);
@@ -2286,7 +2372,7 @@ function renderDebt(){
         esc(x.sale), st(x.status) + (x.by ? `<div class="muted" style="font-size:11px">${esc(x.by)} ${esc(x.at)}</div>` : ''),
         ico(i, 'files', x.files, x.files),
         `<div class="inl-cell">${x.lastMsg ? `<div class="lm"><span class="lm-t">${esc(x.lastMsg)}</span><button class="db-clock" data-th="${i}" data-k="msgs" title="Xem lịch sử trao đổi">🕘 ${x.msgs}</button></div>` : ''}
-          <div class="inl"><input class="inl-in" data-msg="${i}" placeholder="Nhập lời nhắn..." enterkeyhint="send"><button class="inl-go" data-send="${i}" title="Gửi">➤</button></div></div>`,
+          <div class="inl"><textarea class="inl-in inl-ta" data-msg="${i}" rows="2" placeholder="Nhập lời nhắn... (Enter để gửi)" enterkeyhint="send"></textarea><button class="inl-go" data-send="${i}" title="Gửi">➤</button></div></div>`,
         `<div class="inl-cell"><input class="inl-in" data-note="${i}" value="${esc(x.myNote || '')}" placeholder="Ghi chú riêng (chỉ mình bạn thấy)" enterkeyhint="done"><div class="muted inl-st" id="ns-${i}"></div></div>`]); }), ed ? 1 : 0)}
       <div style="text-align:right;margin-top:8px;font-weight:700">Tổng: ${fmt(g.total)}đ · Còn lại: ${fmt(g.remain)}đ</div></div>`;
   $('db-bar').classList.toggle('hidden', !ed);
@@ -2326,7 +2412,7 @@ $('db-list').addEventListener('change', async e => {
 $('db-list').addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   if (e.target.dataset.amt != null || e.target.dataset.paid != null || e.target.dataset.note != null) e.target.blur();
-  if (e.target.dataset.msg != null) { e.preventDefault(); dbSendMsg(+e.target.dataset.msg); }
+  if (e.target.dataset.msg != null && !e.shiftKey) { e.preventDefault(); dbSendMsg(+e.target.dataset.msg); }   // Enter = gửi, Shift+Enter = xuống dòng
 });
 $('db-list').addEventListener('click', e => {
   const s = e.target.closest('[data-send]'); if (s) { dbSendMsg(+s.dataset.send); return; }
@@ -2646,7 +2732,7 @@ async function openThread(x, tab){
         <div class="muted" id="th-prog" style="font-size:13px;margin-top:6px"></div>
         ${t.files.length ? t.files.map((f, i) => `<div class="hrow"><a href="#" data-fo="${i}"><b>${esc(f.name)}</b></a><div class="muted">${esc(f.by)} · ${esc(f.time)}</div></div>`).join('') : '<div class="empty">Chưa có tệp đính kèm</div>'}`,
       msgs: () => `<div class="chat" id="th-chat">${t.msgs.length ? t.msgs.map(m => `<div class="msg ${m.mine ? 'me' : ''}"><div class="who">${esc(m.by)} · ${esc(m.time)}</div>${esc(m.text).replace(/\n/g, '<br>')}</div>`).join('') : '<div class="empty">Chưa có lời nhắn</div>'}</div>
-        <textarea class="inp" id="th-msg" rows="2" placeholder="Nhắn cho kế toán / sale / manager liên quan..."></textarea>
+        <textarea class="inp" id="th-msg" rows="2" placeholder="Nhắn cho kế toán / sale / manager liên quan... (Enter để gửi)" enterkeyhint="send"></textarea>
         <button class="btn block" id="th-send">Gửi lời nhắn</button>`,
       note: () => `<div class="muted" style="font-size:13px;margin-bottom:6px">🔒 Ghi chú riêng – chỉ mình bạn xem được.</div>
         <textarea class="inp" id="th-note" rows="5">${esc(t.note)}</textarea><button class="btn block" id="th-nsave">Lưu ghi chú</button>` }[tab]();
@@ -2699,6 +2785,7 @@ async function openThread(x, tab){
     }
     if (tab === 'msgs') {
       const ch = $('th-chat'); ch.scrollTop = ch.scrollHeight;
+      $('th-msg').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('th-send').click(); } };
       $('th-send').onclick = async () => {
         const v = $('th-msg').value.trim(); if (!v) return;
         $('th-send').disabled = true;
