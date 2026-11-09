@@ -100,6 +100,89 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .app-ic svg.i{width:46%;height:46%;stroke-width:1.8}
 .app-tile span{font-size:13.5px;font-weight:700;text-align:center;line-height:1.25;word-break:break-word}
 .tile-badge{position:absolute;top:8px;right:10px;min-width:24px;height:24px;padding:0 7px;border-radius:999px;background:var(--red);color:#fff;font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.hero{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden;touch-action:pan-y;user-select:none}
+.hero-head{background:linear-gradient(135deg,#3d7a57,#182e22);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hero-k{font-size:12px;letter-spacing:.6px;text-transform:uppercase;opacity:.8;font-weight:700}
+.hero-d{font-size:18px;font-weight:800;margin-top:2px}
+.hero-nav{display:flex;gap:6px}
+.hero-nav button{width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:22px;font-weight:800;cursor:pointer;line-height:1}
+.hero-nav button:disabled{opacity:.3}
+.hero-body{padding:6px 14px 4px;animation:heroIn .25s ease}
+@keyframes heroIn{from{opacity:0;transform:translateX(var(--hx,20px))}to{opacity:1;transform:none}}
+.hero-bike{display:flex;align-items:center;gap:8px;margin:10px 0 2px;font-size:14px}
+.hero-bike b{background:#e0f7fa;color:#006064;padding:3px 10px;border-radius:20px}
+.hs{border-top:1px dashed var(--line);padding:10px 0 8px}
+.hs-t{font-weight:800;color:var(--pri-d);display:flex;align-items:center;gap:8px;font-size:14.5px}
+.hs.cur{background:linear-gradient(90deg,#f1f8f3,transparent);margin:0 -14px;padding-left:14px;padding-right:14px}
+.hs-line{font-size:14px;margin-top:5px;line-height:1.5}
+.hero-foot{display:flex;justify-content:space-between;align-items:center;padding:8px 14px 12px}
+.hero-dots{display:flex;gap:6px}
+.hero-dots i{width:8px;height:8px;border-radius:50%;background:#cfd8dc;display:block}
+.hero-dots i.on{background:var(--pri);width:20px;border-radius:5px}
+.hero-next{border:0;background:var(--pri-l);color:var(--pri);font-weight:800;border-radius:20px;padding:8px 14px;font-size:13.5px;cursor:pointer}
+.my-mode{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:800;margin:10px 0 4px}
+.my-mode .ico{font-size:26px}
+.pr-wrap{display:flex;flex-wrap:wrap;gap:4px 8px;margin:4px 0}
+.sched .pr-wrap{justify-content:center}
+.pr-box{position:relative;display:inline-block;background:#fff3c4;border:1.5px solid #f9a825;border-radius:10px;padding:13px 10px 6px;margin-top:12px;font-weight:800;color:#5d4037;font-size:13.5px}
+.pr-box.mine{background:#ffe082;border-color:#e65100;box-shadow:0 0 0 3px rgba(230,81,0,.15)}
+.pr-tag{position:absolute;top:-11px;left:6px;transform:rotate(-7deg);background:#e53935;color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;box-shadow:0 2px 5px rgba(0,0,0,.2);white-space:nowrap}
+.pr-tag.pr-none{background:#90a4ae}
+.pr-tag.ed{cursor:pointer}
+.se-pby{display:flex;align-items:center;gap:8px;margin-top:6px}
+.se-pby span{flex:none;font-size:13px;font-weight:700;background:#fff3c4;border-radius:6px;padding:4px 8px}
+.bd-card{background:linear-gradient(135deg,#fff,#fdf0f5);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:18px;padding:12px 14px}
+.bd-head{display:flex;justify-content:space-between;align-items:center;font-weight:800;color:#ad1457;font-size:15px}
+.bd-link{border:0;background:none;color:#ad1457;font-weight:700;cursor:pointer;font-size:13.5px}
+.bd-today{display:flex;align-items:center;gap:12px;padding:10px 0;cursor:pointer}
+.card.bd-today{padding:12px 14px}
+.bd-av{position:relative;flex:none;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#ec407a,#ad1457);color:#fff;font-weight:800;font-size:20px;display:flex;align-items:center;justify-content:center}
+.bd-av i{position:absolute;right:-6px;bottom:-4px;font-style:normal;font-size:18px}
+.bd-av.big{width:76px;height:76px;font-size:32px;margin:0 auto}
+.bd-av.big i{font-size:28px}
+.bd-av.sm{width:36px;height:36px;font-size:15px}
+.bd-t{font-size:14.5px}
+.bd-s{font-size:12.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msg-card{background:linear-gradient(135deg,#fff,#eef5fd)}
+.msg-head{color:#0d47a1}.msg-card .bd-link{color:#0d47a1}
+.msg-card .bd-soon{border-top-color:#c5dbf3}
+.msg-mini{display:flex;gap:10px;align-items:center;padding:8px 0;cursor:pointer;border-bottom:1px solid #eef1f6}
+.msg-mini .msg-ic{font-size:20px;flex:none}
+.msg-mini.unread .bd-s{color:#1f2937;font-weight:600}
+.msg-dot{flex:none;width:9px;height:9px;border-radius:50%;background:#e53935}
+.msg-it.unread{border-left:4px solid #1e88e5;background:#f5f9ff}
+.bd-av.tb{background:linear-gradient(135deg,#ffb300,#f57c00);font-size:17px}
+.msg-tag{font-size:11px;font-weight:700;background:#fff3e0;color:#e65100;border-radius:6px;padding:1px 6px;margin-left:4px}
+.msg-new{font-size:11px;font-weight:700;background:#e53935;color:#fff;border-radius:6px;padding:1px 6px;margin-left:4px}
+.msg-ft{margin-top:8px;font-size:12.5px;color:var(--muted);text-align:right}
+.msg-pop{max-height:52vh;overflow-y:auto;margin:6px -4px 0;padding:0 4px}
+.msg-pop .card{box-shadow:none;border:1px solid #e6eaf0;margin-bottom:8px}
+.msg-all{display:flex;gap:8px;align-items:center;background:#fff8e1;border-radius:10px;padding:10px 12px;margin:6px 0 4px;font-size:14px;cursor:pointer}
+.msg-chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
+.msg-chip{background:#e3f2fd;color:#0d47a1;border-radius:14px;padding:4px 10px;font-size:13px;font-weight:600;cursor:pointer}
+.msg-list{max-height:200px;overflow-y:auto;border:1px solid #e6eaf0;border-radius:10px;margin-top:6px}
+.msg-row{display:flex;gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid #f1f3f6;font-size:14.5px;cursor:pointer}
+.msg-row input{width:18px;height:18px}
+.bd-soon{font-size:12.5px;color:var(--muted);border-top:1px dashed #f3c1d5;padding-top:8px;margin-top:4px}
+.bd-cover{text-align:center;background:linear-gradient(135deg,#fff,#fde4ee)}
+.bd-ct{font-size:19px;font-weight:800;color:#ad1457;margin-top:10px}
+.bd-w{padding:12px 14px}
+.bd-wh{display:flex;align-items:center;gap:10px}
+.bd-wt{font-size:14.5px;line-height:1.5;margin-top:8px}
+.bd-img{margin-top:8px;font-size:12px;color:var(--muted)}
+.bd-img img{width:100%;border-radius:10px;cursor:pointer;display:block}
+.bd-pv{position:relative;display:inline-block;margin-top:8px}
+.bd-pv img{max-height:140px;border-radius:10px;display:block}
+.bd-pv button{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-weight:800}
+.bd-pop{text-align:center;position:relative;overflow:hidden}
+.bd-cake{font-size:64px;animation:bdpop .7s ease}
+.bd-names{font-size:18px;font-weight:800;color:#ad1457}
+@keyframes bdpop{0%{transform:scale(.2) rotate(-20deg)}70%{transform:scale(1.15)}100%{transform:none}}
+.bd-conf{position:absolute;inset:0;pointer-events:none;z-index:0}
+.bd-pop>*:not(.bd-conf){position:relative;z-index:1}
+.bd-pop h3,.bd-pop p{background:rgba(255,255,255,.85);border-radius:8px}
+.bd-conf i{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;opacity:.9;animation:conf 2.4s ease-in forwards}
+@keyframes conf{to{transform:translateY(420px) rotate(540deg);opacity:0}}
 .sec-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:22px 4px 10px}
 
 /* ---------- CARDS / KPI ---------- */
@@ -474,6 +557,8 @@ table.grid tr.bad td{background:#fdecea}
       <div class="hello">
         <div><h3 id="hello-name">Xin chào</h3><p id="hello-date"></p></div>
       </div>
+      <div class="hero hidden" id="home-hero"></div>
+      <div class="bd-card hidden" id="home-bd"></div>
       <div class="sec-title">Tính năng chung</div>
       <div class="grid-apps" id="apps-common"></div>
       <div class="sec-title" id="sec-mine">Công việc của tôi</div>
@@ -878,8 +963,17 @@ table.grid tr.bad td{background:#fdecea}
     </div>
 
     <!-- CÀI ĐẶT -->
+    <!-- SINH NHẬT -->
+    <div class="view hidden" id="v-bday"><div id="bd-box"></div></div>
+    <!-- LỜI NHẮN -->
+    <div class="view hidden" id="v-msg">
+      <div class="seg" id="msg-tabs" style="margin-bottom:12px"><button data-t="in" class="on">Hộp thư</button><button data-t="out">Đã gửi</button></div>
+      <button class="btn" id="msg-new" style="width:100%;margin-bottom:14px">✏️ Soạn lời nhắn</button>
+      <div id="msg-box"></div>
+    </div>
+
     <div class="view hidden" id="v-settings">
-      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 09/11/2026-c · máy chủ <span id="s-ver">?</span></div>
+      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 09/11/2026-f · máy chủ <span id="s-ver">?</span></div>
       <div class="card" id="force-note" style="background:var(--amber-l)">
         <b style="color:var(--amber)">Bạn đang dùng mật khẩu mặc định.</b>
         <div style="font-size:14px;margin-top:4px">Vui lòng đổi mật khẩu để tiếp tục sử dụng ứng dụng.</div>
@@ -890,6 +984,8 @@ table.grid tr.bad td{background:#fdecea}
           <dt>Tên đăng nhập</dt><dd id="s-user"></dd>
           <dt>Nhân viên</dt><dd id="s-name"></dd>
         </dl>
+        <label class="f">Ngày sinh (ngày/tháng – để mọi người chúc mừng sinh nhật bạn)</label>
+        <div style="display:flex;gap:8px"><input class="inp" id="s-dob" placeholder="VD: 25/12" inputmode="numeric"><button class="btn light" id="s-dob-save" style="flex:none">Lưu</button></div>
       </div>
       <div class="card">
         <h4>Đổi mật khẩu</h4>
@@ -1004,7 +1100,8 @@ function modal(html){
   $('modal-root').innerHTML = `<div class="modal-bg" id="mbg"><div class="modal">${html}</div></div>`;
   $('mbg').addEventListener('click', e => { if (e.target.id === 'mbg') closeModal(); });
 }
-function closeModal(){ if (scanCleanup) { const f = scanCleanup; scanCleanup = null; f(); return; } $('modal-root').innerHTML = ''; kkOnModalClosed(); }
+function closeModal(){ if (scanCleanup) { const f = scanCleanup; scanCleanup = null; f(); return; } $('modal-root').innerHTML = ''; kkOnModalClosed();
+  if (afterModal) { const f = afterModal; afterModal = null; setTimeout(f, 250); } }
 
 /* ========= TRẠNG THÁI ========= */
 const S = {
@@ -1087,7 +1184,7 @@ function restoreView(){
   let v = '';
   try { v = decodeURIComponent((location.hash || '').slice(1)) || sessionStorage.getItem('annt_view') || ''; } catch (e) {}
   if (!v || v === 'home' || !VIEWS[v] || v === 'install') return 'home';
-  const ok = v === 'settings' || v === 'docs' || !!document.querySelector('#v-home [data-go="' + v + '"]');
+  const ok = v === 'settings' || v === 'docs' || v === 'bday' || v === 'msg' || !!document.querySelector('#v-home [data-go="' + v + '"]');
   return ok ? v : 'home';
 }
 function enterApp(){
@@ -1142,7 +1239,7 @@ function renderNotif(){
   modal(`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3 style="margin:0">Thông báo</h3>
       ${d.unread ? '<button class="btn light" id="nt-all" style="padding:6px 10px;font-size:12.5px">Đánh dấu đã đọc hết</button>' : ''}</div>
     <div style="margin-top:8px;max-height:65vh;overflow:auto">${d.items.length ? d.items.map((x, i) => `<div class="nt-item ${x.read ? '' : 'unread'}" data-nt="${i}">
-      <span class="ic">${x.type === 'ask' ? '💰' : '💬'}</span><div class="tx">${esc(x.text)}<div class="muted" style="font-size:12px;font-weight:400;margin-top:2px">${esc(x.time)}</div></div>${x.read ? '' : '<span class="dot2"></span>'}</div>`).join('')
+      <span class="ic">${x.type === 'ask' ? '💰' : x.type === 'bd' ? '🎂' : '💬'}</span><div class="tx">${esc(x.text)}<div class="muted" style="font-size:12px;font-weight:400;margin-top:2px">${esc(x.time)}</div></div>${x.read ? '' : '<span class="dot2"></span>'}</div>`).join('')
       : '<div class="empty">Chưa có thông báo nào</div>'}</div>
     <div class="modal-actions"><button class="btn light" onclick="closeModal()">Đóng</button></div>`);
   if ($('nt-all')) $('nt-all').onclick = async () => { try { NT.data = await api('notifRead', 'all'); setBell(NT.data.unread); renderNotif(); } catch (e) { toast(e.message); } };
@@ -1156,6 +1253,7 @@ $('nt-bell').addEventListener('click', async () => {
 async function openNotif(x){
   closeModal();
   if (!x.read) { x.read = true; NT.data.unread = Math.max(0, NT.data.unread - 1); setBell(NT.data.unread); api('notifRead', [x.id]).catch(() => {}); }
+  if (x.type === 'bd') { openBdPost(x.so); return; }
   if ((S.user.features || []).indexOf('congno') === -1) return;
   const sos = String(x.so || '').split(',').filter(Boolean);
   DB.mode = 'all'; DB.sale = ''; DB.q = sos.length === 1 ? sos[0] : '';
@@ -1183,6 +1281,8 @@ const VIEWS = {
   soanhang: { title: 'Soạn hàng',         icon: 'cart',   color: 'linear-gradient(135deg,#8e24aa,#5e35b1)', label: 'Soạn hàng' },
   bcsoan:   { title: 'Báo cáo soạn hàng', icon: 'cam',    color: 'linear-gradient(135deg,#6d4c41,#3e2723)', label: 'BC Soạn hàng' },
   congno:   { title: 'Công nợ',           icon: 'money',  color: 'linear-gradient(135deg,#c62828,#7f0000)', label: 'Công nợ' },
+  msg:      { title: 'Lời nhắn',           icon: 'doc',    color: 'linear-gradient(135deg,#1e88e5,#0d47a1)', label: 'Lời nhắn' },
+  bday:     { title: 'Sinh nhật',          icon: 'doc',    color: 'linear-gradient(135deg,#ec407a,#ad1457)', label: 'Sinh nhật' },
   docs:     { title: 'Chứng từ chờ hoàn trả', icon: 'doc', color: 'linear-gradient(135deg,#00897b,#004d40)', label: 'Chứng từ chờ hoàn trả' },
   lookup:   { title: 'Tra cứu đơn hàng',  icon: 'search', color: 'linear-gradient(135deg,#00acc1,#00838f)', label: 'Tra cứu đơn' },
   bank:     { title: 'Thông tin tài khoản', icon: 'bank', color: 'linear-gradient(135deg,#7e57c2,#5e35b1)', label: 'Thông tin TK' },
@@ -1235,10 +1335,13 @@ function go(view){
   if (view === 'huyhang') initHuyhang();
   if (view === 'soanhang') initSoanhang();
   if (view === 'docs') loadDocs();
+  if (view === 'settings') loadMyDob();
+  if (view === 'msg') loadMsg();
   if (view === 'congno') DB.loading = loadDebt();
   if (view === 'bcsoan') initBcs();
   if (view === 'bank') renderBank();
   if (view === 'schedule') loadSchedule();
+  if (view === 'home') { HERO.off = 0; HERO.ses = null; loadHero(); loadBdHome(); }
   if (view === 'admin') initAdmin();
   if (view === 'tetnew') initTet();
   if (view === 'tetlist') loadTetOrders();
@@ -3495,11 +3598,22 @@ $('tl-sale').addEventListener('change', renderTetOrders);
 $('tl-group').addEventListener('change', renderTetOrders);
 
 /* ========= LỊCH GIAO HÀNG (đọc từ máy chủ) ========= */
-function schedTable(sch){
+const prioList = t => String(t || '').split(/[,;\n]+/).map(x => x.trim()).filter(Boolean);
+/* Tuyến cố định / ưu tiên: mỗi tuyến 1 ô vàng, có nhãn nghiêng phía trên ghi người phụ trách (admin bấm nhãn để gán) */
+function prioHtml(c, day, ses, editable, mineFn){
+  const rs = prioList(c.priority); if (!rs.length) return '';
+  return `<div class="pr-wrap">${rs.map(r => {
+    const by = (c.prioBy || {})[r] || '', mine = mineFn && by && mineFn(by);
+    const tag = by ? '👤 ' + esc(by) : (editable ? '+ Phụ trách' : '');
+    return `<span class="pr-box ${mine ? 'mine' : ''}">${tag ? `<span class="pr-tag ${by ? '' : 'pr-none'} ${editable ? 'ed' : ''}" ${editable ? `data-prio="${day}|${ses}|${esc(r)}"` : ''}>${tag}</span>` : ''}${esc(r)}</span>`;
+  }).join('')}</div>`;
+}
+function schedTable(sch, opt){
   const br = s => esc(s).replace(/\n/g, '<br>');
-  const cell = c => {
+  const ed = !(opt && opt.noEdit) && S.user && S.user.role === 'admin';
+  const cell = (c, i, s) => {
     let h = '';
-    if (c.priority) h += `<span class="hl-y">${br(c.priority)}</span><br>`;
+    if (c.priority) h += prioHtml(c, i, s, ed);
     if (c.route) h += `<span class="hl-r">${br(c.route)}</span>`;
     if (c.stores) h += `<span class="hl-mt">${br(c.stores)}</span>`;
     if (c.center) h += `<span class="hl-c">${br(c.center)}</span>`;
@@ -3509,17 +3623,345 @@ function schedTable(sch){
   return `<div class="sched-wrap"><table class="sched">
     <thead><tr><th></th>${sch.days.map(d => `<th>${esc(d)}</th>`).join('')}</tr>
       <tr><th class="sm">${esc(sch.driverLabel)}</th>${sch.drivers.map(d => `<th class="sm">${esc(d)}</th>`).join('')}</tr></thead>
-    <tbody>${sch.sessions.map(se => `<tr><td class="ses">${esc(se.name)}</td>${se.cells.map(c => `<td>${cell(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+    <tbody>${sch.sessions.map((se, s) => `<tr><td class="ses">${esc(se.name)}</td>${se.cells.map((c, i) => `<td>${cell(c, i, s)}</td>`).join('')}</tr>`).join('')}</tbody>
   </table></div>
   ${sch.notes && sch.notes.length ? `<div style="margin-top:14px;font-size:14px;line-height:1.8"><b>Ghi chú:</b><br>
     ${sch.notes.map(n => `• ${noteCls[n.style] ? `<span class="${noteCls[n.style]}" style="margin:0">${esc(n.label)}</span>` : `<i>${esc(n.label)}</i>`} ${esc(n.text)}`).join('<br>')}</div>` : ''}
   ${sch.updatedAt ? `<div class="muted" style="font-size:12px;margin-top:10px">Cập nhật ${esc(sch.updatedAt)}${sch.updatedBy ? ' bởi ' + esc(sch.updatedBy) : ''}</div>` : ''}`;
 }
+/* ========= LỊCH GIAO HÔM NAY – khu vực nổi bật trên trang chủ ========= */
+const HERO = { off: 0, ses: null };
+const lastTok = s => norm(String(s || '').trim()).split(/\s+/).pop();
+/* "Tên cuối" trong lịch (VD: Cảnh) → nhân viên giao hàng trong sheet User */
+function manOf(short){
+  const k = norm(String(short || '').trim()), men = (S.schedule && S.schedule.men) || [];
+  if (!k) return null;
+  return men.find(m => norm(m.name) === k || norm(m.u) === k) || men.find(m => lastTok(m.name) === lastTok(k)) || null;
+}
+function isMe(short){
+  if (!String(short || '').trim()) return false;
+  const m = manOf(short);
+  return m ? m.u.toLowerCase() === S.user.username.toLowerCase() : lastTok(short) === lastTok(S.user.name);
+}
+function schedDay(sch, date){
+  const d = date.getDay(), i = d === 0 ? 6 : d - 1;            // T2 = 0 … T7 = 5, CN = 6
+  return i < sch.days.length ? i : -1;
+}
+const curSes = () => new Date().getHours() < 12 ? 0 : 1;
+function sesLines(c){
+  const br = s => esc(s).replace(/\n/g, ', ');
+  return [c.route ? `<div class="hs-line"><span class="hl-r" style="margin:0">${esc(c.route)}</span></div>` : '',
+          c.stores ? `<div class="hs-line">🏬 ${br(c.stores)}</div>` : '',
+          c.center ? `<div class="hs-line"><i>${esc(c.center)}</i></div>` : ''].join('');
+}
+async function loadHero(){
+  if (!S.user) return;
+  if (!S.schedule) { try { S.schedule = await api('getSchedule'); } catch (e) { return; } }
+  renderHero();
+}
+function renderHero(dir){
+  const sch = S.schedule, box = $('home-hero'); if (!sch || !S.user) return;
+  box.classList.remove('hidden');
+  const date = new Date(); date.setDate(date.getDate() + HERO.off);
+  const di = schedDay(sch, date), deli = S.user.role === 'deliveryman';
+  const dl = (HERO.off ? 'Ngày mai' : 'Hôm nay') + ' · ' + date.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' });
+  let body;
+  if (di < 0) body = `<div class="empty" style="padding:18px 0">Không có lịch giao hàng ${HERO.off ? 'ngày mai' : 'hôm nay'}.</div>`;
+  else if (deli) body = myPlanHtml(sch, di);
+  else {
+    const admin = S.user.role === 'admin';
+    body = `<div class="hero-bike">🛵 ${esc(sch.driverLabel || 'Giao hàng xe máy')}: <b>${esc(sch.drivers[di] || '—')}</b></div>` +
+      sch.sessions.map((se, s) => { const c = se.cells[di] || {}, cur = !HERO.off && s === curSes();
+        return `<div class="hs ${cur ? 'cur' : ''}"><div class="hs-t">Buổi ${esc(se.name)}${cur ? ' <span class="badge st-done">Đang diễn ra</span>' : ''}</div>
+          ${prioHtml(c, di, s, admin)}${sesLines(c) || (c.priority ? '' : '<div class="hs-line muted">Không có tuyến</div>')}</div>`; }).join('');
+  }
+  box.innerHTML = `<div class="hero-head"><div><div class="hero-k">${deli ? 'Kế hoạch giao hàng của tôi' : 'Lịch giao hàng'}</div><div class="hero-d">${esc(dl)}</div></div>
+      <div class="hero-nav"><button data-hn="0" ${HERO.off ? '' : 'disabled'} aria-label="Hôm nay">‹</button><button data-hn="1" ${HERO.off ? 'disabled' : ''} aria-label="Ngày mai">›</button></div></div>
+    <div class="hero-body" style="--hx:${dir === 'back' ? '-20px' : '20px'}">${body}</div>
+    <div class="hero-foot"><div class="hero-dots"><i class="${HERO.off ? '' : 'on'}"></i><i class="${HERO.off ? 'on' : ''}"></i></div>
+      <button class="hero-next" data-hn="${HERO.off ? 0 : 1}">${HERO.off ? '‹ Hôm nay' : 'Ngày mai ›'}</button></div>`;
+}
+/* Nhân viên giao hàng: tuyến ưu tiên được gán → tuyến đó; là NV xe máy trong lịch → các tuyến còn lại của buổi; không có lịch → giao xe tải */
+function myPlanHtml(sch, di){
+  if (HERO.ses === null || HERO.ses >= sch.sessions.length) HERO.ses = HERO.off ? 0 : Math.min(curSes(), sch.sessions.length - 1);
+  const s = HERO.ses, se = sch.sessions[s], c = se.cells[di] || {};
+  const mine = prioList(c.priority).filter(r => isMe((c.prioBy || {})[r]));
+  const bike = isMe(sch.drivers[di]);
+  const mode = bike ? 'Giao hàng xe máy' : 'Giao hàng xe tải', ico = bike ? '🛵' : '🚚';
+  let content = '';
+  if (mine.length) content += `<div class="hs-line"><b>Tuyến ưu tiên của bạn:</b></div>` + prioHtml({ priority: mine.join(','), prioBy: c.prioBy }, di, s, false, isMe);
+  if (bike || !mine.length) content += `<div class="hs-line" style="margin-top:8px"><b>${bike ? 'Các tuyến còn lại của buổi' : 'Các tuyến giao trong buổi'}:</b></div>` + (sesLines(c) || '<div class="hs-line muted">Không có tuyến</div>');
+  const others = prioList(c.priority).filter(r => mine.indexOf(r) === -1);
+  return `<div class="seg" style="margin:10px 0 0">${sch.sessions.map((x, k) => `<button data-hs="${k}" class="${k === s ? 'on' : ''}">Buổi ${esc(x.name)}${!HERO.off && k === curSes() ? ' •' : ''}</button>`).join('')}</div>
+    <div class="my-mode"><span class="ico">${ico}</span>${mode}</div>${content}
+    ${others.length ? `<div class="hs-line muted" style="margin-top:8px">Tuyến ưu tiên khác: ${others.map(r => esc(r) + ((c.prioBy || {})[r] ? ' (' + esc(c.prioBy[r]) + ')' : '')).join(', ')}</div>` : ''}
+    ${!bike && sch.drivers[di] ? `<div class="hs-line muted">Xe máy: ${esc(sch.drivers[di])}</div>` : ''}
+    ${HERO.off ? '' : `<button class="btn block light" data-go="waiting" style="margin-top:10px">Xem đơn chờ giao</button>`}`;
+}
+$('home-hero').addEventListener('click', e => {
+  const n = e.target.closest('[data-hn]'); if (n) { const o = +n.dataset.hn; if (o !== HERO.off) { HERO.off = o; HERO.ses = null; renderHero(o ? 'next' : 'back'); } return; }
+  const s = e.target.closest('[data-hs]'); if (s) { HERO.ses = +s.dataset.hs; renderHero(); return; }
+  const g = e.target.closest('[data-go]'); if (g) go(g.dataset.go);
+});
+(() => {   // vuốt trái/phải để chuyển Hôm nay ↔ Ngày mai
+  let x0 = null, y0 = 0;
+  $('home-hero').addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  $('home-hero').addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
+    const o = dx < 0 ? 1 : 0;
+    if (o !== HERO.off) { HERO.off = o; HERO.ses = null; renderHero(o ? 'next' : 'back'); }
+  }, { passive: true });
+})();
+/* Admin bấm nhãn trên tuyến ưu tiên → chọn người phụ trách */
+const shortName = n => String(n || '').trim().split(/\s+/).pop();
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-prio]'); if (!t || !S.user || S.user.role !== 'admin') return;
+  const [day, ses, route] = t.dataset.prio.split('|');
+  const cell = S.schedule.sessions[+ses].cells[+day], cur = (cell.prioBy || {})[route] || '';
+  const men = S.schedule.men || [];
+  const known = men.some(m => norm(shortName(m.name)) === norm(cur));
+  modal(`<h3>Người phụ trách tuyến ${esc(route)}</h3><div class="muted" style="font-size:13px">${esc(S.schedule.days[+day])} – buổi ${esc(S.schedule.sessions[+ses].name)}</div>
+    <div class="reason-list" style="margin-top:10px">${men.map(m => `<label><input type="radio" name="pb" value="${esc(shortName(m.name))}" ${norm(shortName(m.name)) === norm(cur) ? 'checked' : ''}> <b>${esc(shortName(m.name))}</b> <span class="muted">– ${esc(m.name)}</span></label>`).join('')}
+      <label><input type="radio" name="pb" value="__other" ${cur && !known ? 'checked' : ''}> Khác: <input class="inp" id="pb-other" style="display:inline-block;width:auto;padding:6px 8px" value="${known ? '' : esc(cur)}"></label></div>
+    <div class="modal-actions"><button class="btn light" id="pb-clear">Bỏ gán</button><button class="btn" id="pb-ok">Lưu</button></div>`);
+  const save = async v => {
+    closeModal(); loading(true);
+    try {
+      S.schedule = await api('adminSetPrioBy', +day, +ses, route, v);
+      if (typeof AD !== 'undefined' && AD.draft) AD.draft.sessions[+ses].cells[+day].prioBy = S.schedule.sessions[+ses].cells[+day].prioBy;
+      renderHero(); if (S.view === 'schedule') $('sched-box').innerHTML = schedTable(S.schedule);
+      toast(v ? `Đã gán ${v} phụ trách ${route}` : 'Đã bỏ gán người phụ trách');
+    } catch (x) { toast(x.message, 4000); } finally { loading(false); }
+  };
+  $('pb-ok').onclick = () => { const r = document.querySelector('[name=pb]:checked'); save(!r ? '' : r.value === '__other' ? $('pb-other').value.trim() : r.value); };
+  $('pb-clear').onclick = () => save('');
+});
+/* ========= SINH NHẬT 🎂 ========= */
+const BD = { home: null, post: null, img: null, imgCache: {} };
+const initial = n => (String(n || '?').trim().split(/\s+/).pop() || '?').charAt(0).toUpperCase();
+async function loadBdHome(){
+  if (!S.user) return;
+  try { BD.home = await api('bdHome'); } catch (e) { return; }
+  renderBdHome(); if (!bdPopup()) msgPopup(); else afterModal = msgPopup;
+}
+function renderBdHome(){
+  const h = BD.home, box = $('home-bd'); if (!h) return;
+  box.classList.remove('hidden');
+  box.classList.toggle('msg-card', !h.today.length);
+  if (!h.today.length) { box.innerHTML = msgHomeHtml(h.msgs); return; }
+  const unr = h.msgs && h.msgs.unread;
+  box.innerHTML = `<div class="bd-head"><span>🎂 Sinh nhật</span><button class="bd-link" data-bdfeed="1">Bảng tin ›</button></div>
+    ${h.today.map(p => `<div class="bd-today" data-bdpost="${esc(p.id)}">
+        <div class="bd-av">${esc(initial(p.name))}<i>🎉</i></div>
+        <div style="flex:1;min-width:0"><div class="bd-t">${p.me ? 'Hôm nay là sinh nhật của bạn!' : 'Hôm nay sinh nhật <b>' + esc(p.name) + '</b>'}</div>
+          <div class="bd-s">${p.wishes ? `💬 ${p.wishes} lời chúc${p.imgs ? ' · 📷 ' + p.imgs + ' ảnh' : ''}${p.last ? ' · ' + esc(p.last.by) + ': “' + esc(p.last.text) + '”' : ''}` : 'Hãy là người đầu tiên gửi lời chúc!'}</div></div>
+        <button class="btn" style="padding:8px 12px;font-size:13px;flex:none">${p.me ? 'Xem' : p.iWished ? 'Xem' : 'Gửi lời chúc'}</button></div>`).join('')}
+    <div class="bd-soon" style="display:flex;justify-content:space-between"><button class="bd-link" data-msgopen="1" style="padding:0">✉️ Lời nhắn${unr ? ' (' + unr + ' chưa xem)' : ''} ›</button><button class="bd-link" data-msgnew="1" style="padding:0">✏️ Soạn</button></div>`;
+}
+$('home-bd').addEventListener('click', e => {
+  const p = e.target.closest('[data-bdpost]'); if (p) { openBdPost(p.dataset.bdpost); return; }
+  if (e.target.closest('[data-bdfeed]')) { openBdFeed(); return; }
+  if (e.target.closest('[data-msgnew]')) { msgCompose([]); return; }
+  if (e.target.closest('[data-msgopen]')) { MSG.tab = 'in'; go('msg'); }
+});
+/* Popup chúc mừng: mỗi ngày hiện 1 lần trên mỗi máy */
+function bdPopup(){
+  const h = BD.home; if (!h || !h.today.length || S.view !== 'home' || $('modal-root').innerHTML) return false;
+  const k = 'annt_bdpop_' + S.user.username + '_' + new Date().toDateString();
+  if (store.get(k)) return false; store.set(k, 1);
+  const me = h.today.find(p => p.me), others = h.today.filter(p => !p.me);
+  const conf = Array.from({ length: 28 }, (_, i) => `<i style="left:${(i * 37) % 100}%;animation-delay:${(i % 7) * 0.18}s;background:${['#e53935', '#fbc02d', '#43a047', '#1e88e5', '#8e24aa'][i % 5]}"></i>`).join('');
+  modal(`<div class="bd-pop"><div class="bd-conf">${conf}</div>
+    <div class="bd-cake">🎂</div>
+    ${me ? `<h3>Chúc mừng sinh nhật, ${esc(String(S.user.name).trim().split(/\s+/).pop())}!</h3><p>Chúc bạn tuổi mới thật nhiều sức khỏe, niềm vui và thành công. Cả nhà Ân Nam Nha Trang luôn bên bạn! 🎉</p>` : ''}
+    ${others.length ? `<h3>${me ? 'Hôm nay cũng là sinh nhật của' : 'Hôm nay là sinh nhật của'}</h3><p class="bd-names">${others.map(p => esc(p.name)).join(', ')}</p><p>Gửi lời chúc mừng ngay nhé! 🥳</p>` : ''}
+    <div class="modal-actions" style="justify-content:center"><button class="btn light" onclick="closeModal()">Để sau</button>
+      <button class="btn" id="bd-go">${others.length ? 'Gửi lời chúc' : 'Xem lời chúc'}</button></div></div>`);
+  beep('notify');
+  $('bd-go').onclick = () => { afterModal = null; closeModal(); openBdPost((others[0] || me).id); };
+  return true;
+}
+async function openBdPost(id){
+  BD.post = null; BD.img = null;
+  go('bday'); $('bd-box').innerHTML = '<div class="card empty">Đang tải...</div>';
+  try { BD.post = await api('bdPost', id); renderBdPost(); } catch (e) { $('bd-box').innerHTML = `<div class="card empty">${esc(e.message)}</div>`; }
+}
+function renderBdPost(){
+  const p = BD.post;
+  $('bd-box').innerHTML = `<div class="card bd-cover"><div class="bd-av big">${esc(initial(p.name))}<i>🎂</i></div>
+      <div class="bd-ct">${p.me ? 'Sinh nhật của bạn' : 'Sinh nhật ' + esc(p.name)}</div>
+      <div class="muted">${esc(p.dob)}/${p.year} · ${p.wishes.length} lời chúc</div></div>
+    <div class="card"><textarea class="inp" id="bd-text" rows="3" placeholder="${p.me ? 'Gửi lời cảm ơn mọi người...' : 'Viết lời chúc cho ' + esc(String(p.name).trim().split(/\s+/).pop()) + '...'}"></textarea>
+      <div id="bd-prev"></div>
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn light" id="bd-pic" style="flex:none">📷 Ảnh</button>
+        <input type="file" id="bd-file" accept="image/*" class="hidden"><button class="btn" id="bd-send" style="flex:1">${p.me ? 'Gửi lời cảm ơn' : 'Gửi lời chúc'}</button></div></div>
+    <div id="bd-tl">${p.wishes.length ? p.wishes.map((w, i) => `<div class="card bd-w">
+        <div class="bd-wh"><div class="bd-av sm">${esc(initial(w.by))}</div><div><b>${esc(w.by)}</b><div class="muted" style="font-size:12px">${esc(w.time)}</div></div></div>
+        ${w.text ? `<div class="bd-wt">${esc(w.text).replace(/\n/g, '<br>')}</div>` : ''}
+        ${w.img ? `<div class="bd-img" data-bdimg="${esc(w.img)}">Đang tải ảnh...</div>` : ''}</div>`).join('')
+      : '<div class="card empty">Chưa có lời chúc nào – hãy là người đầu tiên! 🎉</div>'}</div>`;
+  $('bd-pic').onclick = () => $('bd-file').click();
+  $('bd-file').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    try { BD.img = await compressImg(f, 1600, 0.82); $('bd-prev').innerHTML = `<div class="bd-pv"><img src="${BD.img}"><button id="bd-rm">×</button></div>`; $('bd-rm').onclick = () => { BD.img = null; $('bd-prev').innerHTML = ''; }; }
+    catch (x) { toast(x.message); }
+  };
+  $('bd-send').onclick = async () => {
+    const t = $('bd-text').value.trim();
+    if (!t && !BD.img) { toast('Hãy viết lời chúc hoặc chọn ảnh.'); return; }
+    $('bd-send').disabled = true; loading(true);
+    try {
+      BD.post = await api('bdWish', p.id, t, BD.img ? { mime: 'image/jpeg', base64: BD.img.split(',')[1] } : null);
+      BD.img = null; beep('saved'); toast('🎉 Đã gửi!'); renderBdPost(); BD.home = null;
+    } catch (x) { toast(x.message, 4000); $('bd-send').disabled = false; }
+    finally { loading(false); }
+  };
+  bdLoadImgs();
+}
+async function bdLoadImgs(){
+  for (const el of Array.from(document.querySelectorAll('[data-bdimg]'))) {
+    const fid = el.dataset.bdimg;
+    try { BD.imgCache[fid] = BD.imgCache[fid] || await api('bdImage', BD.post.id, fid); el.innerHTML = `<img src="${BD.imgCache[fid]}" data-bigsrc="1">`; }
+    catch (e) { el.textContent = e.message; }
+  }
+}
+$('bd-box').addEventListener('click', e => {
+  const im = e.target.closest('[data-bigsrc]'); if (im) modal(`<img class="bcs-big" src="${im.src}"><div class="modal-actions"><button class="btn" onclick="closeModal()">Đóng</button></div>`);
+  const p = e.target.closest('[data-bdpost]'); if (p) openBdPost(p.dataset.bdpost);
+});
+/* Bảng tin: các bài sinh nhật gần đây, mới nhất trước */
+async function openBdFeed(){
+  go('bday');
+  if (!BD.home) { $('bd-box').innerHTML = '<div class="card empty">Đang tải...</div>'; try { BD.home = await api('bdHome'); } catch (e) { $('bd-box').innerHTML = `<div class="card empty">${esc(e.message)}</div>`; return; } }
+  const h = BD.home, items = h.today.concat(h.feed.filter(f => !h.today.some(t => t.id === f.id)));
+  $('bd-box').innerHTML = `<div class="card"><h4 style="margin:0">🎂 Bảng tin sinh nhật</h4>
+      <div class="muted" style="font-size:13px">${h.myDob ? 'Ngày sinh của bạn: ' + esc(h.myDob) : 'Bạn chưa cập nhật ngày sinh – vào <b>Cài đặt</b> để thêm.'}</div></div>` +
+    (items.length ? items.map(p => `<div class="card bd-today" data-bdpost="${esc(p.id)}">
+        <div class="bd-av">${esc(initial(p.name))}<i>🎂</i></div>
+        <div style="flex:1;min-width:0"><div class="bd-t">Sinh nhật <b>${esc(p.name)}</b> · ${esc(p.dob || '')}${p.year ? '/' + p.year : ''}</div>
+          <div class="bd-s">💬 ${p.wishes} lời chúc${p.imgs ? ' · 📷 ' + p.imgs + ' ảnh' : ''}${p.last ? ' · ' + esc(p.last.by) + ': “' + esc(p.last.text) + '”' : ''}</div></div>
+        <span style="font-size:20px;color:var(--muted)">›</span></div>`).join('') : '<div class="card empty">Chưa có bài sinh nhật nào gần đây.</div>');
+}
+/* Cài đặt: ngày sinh của tôi */
+async function loadMyDob(){ try { const r = await api('getMyDob'); $('s-dob').value = r.dob || ''; } catch (e) {} }
+$('s-dob-save').addEventListener('click', async () => {
+  try { const r = await api('setMyDob', $('s-dob').value); $('s-dob').value = r.dob; toast(r.dob ? 'Đã lưu ngày sinh ' + r.dob : 'Đã xóa ngày sinh'); BD.home = null; }
+  catch (e) { toast(e.message, 4000); }
+});
+/* ========= LỜI NHẮN & THÔNG BÁO ✉️ ========= */
+const MSG = { data: null, tab: 'in' };
+var afterModal = null;              // popup kế tiếp (sau popup sinh nhật)
+function msgItemHtml(m, mode){
+  const tb = m.type === 'tb';
+  return `<div class="card msg-it${mode === 'in' && !m.read ? ' unread' : ''}">
+    <div class="bd-wh"><div class="bd-av sm${tb ? ' tb' : ''}">${tb ? '📢' : esc(initial(mode === 'out' ? S.user.name : m.fromName))}</div>
+      <div style="flex:1;min-width:0"><b>${mode === 'out' ? 'Bạn' : esc(m.fromName)}</b> ${tb ? '<span class="msg-tag">Thông báo</span>' : ''}${mode === 'in' && !m.read ? '<span class="msg-new">Mới</span>' : ''}
+        <div class="muted" style="font-size:12px">${esc(m.time)}${!tb || mode === 'out' ? ' · Gửi đến: ' + esc(m.toNames) : ''}</div></div></div>
+    <div class="bd-wt">${esc(m.text).replace(/\n/g, '<br>')}</div>
+    ${mode === 'out' ? `<div class="msg-ft">👁 Đã xem ${m.readBy}/${m.total}</div>` : ''}
+    ${mode === 'in' && !tb ? `<div class="msg-ft"><button class="bd-link" data-reply="${esc(m.from)}">↩ Trả lời</button></div>` : ''}</div>`;
+}
+/* Thẻ trên trang chủ khi hôm nay không có sinh nhật */
+function msgHomeHtml(ms){
+  const list = ms ? ms.inbox.slice().sort((a, b) => (a.read - b.read) || (b.t - a.t)).slice(0, 3) : [];
+  return `<div class="bd-head msg-head"><span>✉️ Thông báo & lời nhắn</span><button class="bd-link" data-msgnew="1">✏️ Soạn</button></div>
+    ${list.length ? list.map(m => `<div class="msg-mini${m.read ? '' : ' unread'}" data-msgopen="1">
+        <span class="msg-ic">${m.type === 'tb' ? '📢' : '💬'}</span>
+        <div style="flex:1;min-width:0"><div class="bd-t"><b>${esc(m.fromName)}</b> <span class="muted" style="font-size:12px">${esc(m.time)}</span></div>
+          <div class="bd-s">${esc(m.text)}</div></div>${m.read ? '' : '<i class="msg-dot"></i>'}</div>`).join('')
+      : '<div class="bd-s" style="padding:8px 0">Chưa có lời nhắn nào. Bấm <b>Soạn</b> để gửi lời nhắn cho đồng nghiệp.</div>'}
+    <div class="bd-soon" style="display:flex;justify-content:space-between"><button class="bd-link" data-msgopen="1" style="padding:0">Xem tất cả${ms && ms.unread ? ' (' + ms.unread + ' chưa xem)' : ''} ›</button>
+      ${BD.home && BD.home.feed.length ? '<button class="bd-link" data-bdfeed="1" style="padding:0">🎂 Bảng tin sinh nhật</button>' : ''}</div>`;
+}
+/* Popup tin chưa xem: hiện 1 lần mỗi lần mở app; bấm "Đã xem" thì lần sau không hiện nữa */
+function msgPopup(){
+  const ms = BD.home && BD.home.msgs; if (!ms || S.view !== 'home' || $('modal-root').innerHTML) return;
+  const un = ms.inbox.filter(m => !m.read); if (!un.length) return;
+  const k = 'annt_msgpop_' + S.user.username;
+  try { if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, '1'); } catch (e) {}
+  const tb = un.filter(m => m.type === 'tb').length;
+  modal(`<h3>📬 Bạn có ${un.length} ${tb && tb === un.length ? 'thông báo' : tb ? 'thông báo & lời nhắn' : 'lời nhắn'} mới</h3>
+    <div class="msg-pop">${un.slice(0, 20).map(m => msgItemHtml(m, 'in')).join('')}</div>
+    <div class="modal-actions"><button class="btn light" onclick="closeModal()">Để sau</button><button class="btn" id="msg-seen">Đã xem</button></div>`);
+  beep('notify');
+  $('msg-seen').onclick = async () => {
+    closeModal(); const ids = un.map(m => m.id);
+    un.forEach(m => m.read = true); ms.unread = ms.inbox.filter(m => !m.read).length; renderBdHome();
+    try { await api('msgRead', ids); } catch (e) {}
+  };
+  document.querySelectorAll('.msg-pop [data-reply]').forEach(b => b.onclick = () => { closeModal(); msgCompose([b.dataset.reply]); });
+}
+async function loadMsg(){
+  $('msg-box').innerHTML = '<div class="card empty">Đang tải...</div>';
+  try { MSG.data = await api('msgInbox'); } catch (e) { $('msg-box').innerHTML = `<div class="card empty">${esc(e.message)}</div>`; return; }
+  renderMsg();
+}
+function renderMsg(){
+  const d = MSG.data; if (!d) return;
+  document.querySelectorAll('#msg-tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === MSG.tab));
+  $('msg-tabs').querySelector('[data-t="in"]').textContent = 'Hộp thư' + (d.unread ? ' (' + d.unread + ')' : '');
+  const list = MSG.tab === 'in' ? d.inbox : d.sent;
+  $('msg-box').innerHTML = list.length ? list.map(m => msgItemHtml(m, MSG.tab)).join('')
+    : `<div class="card empty">${MSG.tab === 'in' ? 'Chưa có lời nhắn nào gửi cho bạn.' : 'Bạn chưa gửi lời nhắn nào.'}</div>`;
+  if (MSG.tab === 'in') {          // mở hộp thư = đã xem
+    const ids = d.inbox.filter(m => !m.read).map(m => m.id);
+    if (ids.length) {
+      d.inbox.forEach(m => m.read = true); d.unread = 0;
+      if (BD.home && BD.home.msgs) { BD.home.msgs.inbox.forEach(m => m.read = true); BD.home.msgs.unread = 0; }
+      api('msgRead', ids).catch(() => {});
+    }
+  }
+}
+$('msg-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; MSG.tab = b.dataset.t; renderMsg(); });
+$('msg-new').addEventListener('click', () => msgCompose([]));
+$('msg-box').addEventListener('click', e => { const b = e.target.closest('[data-reply]'); if (b) msgCompose([b.dataset.reply]); });
+async function msgCompose(pre){
+  let staff; loading(true);
+  try { staff = (await staffList()).filter(x => norm(x.u) !== norm(S.user.username)); } catch (e) { toast(e.message); return; } finally { loading(false); }
+  const isAdmin = S.user.role === 'admin', sel = new Set((pre || []).map(norm));
+  modal(`<h3>✏️ Soạn lời nhắn</h3>
+    ${isAdmin ? `<label class="msg-all"><input type="checkbox" id="mc-all"> 📢 Gửi <b>thông báo</b> đến toàn bộ người dùng</label>` : ''}
+    <div id="mc-pick"><label class="f">Người nhận (chọn 1 hoặc nhiều người)</label>
+      <div id="mc-chips" class="msg-chips"></div>
+      <input class="inp" id="mc-q" placeholder="🔍 Tìm tên đồng nghiệp...">
+      <div class="msg-list" id="mc-list"></div></div>
+    <label class="f">Nội dung</label><textarea class="inp" id="mc-text" rows="4" placeholder="Nhập lời nhắn..."></textarea>
+    <div class="modal-actions"><button class="btn light" onclick="closeModal()">Hủy</button><button class="btn" id="mc-send">Gửi</button></div>`);
+  const draw = () => {
+    const q = norm($('mc-q').value);
+    $('mc-list').innerHTML = staff.filter(x => !q || norm(x.name + ' ' + x.u).includes(q)).map(x =>
+      `<label class="msg-row"><input type="checkbox" value="${esc(x.u)}" ${sel.has(norm(x.u)) ? 'checked' : ''}> ${esc(x.name)}</label>`).join('') || '<div class="muted" style="padding:8px">Không tìm thấy.</div>';
+    const chosen = staff.filter(x => sel.has(norm(x.u)));
+    $('mc-chips').innerHTML = chosen.length ? chosen.map(x => `<span class="msg-chip" data-un="${esc(x.u)}">${esc(x.name)} ×</span>`).join('') : '<span class="muted" style="font-size:13px">Chưa chọn người nhận</span>';
+  };
+  draw();
+  $('mc-q').oninput = draw;
+  $('mc-list').onchange = e => { const v = norm(e.target.value); e.target.checked ? sel.add(v) : sel.delete(v); draw(); };
+  $('mc-chips').onclick = e => { const c = e.target.closest('[data-un]'); if (c) { sel.delete(norm(c.dataset.un)); draw(); } };
+  if (isAdmin) $('mc-all').onchange = e => $('mc-pick').classList.toggle('hidden', e.target.checked);
+  const rid = 'msg' + Date.now() + Math.random().toString(36).slice(2, 7);
+  $('mc-send').onclick = async () => {
+    const all = isAdmin && $('mc-all').checked, text = $('mc-text').value.trim();
+    const to = staff.filter(x => sel.has(norm(x.u))).map(x => x.u);
+    if (!all && !to.length) { toast('Hãy chọn người nhận.'); return; }
+    if (!text) { toast('Hãy nhập nội dung.'); return; }
+    $('mc-send').disabled = true; loading(true);
+    try {
+      MSG.data = await api('msgSend', to, text, all, rid);
+      closeModal(); beep('saved'); toast(all ? '📢 Đã gửi thông báo đến toàn bộ người dùng' : '✉️ Đã gửi lời nhắn');
+      if (BD.home) BD.home.msgs = MSG.data;
+      if (S.view === 'msg') { MSG.tab = 'out'; renderMsg(); } else renderBdHome();
+    } catch (e) { toast(e.message, 4000); $('mc-send').disabled = false; }
+    finally { loading(false); }
+  };
+}
 async function loadSchedule(force){
   if (S.schedule && !force) { $('sched-box').innerHTML = schedTable(S.schedule); }
   try {
     S.schedule = await api('getSchedule');
-    $('sched-box').innerHTML = schedTable(S.schedule);
+    $('sched-box').innerHTML = schedTable(S.schedule); renderHero();
   } catch (e) { if (!S.schedule) $('sched-box').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 }
 
@@ -3606,6 +4048,7 @@ function openUserModal(u){
     ${isNew ? `<label class="f">Tên đăng nhập</label><input class="inp" id="mu-user" autocapitalize="none" placeholder="VD: duy.nguyen">` : ''}
     <label class="f">Tên nhân viên</label><input class="inp" id="mu-name" value="${esc(u.name)}">
     <label class="f">Email (để nhận CC đơn Tết – không bắt buộc)</label><input class="inp" id="mu-email" type="email" value="${esc(u.email)}">
+    <label class="f">Ngày sinh (ngày/tháng – để chúc mừng sinh nhật)</label><input class="inp" id="mu-dob" placeholder="VD: 25/12" value="${esc(u.dob || '')}">
     <div class="row2">
       <div><label class="f">Vai trò</label><select class="inp" id="mu-role" ${isMe ? 'disabled' : ''}>${AD.data.roles.map(r => `<option value="${r.key}" ${r.key === u.role ? 'selected' : ''}>${esc(r.label)}</option>`).join('')}</select></div>
       <div><label class="f">Trạng thái</label><select class="inp" id="mu-status" ${isMe ? 'disabled' : ''}><option ${u.status === 'Active' ? 'selected' : ''}>Active</option><option ${u.status === 'Khóa' ? 'selected' : ''}>Khóa</option></select></div>
@@ -3652,7 +4095,7 @@ function openUserModal(u){
     $('mu-err').textContent = '';
     const d = {
       username: isNew ? $('mu-user').value.trim() : u.username,
-      name: $('mu-name').value.trim(), email: $('mu-email').value.trim(),
+      name: $('mu-name').value.trim(), email: $('mu-email').value.trim(), dob: $('mu-dob').value.trim(),
       role: $('mu-role').value, status: $('mu-status').value, scope: $('mu-scope').value,
       features: mode === 'role' ? '' : (picked.length ? picked : 'none'),
       password: isNew ? $('mu-pw').value.trim() : ''
@@ -3694,11 +4137,13 @@ function drawSchedEditor(){
   d.sessions.forEach((se, s) => {
     const c = se.cells[i];
     h += `<div class="se-ses"><div class="se-title">Buổi ${esc(se.name)}</div>
-      <label class="f"><span class="hl-y" style="margin:0">Cố định / ưu tiên</span></label><input class="inp" data-se="priority" data-s="${s}" value="${esc(c.priority)}" placeholder="VD: Cam Ranh, Đảo Hòn Tre">
+      <label class="f"><span class="hl-y" style="margin:0">Cố định / ưu tiên</span> <span class="muted" style="font-size:12px">(nhiều tuyến cách nhau dấu phẩy)</span></label><input class="inp" data-se="priority" data-s="${s}" value="${esc(c.priority)}" placeholder="VD: Cam Ranh, Đảo Hòn Tre">
+      ${prioList(c.priority).map(r => `<div class="se-pby"><span>${esc(r)}</span><input class="inp" list="se-men" data-se="prioBy" data-s="${s}" data-r="${esc(r)}" value="${esc((c.prioBy || {})[r] || '')}" placeholder="Người phụ trách (tên cuối, VD: Cảnh)"></div>`).join('')}
       <label class="f"><span class="hl-r" style="margin:0">Tuyến</span></label><input class="inp" data-se="route" data-s="${s}" value="${esc(c.route)}" placeholder="VD: Tuyến phía Bắc">
       <label class="f">Siêu thị / MT (mỗi dòng 1 điểm)</label><textarea class="inp" rows="3" data-se="stores" data-s="${s}">${esc(c.stores)}</textarea>
       <label class="f">Khu vực chung</label><input class="inp" data-se="center" data-s="${s}" value="${esc(c.center)}"></div>`;
   });
+  h += `<datalist id="se-men">${((S.schedule && S.schedule.men) || []).map(m => `<option value="${esc(String(m.name).trim().split(/\s+/).pop())}">${esc(m.name)}</option>`).join('')}</datalist>`;
   $('se-day-form').innerHTML = h;
   $('se-notes').innerHTML = d.notes.map((n, k) => `<div class="se-note">
     <select class="inp" data-note="style" data-k="${k}"><option value="priority" ${n.style === 'priority' ? 'selected' : ''}>Nền vàng</option>
@@ -3706,7 +4151,7 @@ function drawSchedEditor(){
     <input class="inp" data-note="label" data-k="${k}" value="${esc(n.label)}" placeholder="Nhãn">
     <input class="inp" data-note="text" data-k="${k}" value="${esc(n.text)}" placeholder="Nội dung">
     <button class="icon-btn" type="button" data-note-del="${k}" title="Xóa">${ic('trash')}</button></div>`).join('');
-  $('se-preview').innerHTML = schedTable(d);
+  $('se-preview').innerHTML = schedTable(d, { noEdit: true });
 }
 $('se-days').addEventListener('click', e => { const b = e.target.closest('[data-d]'); if (b) { AD.day = +b.dataset.d; drawSchedEditor(); } });
 $('ad-sched').addEventListener('input', e => {
@@ -3715,11 +4160,13 @@ $('ad-sched').addEventListener('input', e => {
   else if (el.dataset.se) d.sessions[+el.dataset.s].cells[AD.day][el.dataset.se] = el.value;
   else if (el.dataset.note) d.notes[+el.dataset.k][el.dataset.note] = el.value;
   else if (el.id === 'se-driver-label') d.driverLabel = el.value;
+  else if (el.dataset.se === 'prioBy') { const cc = d.sessions[+el.dataset.s].cells[AD.day]; cc.prioBy = cc.prioBy || {}; cc.prioBy[el.dataset.r] = el.value; }
   else return;
-  $('se-preview').innerHTML = schedTable(d);
+  $('se-preview').innerHTML = schedTable(d, { noEdit: true });
 });
 $('ad-sched').addEventListener('change', e => {
   const el = e.target;
+  if (el.dataset.se === 'priority') { drawSchedEditor(); return; }        // hiện ô người phụ trách cho từng tuyến
   if (el.dataset.note === 'style') { AD.draft.notes[+el.dataset.k].style = el.value; $('se-preview').innerHTML = schedTable(AD.draft); }
 });
 $('ad-sched').addEventListener('click', e => {
