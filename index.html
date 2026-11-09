@@ -578,7 +578,9 @@ table.grid tr.bad td{background:#fdecea}
       <div class="seg" id="kk-tabs" style="margin-bottom:14px"><button data-t="count" class="on">Đếm hàng</button><button data-t="result">Kết quả & đếm lại</button></div>
       <div id="kk-count">
         <div class="card">
-          <label class="f" style="margin-top:0">Vị trí (Location)</label><input class="inp" id="kk-loc" placeholder="Khu vực, ô kệ...">
+          <label class="f" style="margin-top:0">Vị trí (Location) <span style="color:var(--red)">*</span></label>
+          <div style="display:flex;gap:8px"><input class="inp" id="kk-loc" placeholder="Nhập hoặc quét mã vị trí (khu, ô kệ...)" enterkeyhint="next"><button class="btn light scan-btn" id="kk-locscan" title="Quét mã vị trí"></button></div>
+          <div class="err" id="kk-locerr" style="margin-top:4px"></div>
           <label class="f">Barcode / Mã hàng / Tên hàng</label>
           <div style="display:flex;gap:8px"><input class="inp" id="kk-q" placeholder="Nhập vài số cuối hoặc tên hàng" enterkeyhint="search"><button class="btn" id="kk-find">Tìm</button><button class="btn light scan-btn" id="kk-scan" title="Quét mã vạch / QR"></button></div>
           <div class="muted ms-note" id="kk-ms"></div>
@@ -876,7 +878,7 @@ table.grid tr.bad td{background:#fdecea}
 
     <!-- CÀI ĐẶT -->
     <div class="view hidden" id="v-settings">
-      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 07/11/2026-a · máy chủ <span id="s-ver">?</span></div>
+      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 09/11/2026-b · máy chủ <span id="s-ver">?</span></div>
       <div class="card" id="force-note" style="background:var(--amber-l)">
         <b style="color:var(--amber)">Bạn đang dùng mật khẩu mặc định.</b>
         <div style="font-size:14px;margin-top:4px">Vui lòng đổi mật khẩu để tiếp tục sử dụng ứng dụng.</div>
@@ -1001,7 +1003,7 @@ function modal(html){
   $('modal-root').innerHTML = `<div class="modal-bg" id="mbg"><div class="modal">${html}</div></div>`;
   $('mbg').addEventListener('click', e => { if (e.target.id === 'mbg') closeModal(); });
 }
-function closeModal(){ if (scanCleanup) { const f = scanCleanup; scanCleanup = null; f(); return; } $('modal-root').innerHTML = ''; }
+function closeModal(){ if (scanCleanup) { const f = scanCleanup; scanCleanup = null; f(); return; } $('modal-root').innerHTML = ''; kkOnModalClosed(); }
 
 /* ========= TRẠNG THÁI ========= */
 const S = {
@@ -1206,6 +1208,7 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-go]'
 function go(view){
   if (view === 'install') { showInstall(); return; }
   if (scanCleanup) closeModal();          // đang mở cửa sổ quét → đóng & tắt camera
+  else if (typeof KK !== 'undefined' && KK.claim) { $('modal-root').innerHTML = ''; kkReleaseClaim(); }   // rời màn hình khi đang đếm lại
   setTimeout(stopAllCams, 0);
   if (S.view === 'scan' && view !== 'scan') qrStop();
   if (S.view === 'bcsoan' && view !== 'bcsoan' && typeof bcsCamStop === 'function') bcsCamStop();
@@ -1933,26 +1936,37 @@ function collectEntries(box, list){
 const reqId = p => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 /* ========= KIỂM KÊ ========= */
-const KK = { list: [], round: 1, state: null, summary: null };
+const KK = { list: [], round: 1, state: null, summary: null, cid: '' };
 async function initKiemke(){
   try {
     KK.state = await api('kkGetState');
-    renderKkBanner();
+    const list = KK.state.campaigns || [];
+    const saved = store.get('annt_kk_cid');
+    KK.cid = (list.find(x => x.id === KK.cid) || list.find(x => x.id === saved) || list.find(x => x.status === 'open') || list[0] || {}).id || '';
+    KK.summary = null; renderKkBanner();
+    if (!$('kk-result').classList.contains('hidden') && KK.cid) kkSummary();
     await loadMaster(); msNote('kk-ms');
     try { $('kk-loc').value = store.get('annt_kk_loc') || ''; } catch (e) {}
   } catch (e) { toast(e.message); }
 }
-function kkOpen(){ return KK.state && KK.state.campaign && KK.state.campaign.status === 'open'; }
+function kkCur(){ return KK.state && (KK.state.campaigns || []).find(x => x.id === KK.cid) || null; }
+function kkOpen(){ const c = kkCur(); return !!(c && c.status === 'open'); }
 function renderKkBanner(){
-  const c = KK.state && KK.state.campaign;
-  $('kk-banner').innerHTML = !c ? `<b>Chưa có đợt kiểm kê nào.</b><div class="muted" style="font-size:13.5px">Admin cần mở đợt kiểm kê trong mục Quản trị.</div>`
-    : `<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
-        <div><div style="font-weight:800;font-size:16px">${esc(c.name)}</div>
-        <div class="muted" style="font-size:12.5px">Mở ${esc(c.startedAt)} bởi ${esc(c.startedBy)} · Đối chiếu với: ${esc(c.stockFile || '')}</div>
-        ${c.status === 'done' ? `<div class="muted" style="font-size:12.5px">Hoàn tất ${esc(c.doneAt)} bởi ${esc(c.doneBy)}</div>` : ''}</div>
-        <span class="badge ${c.status === 'open' ? 'st-done' : 'st-other'}">${c.status === 'open' ? 'Đang kiểm kê' : 'Đã hoàn tất'}</span></div>`;
+  const list = (KK.state && KK.state.campaigns) || [], c = kkCur();
+  $('kk-banner').innerHTML = !list.length ? `<b>Chưa có đợt kiểm kê nào.</b><div class="muted" style="font-size:13.5px">Admin cần tạo đợt kiểm kê trong mục Quản trị.</div>`
+    : `<label class="f" style="margin-top:0">Chọn đợt kiểm kê</label>
+       <select class="inp" id="kk-cid">${list.map(x => `<option value="${esc(x.id)}" ${x.id === KK.cid ? 'selected' : ''}>${x.status === 'open' ? '🟢' : '⚪'} ${esc(x.name)}${x.status === 'open' ? '' : ' (đã hoàn tất)'}</option>`).join('')}</select>
+       ${c ? `<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-top:8px">
+        <div class="muted" style="font-size:12.5px">Mở ${esc(c.startedAt)} bởi ${esc(c.startedBy)} · Đối chiếu: ${esc(c.stockFile || '')}${c.stockItems ? ' (' + fmt(c.stockItems) + ' mã)' : ''}
+        ${c.status === 'done' ? `<br>Hoàn tất ${esc(c.doneAt)} bởi ${esc(c.doneBy)}` : ''}${c.reopenedAt ? `<br>Mở lại ${esc(c.reopenedAt)} bởi ${esc(c.reopenedBy)}` : ''}</div>
+        <span class="badge ${c.status === 'open' ? 'st-done' : 'st-other'}">${c.status === 'open' ? 'Đang kiểm kê' : 'Đã hoàn tất'}</span></div>` : ''}`;
+  if ($('kk-cid')) $('kk-cid').onchange = e => {
+    KK.cid = e.target.value; store.set('annt_kk_cid', KK.cid); KK.summary = null; renderKkBanner();
+    $('kk-kpis').innerHTML = ''; $('kk-mis').innerHTML = '';
+    if (!$('kk-result').classList.contains('hidden')) kkSummary();
+  };
   const open = kkOpen();
-  ['kk-q', 'kk-find', 'kk-loc'].forEach(id => $(id).disabled = !open);
+  ['kk-q', 'kk-find', 'kk-loc', 'kk-locscan'].forEach(id => $(id).disabled = !open);
   $('kk-finish').classList.toggle('hidden', !open);
 }
 $('kk-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) kkTab(b.dataset.t); });
@@ -1960,9 +1974,15 @@ function kkTab(t){
   document.querySelectorAll('#kk-tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
   $('kk-count').classList.toggle('hidden', t !== 'count');
   $('kk-result').classList.toggle('hidden', t !== 'result');
-  if (t === 'result' && KK.state && KK.state.campaign) kkSummary();
+  if (t === 'result' && KK.cid && !KK.summary) kkSummary();
 }
-$('kk-loc').addEventListener('change', e => store.set('annt_kk_loc', e.target.value.trim()));
+$('kk-loc').addEventListener('change', e => { e.target.value = e.target.value.trim(); store.set('annt_kk_loc', e.target.value); if (e.target.value) $('kk-locerr').textContent = ''; });
+$('kk-locscan').innerHTML = ic('qr');
+$('kk-locscan').addEventListener('click', async () => {
+  if (!kkOpen()) return;
+  const v = await scanOnce('Quét mã vị trí (Location)');
+  if (v) { $('kk-loc').value = v.trim(); store.set('annt_kk_loc', v.trim()); $('kk-locerr').textContent = ''; toast('Vị trí: ' + v.trim()); }
+});
 function kkSearch(){
   if (!S.master) return;
   KK.list = findProducts($('kk-q').value);
@@ -1973,12 +1993,12 @@ $('kk-find').addEventListener('click', kkSearch);
 $('kk-q').addEventListener('keydown', e => { if (e.key === 'Enter') kkSearch(); });
 $('kk-save').addEventListener('click', async () => {
   const loc = $('kk-loc').value.trim();
-  if (!loc) { toast('Vui lòng nhập Vị trí (Location).'); $('kk-loc').focus(); return; }
+  if (!loc) { beep('err'); $('kk-locerr').textContent = 'Bắt buộc nhập hoặc quét Vị trí trước khi lưu.'; toast('Vui lòng nhập hoặc quét Vị trí (Location).'); $('kk-loc').focus(); return; }
   const data = collectEntries($('kk-list'), KK.list);
   if (!data.length) { toast('Chưa nhập số lượng.'); return; }
   const btn = $('kk-save'); btn.disabled = true; btn.textContent = 'Đang lưu...';
   try {
-    const r = await api('kkSave', { location: loc, round: 1, data: data, requestId: reqId('KK') });
+    const r = await api('kkSave', { campaignId: KK.cid, location: loc, round: 1, data: data, requestId: reqId('KK') });
     beep('saved'); toast(`✔ Đã lưu ${r.saved} dòng kiểm kê`);
     $('kk-hist-card').classList.remove('hidden');
     $('kk-hist').insertAdjacentHTML('afterbegin', data.map(p => p.entries.map(e => `<div class="hrow"><b>${esc(p.itemNumber)}</b> · ${esc(e.batchNumber)}
@@ -1987,19 +2007,29 @@ $('kk-save').addEventListener('click', async () => {
   } catch (e) { beep('err'); toast(e.message, 4000); }
   finally { btn.disabled = false; btn.textContent = 'Lưu số đếm'; }
 });
-async function kkSummary(){
+/* Kết quả: mặc định lấy kết quả đã tổng hợp gần nhất (nhanh). Nút "Tổng hợp kết quả mới nhất" mới chạy lại báo cáo. */
+async function kkSummary(force){
+  if (!KK.cid) return;
   loading(true);
-  try { KK.summary = await api('kkSummary'); KK.state.campaign = KK.summary.campaign; renderKkBanner(); renderKkSummary(); }
+  try { KK.summary = await api('kkSummary', KK.cid, !!force); kkSyncCampaign(KK.summary.campaign); renderKkSummary(); if (force) toast('Đã tổng hợp lại kết quả mới nhất.'); }
   catch (e) { toast(e.message); }
   finally { loading(false); }
 }
-$('kk-sum').addEventListener('click', kkSummary);
+function kkSyncCampaign(c){
+  if (!c || !KK.state) return;
+  const l = KK.state.campaigns || [], i = l.findIndex(x => x.id === c.id);
+  if (i === -1) l.push(c); else l[i] = c;
+  renderKkBanner();
+}
+$('kk-sum').addEventListener('click', () => kkSummary(true));
 function renderKkSummary(){
   const s = KK.summary, t = s.totals;
   $('kk-kpis').innerHTML = [['Tổng mã', t.items, 'var(--pri)'], ['Khớp', t.g3, 'var(--green)'], ['Lệch tổng SL', t.g1, 'var(--red)'], ['Lệch batch', t.g2, 'var(--amber)'],
       ['Chờ đếm lại', t.pending != null ? t.pending : s.mismatches.length, 'var(--red)'], ['Đã đếm lại', t.recounted || 0, 'var(--pri)']]
     .map(k => `<div class="kpi-mini"><b style="color:${k[2]}">${fmt(k[1])}</b><small>${k[0]}</small></div>`).join('');
-  $('kk-mis').innerHTML = `<div class="muted" style="font-size:12.5px;margin:0 4px 8px">${fmt(s.counted)} dòng đếm · tổng hợp lúc ${esc(s.at)} · chi tiết ở sheet BC Kiem ke<br>Danh sách chỉ còn các mã lệch <b>chưa đếm lại</b> – mỗi mã chỉ được đếm lại 1 lần.</div>` +
+  $('kk-mis').innerHTML = `<div class="muted" style="font-size:12.5px;margin:0 4px 8px">${fmt(s.counted)} dòng đếm · <b>tổng hợp lúc ${esc(s.at)}</b> · chi tiết ở sheet BC Kiem ke (khối của đợt này)<br>
+      Danh sách chỉ gồm mã <b>lệch số lượng</b>, chưa đếm lại – mỗi mã chỉ được đếm lại 1 lần. Mã lệch batch/date nhưng đủ số lượng không cần đếm lại.
+      ${(s.busy || []).length ? `<br>🔒 Đang được người khác đếm lại: ${s.busy.map(b => esc(b.item) + ' (' + esc(b.by) + ')').join(', ')}` : ''}</div>` +
     (s.mismatches.length ? s.mismatches.map((m, i) => `<div class="card mis ${m.group === 1 ? 'g1' : 'g2'}">
       <div style="display:flex;justify-content:space-between;gap:10px">
         <div><div class="line-code">${esc(m.item)} <span class="badge ${m.group === 1 ? 'st-cancel' : 'st-wait'}">${m.group === 1 ? 'Lệch tổng' : 'Lệch batch'}</span>
@@ -2012,10 +2042,31 @@ function renderKkSummary(){
       ${kkOpen() ? `<button class="btn ghost" data-recount="${i}" style="margin-top:10px;width:100%">Đếm lại lần 2</button>` : ''}
     </div>`).join('') : `<div class="card empty">${(t.recounted || 0) ? 'Đã đếm lại xong tất cả mã lệch 🎉' : 'Không có mã lệch 🎉 Tất cả đều khớp.'}</div>`);
 }
-$('kk-mis').addEventListener('click', e => {
+$('kk-mis').addEventListener('click', async e => {
   const b = e.target.closest('[data-recount]'); if (!b) return;
-  openRecount(KK.summary.mismatches[+b.dataset.recount]);
+  const m = KK.summary.mismatches[+b.dataset.recount];
+  b.disabled = true;
+  try { await api('kkClaim', KK.cid, m.item); KK.claim = { cid: KK.cid, item: m.item }; openRecount(m); }      // giữ mã → người khác không thấy mã này để đếm trùng
+  catch (x) { beep('err'); toast(x.message, 4000); KK.summary.mismatches = KK.summary.mismatches.filter(y => y !== m); renderKkSummary(); }
+  finally { b.disabled = false; }
 });
+/* Mã đang được mình giữ để đếm lại: thoát ra / quay lại / chuyển màn hình / ẩn app → nhả ngay cho người khác */
+function kkReleaseClaim(){
+  if (!KK.claim) return;
+  const c = KK.claim; KK.claim = null;
+  api('kkRelease', c.cid, c.item).catch(() => {});
+}
+function kkOnModalClosed(){ if (typeof KK !== 'undefined' && KK.claim) kkReleaseClaim(); }
+function kkCancelRecount(m){ closeModal(); }
+document.addEventListener('visibilitychange', async () => {
+  if (typeof KK === 'undefined') return;
+  if (document.hidden) { if (KK.claim) { KK.reclaim = KK.claim; kkReleaseClaim(); } return; }
+  const c = KK.reclaim; KK.reclaim = null;
+  if (!c || !$('rc-list') && !$('rc-ok')) return;           // không còn mở cửa sổ đếm lại
+  try { await api('kkClaim', c.cid, c.item); KK.claim = c; }
+  catch (e) { $('modal-root').innerHTML = ''; toast(e.message, 4500); }
+});
+window.addEventListener('pagehide', () => { if (typeof KK !== 'undefined' && KK.claim) kkReleaseClaim(); });
 function openRecount(m, keep){
   // keep = số đã nhập (khi bấm "Quay lại sửa" ở bước xác nhận)
   const rows = m.batches.map(x => ({ b: x.b, sys: x.sys || 0, a1: x.a1 || 0 }));
@@ -2031,7 +2082,8 @@ function openRecount(m, keep){
     <div id="rc-list">${rows.map(rowHtml).join('')}${extra.map(newRow).join('')}</div>
     <button class="btn ghost" id="rc-add" type="button" style="margin-top:10px;width:100%">+ Thêm batch khác</button>
     <div class="err" id="rc-err"></div>
-    <div class="modal-actions"><button class="btn light" onclick="closeModal()">Hủy</button><button class="btn" id="rc-save">Lưu đếm lại (ghi đè)</button></div>`);
+    <div class="modal-actions"><button class="btn light" id="rc-cancel">Hủy</button><button class="btn" id="rc-save">Lưu đếm lại (ghi đè)</button></div>`);
+  $('rc-cancel').onclick = () => kkCancelRecount(m);
   $('rc-add').onclick = () => $('rc-list').insertAdjacentHTML('beforeend', newRow());
   $('rc-save').onclick = () => {
     const entries = [];
@@ -2063,24 +2115,26 @@ function confirmRecount(m, rows, entries){
     const it = S.master && S.master.items.find(x => x.i.toUpperCase() === m.item.toUpperCase());
     $('rc-ok').disabled = true; loading(true);
     try {
-      await api('kkSave', { round: 2, location: $('kk-loc').value.trim(), requestId: reqId('KK2'),
+      await api('kkSave', { campaignId: KK.cid, round: 2, location: $('kk-loc').value.trim(), requestId: reqId('KK2'),
         data: [{ itemNumber: m.item, productName: m.name, barcode: it && it.b[0] || '', entries: entries }] });
+      KK.claim = null;          // máy chủ đã tự nhả mã sau khi lưu
       beep('saved'); closeModal(); toast('✔ Đã lưu đếm lại lần 2 cho ' + m.item);
       // ẩn ngay mã vừa đếm, sau đó tổng hợp lại
       KK.summary.mismatches = KK.summary.mismatches.filter(x => x !== m);
       KK.summary.totals.recounted = (KK.summary.totals.recounted || 0) + 1;
       KK.summary.totals.pending = KK.summary.mismatches.length;
-      renderKkSummary(); kkSummary();
+      renderKkSummary();      // không chạy lại báo cáo – máy chủ đã cập nhật kết quả đã lưu
     } catch (x) { beep('err'); $('rc-err').textContent = x.message; const s = $('rc-ok'); if (s) s.disabled = false; }
     finally { loading(false); }
   };
 }
 $('kk-finish').addEventListener('click', () => {
-  modal(`<h3>Hoàn tất kiểm kê?</h3><p class="muted">Số liệu sẽ được chốt và đợt kiểm kê <b>${esc(KK.state.campaign.name)}</b> bị khóa, không thể nhập thêm. Báo cáo cuối được ghi vào sheet <b>BC Kiem ke</b>.</p>
+  const c = kkCur(); if (!c) return;
+  modal(`<h3>Hoàn tất kiểm kê?</h3><p class="muted">Số liệu sẽ được chốt và đợt kiểm kê <b>${esc(c.name)}</b> bị khóa, không thể nhập thêm (admin có thể mở lại). Báo cáo cuối được ghi vào sheet <b>BC Kiem ke</b> (khối riêng của đợt này).</p>
     <div class="modal-actions"><button class="btn light" onclick="closeModal()">Hủy</button><button class="btn red" id="m-kkf">Hoàn tất</button></div>`);
   $('m-kkf').onclick = async () => {
     closeModal(); loading(true);
-    try { KK.summary = await api('kkFinish'); KK.state.campaign = KK.summary.campaign; renderKkBanner(); renderKkSummary(); toast('Đã chốt số liệu kiểm kê.'); }
+    try { KK.summary = await api('kkFinish', KK.cid); kkSyncCampaign(KK.summary.campaign); renderKkSummary(); toast('Đã chốt số liệu kiểm kê.'); }
     catch (e) { toast(e.message, 4000); }
     finally { loading(false); }
   };
@@ -2215,33 +2269,62 @@ async function initAdminKK(){
   try { renderAdminKK(await api('kkGetState')); } catch (e) { $('akk-box').innerHTML = `<div class="card empty">${esc(e.message)}</div>`; }
 }
 function renderAdminKK(st){
-  const c = st.campaign, open = c && c.status === 'open';
-  const stockCard = (kind, n, title, desc, m) => `<div class="card"><h4>${n}. ${title}</h4>
-      <div class="muted" style="font-size:12.5px;margin-top:2px">${desc}</div>
+  const m = st.stock, list = st.campaigns || [];
+  $('akk-box').innerHTML = `<div class="card"><h4>1. Tồn kho (tra cứu batch)</h4>
+      <div class="muted" style="font-size:12.5px;margin-top:2px">Toàn bộ tồn kho – dùng để hiện danh sách batch khi tìm hàng ở Kiểm kê, Hủy hàng.</div>
       ${m ? `<div style="font-size:14px;margin:8px 0 2px"><b>${esc(m.fileName)}</b> · ${fmt(m.rows)} dòng${m.items ? ' · ' + fmt(m.items) + ' mã' : ''}</div>
-        <div class="muted" style="font-size:12.5px">Import ${esc(m.at)} bởi ${esc(m.by)}${m.fileUrl ? ` · <a href="${esc(m.fileUrl)}" target="_blank">Mở file trên Drive</a>` : ''}</div>`
-          : '<div class="muted" style="font-size:14px;margin-top:8px">Chưa import.</div>'}
-      <input type="file" class="inp" id="akk-file-${kind}" accept=".xlsx,.xls,.csv" style="margin-top:10px" ${kind === 'kk' && open ? 'disabled' : ''}>
-      <button class="btn block" data-import="${kind}" ${kind === 'kk' && open ? 'disabled' : ''}>Import & lưu vào thư mục Drive</button>
-      ${kind === 'kk' && open ? '<div class="hint" style="font-size:12.5px">Đợt kiểm kê đang mở – hoàn tất đợt rồi mới đổi tồn kho kiểm kê được.</div>' : ''}
-    </div>`;
-  $('akk-box').innerHTML =
-    stockCard('stock', 1, 'Tồn kho (tra cứu batch)', 'Toàn bộ tồn kho – dùng để hiện danh sách batch khi tìm hàng ở Kiểm kê, Hủy hàng.', st.stock) +
-    stockCard('kk', 2, 'Tồn kho kiểm kê (căn cứ đối chiếu)', 'Chỉ phần kho cần kiểm – kết quả kiểm kê chỉ so sánh với danh sách này.', st.stockKK) +
-    `<div class="card"><h4>3. Đợt kiểm kê</h4>
-      ${c ? `<div style="font-size:14px;margin:6px 0"><b>${esc(c.name)}</b> <span class="badge ${open ? 'st-done' : 'st-other'}">${open ? 'Đang kiểm kê' : 'Đã hoàn tất'}</span></div>
-        <div class="muted" style="font-size:12.5px">Mở ${esc(c.startedAt)} bởi ${esc(c.startedBy)} · Đối chiếu với: ${esc(c.stockFile || '')}${c.doneAt ? '<br>Hoàn tất ' + esc(c.doneAt) + ' bởi ' + esc(c.doneBy) : ''}</div>` : '<div class="muted" style="font-size:14px">Chưa có đợt nào.</div>'}
-      ${open ? `<button class="btn block ghost" data-go="kiemke">Xem kết quả kiểm kê</button>`
-        : `<label class="f">Tên đợt kiểm kê mới</label><input class="inp" id="akk-name" placeholder="VD: Kiểm kê khu A – 10/2026">
-           <button class="btn block" id="akk-start" ${st.stockKK ? '' : 'disabled'}>Bắt đầu đợt kiểm kê</button>
-           ${st.stockKK ? '' : '<div class="hint" style="font-size:12.5px">Cần import Tồn kho kiểm kê (mục 2) trước.</div>'}`}
-    </div>`;
-  document.querySelectorAll('[data-import]').forEach(b => b.onclick = () => adminImportStock(b.dataset.import));
-  if ($('akk-start')) $('akk-start').onclick = async () => {
-    loading(true);
-    try { await api('adminStartCampaign', $('akk-name').value.trim()); toast('Đã mở đợt kiểm kê. Thủ kho có thể bắt đầu đếm.'); initAdminKK(); }
-    catch (e) { toast(e.message, 4000); } finally { loading(false); }
-  };
+        <div class="muted" style="font-size:12.5px">Import ${esc(m.at)} bởi ${esc(m.by)}${m.fileUrl ? ` · <a href="${esc(m.fileUrl)}" target="_blank">Mở file trên Drive</a>` : ''}</div>` : '<div class="muted" style="font-size:14px;margin-top:8px">Chưa import.</div>'}
+      <input type="file" class="inp" id="akk-file-stock" accept=".xlsx,.xls,.csv" style="margin-top:10px">
+      <button class="btn block" id="akk-imp-stock">Import & lưu vào thư mục Drive</button></div>
+    <div class="card"><h4>2. Tạo đợt kiểm kê mới</h4>
+      <div class="muted" style="font-size:12.5px;margin-top:2px">Mỗi đợt có file tồn kho kiểm kê riêng (chỉ phần kho cần kiểm của đợt đó). Có thể mở nhiều đợt cùng lúc – nhân viên chọn đợt để đếm.</div>
+      <label class="f">Tên đợt (nên ghi rõ khu vực / người phụ trách)</label><input class="inp" id="akk-name" placeholder="VD: Khu A – Thủy · 11/2026">
+      <label class="f">File tồn kho kiểm kê của đợt</label><input type="file" class="inp" id="akk-file-kk" accept=".xlsx,.xls,.csv">
+      <button class="btn block" id="akk-create">Tạo đợt kiểm kê</button></div>
+    <div class="card"><h4>3. Các đợt kiểm kê (${list.length})</h4>
+      ${list.length ? list.map(c => `<div class="hrow" style="padding:10px 0">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b>${esc(c.name)}</b>
+          <span class="badge ${c.status === 'open' ? 'st-done' : 'st-other'}">${c.status === 'open' ? 'Đang kiểm kê' : 'Đã hoàn tất'}</span></div>
+        <div class="muted" style="font-size:12.5px">Mở ${esc(c.startedAt)} bởi ${esc(c.startedBy)} · ${esc(c.stockFile || '')}${c.stockItems ? ' · ' + fmt(c.stockItems) + ' mã' : ''}
+          ${c.doneAt ? '<br>Hoàn tất ' + esc(c.doneAt) + ' bởi ' + esc(c.doneBy) : ''}${c.reopenedAt ? '<br>Mở lại ' + esc(c.reopenedAt) + ' bởi ' + esc(c.reopenedBy) : ''}</div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn light" data-kkview="${esc(c.id)}" style="padding:7px 12px;font-size:13px">Xem kết quả</button>
+          ${c.status === 'done' ? `<button class="btn ghost" data-kkreopen="${esc(c.id)}" style="padding:7px 12px;font-size:13px">Mở lại đợt</button>` : ''}</div></div>`).join('')
+        : '<div class="muted" style="font-size:14px">Chưa có đợt nào.</div>'}</div>`;
+  $('akk-imp-stock').onclick = () => adminImportStock();
+  $('akk-create').onclick = adminCreateCampaign;
+  document.querySelectorAll('[data-kkview]').forEach(b => b.onclick = () => { KK.cid = b.dataset.kkview; store.set('annt_kk_cid', KK.cid); KK.summary = null; go('kiemke'); kkTab('result'); });
+  document.querySelectorAll('[data-kkreopen]').forEach(b => b.onclick = () => {
+    const c = list.find(x => x.id === b.dataset.kkreopen);
+    modal(`<h3>Mở lại đợt kiểm kê?</h3><p>Đợt <b>${esc(c.name)}</b> sẽ chuyển về <b>Đang kiểm kê</b>, nhân viên nhập thêm / đếm lại được. Khi xong cần bấm Hoàn tất lại để chốt số liệu.</p>
+      <div class="modal-actions"><button class="btn light" onclick="closeModal()">Hủy</button><button class="btn" id="m-reopen">Mở lại</button></div>`);
+    $('m-reopen').onclick = async () => { closeModal(); loading(true);
+      try { await api('adminReopenCampaign', c.id); toast('Đã mở lại đợt ' + c.name); initAdminKK(); } catch (e) { toast(e.message, 4000); } finally { loading(false); } };
+  });
+}
+async function readStockFile(inputId){
+  const f = $(inputId).files[0];
+  if (!f) throw new Error('Hãy chọn file tồn kho.');
+  await loadXlsx();
+  const buf = await f.arrayBuffer();
+  const wb = XLSX.read(buf, { type: 'array' });
+  let rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, defval: '' });
+  const hr = rows.findIndex((r, i) => i < 15 && r.some(c => String(c).trim().toLowerCase() === 'item number'));
+  if (hr === -1) throw new Error('Không tìm thấy dòng tiêu đề có cột "Item number" trong file.');
+  rows = rows.slice(hr);
+  let bin = ''; const bytes = new Uint8Array(buf);
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return { name: f.name, mime: f.type, base64: btoa(bin), rows: rows };
+}
+async function adminCreateCampaign(){
+  const name = $('akk-name').value.trim();
+  if (!name) { toast('Hãy đặt tên đợt kiểm kê.'); $('akk-name').focus(); return; }
+  loading(true);
+  try {
+    const c = await api('adminCreateCampaign', name, await readStockFile('akk-file-kk'));
+    toast(`Đã tạo đợt "${c.name}" (${fmt(c.stockItems)} mã). Nhân viên chọn đợt này để đếm.`, 4500); initAdminKK();
+  } catch (e) { toast(e.message, 5000); }
+  finally { loading(false); }
 }
 function loadXlsx(){
   return window.XLSX ? Promise.resolve() : new Promise((ok, fail) => {
@@ -2249,23 +2332,11 @@ function loadXlsx(){
     s.onload = ok; s.onerror = () => fail(new Error('Không tải được thư viện đọc Excel.')); document.head.appendChild(s);
   });
 }
-async function adminImportStock(kind){
-  const f = $('akk-file-' + kind).files[0];
-  if (!f) { toast('Hãy chọn file tồn kho.'); return; }
+async function adminImportStock(){
   loading(true);
   try {
-    await loadXlsx();
-    const buf = await f.arrayBuffer();
-    const wb = XLSX.read(buf, { type: 'array' });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    let rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
-    const hr = rows.findIndex((r, i) => i < 15 && r.some(c => String(c).trim().toLowerCase() === 'item number'));
-    if (hr === -1) throw new Error('Không tìm thấy dòng tiêu đề có cột "Item number" trong file.');
-    rows = rows.slice(hr);
-    let bin = ''; const bytes = new Uint8Array(buf);
-    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-    const meta = await api('adminImportStock', { name: f.name, mime: f.type, base64: btoa(bin), rows: rows }, kind);
-    toast(`Đã import ${fmt(meta.rows)} dòng ${kind === 'kk' ? 'tồn kho kiểm kê' : 'tồn kho'} và lưu file lên Drive.`, 4000);
+    const meta = await api('adminImportStock', await readStockFile('akk-file-stock'));
+    toast(`Đã import ${fmt(meta.rows)} dòng tồn kho và lưu file lên Drive.`, 4000);
     S.master = null; initAdminKK();
   } catch (e) { toast(e.message, 5000); }
   finally { loading(false); }
