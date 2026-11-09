@@ -143,6 +143,8 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .bd-av.sm{width:36px;height:36px;font-size:15px}
 .bd-t{font-size:14.5px}
 .bd-s{font-size:12.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upd-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;background:#1f2937;color:#fff;border-radius:14px;padding:10px 12px 10px 16px;font-size:14px;font-weight:600;display:flex;gap:12px;align-items:center;box-shadow:0 6px 20px rgba(0,0,0,.3);white-space:nowrap}
+.upd-bar button{border:0;background:#43a047;color:#fff;font-weight:700;border-radius:9px;padding:8px 14px;cursor:pointer}
 .msg-card{background:linear-gradient(135deg,#fff,#eef5fd)}
 .msg-head{color:#0d47a1}.msg-card .bd-link{color:#0d47a1}
 .msg-card .bd-soon{border-top-color:#c5dbf3}
@@ -973,7 +975,7 @@ table.grid tr.bad td{background:#fdecea}
     </div>
 
     <div class="view hidden" id="v-settings">
-      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản 09/11/2026-f · máy chủ <span id="s-ver">?</span></div>
+      <div class="muted" style="text-align:right;font-size:11.5px;margin:-4px 4px 6px">Phiên bản <span id="c-ver"></span> · máy chủ <span id="s-ver">?</span></div>
       <div class="card" id="force-note" style="background:var(--amber-l)">
         <b style="color:var(--amber)">Bạn đang dùng mật khẩu mặc định.</b>
         <div style="font-size:14px;margin-top:4px">Vui lòng đổi mật khẩu để tiếp tục sử dụng ứng dụng.</div>
@@ -1096,6 +1098,32 @@ async function api(fn, ...args){
   }
 }
 
+/* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
+ * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
+ * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
+const APP_VER = '09/11/2026-h';
+const NEED_SERVER = '2026-11-09g';      // phiên bản Code.gs tương ứng
+async function checkUpdate(auto){
+  if (location.protocol === 'file:') return;
+  try {
+    const r = await fetch(location.pathname + '?vc=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const m = (await r.text()).match(/const APP_VER = '([^']+)'/);
+    if (!m || m[1] === APP_VER) return;
+    const nv = m[1], url = location.pathname + '?v=' + encodeURIComponent(nv) + location.hash;
+    let tried = false; try { tried = sessionStorage.getItem('annt_upd') === nv; sessionStorage.setItem('annt_upd', nv); } catch (e) {}
+    const busy = (S.user && S.view !== 'home') || ($('modal-root') && $('modal-root').innerHTML);
+    if (auto && !busy && !tried) { location.replace(url); return; }
+    let bar = $('upd-bar');
+    if (!bar) { bar = document.createElement('div'); bar.id = 'upd-bar'; bar.className = 'upd-bar'; document.body.appendChild(bar); }
+    bar.innerHTML = '🔄 Đã có phiên bản mới <button>Cập nhật</button>';
+    bar.querySelector('button').onclick = () => location.replace(url);
+  } catch (e) {}
+}
+checkUpdate(true);
+setInterval(() => checkUpdate(false), 10 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(true); });
+
 function modal(html){
   $('modal-root').innerHTML = `<div class="modal-bg" id="mbg"><div class="modal">${html}</div></div>`;
   $('mbg').addEventListener('click', e => { if (e.target.id === 'mbg') closeModal(); });
@@ -1194,6 +1222,9 @@ function enterApp(){
   $('u-name').textContent = u.name;
   $('u-avatar').textContent = (u.name || u.username).trim().split(/\s+/).pop().charAt(0).toUpperCase();
   $('hello-name').textContent = 'Xin chào, ' + u.name;
+  $('c-ver').textContent = APP_VER;
+  if (u.role === 'admin' && String(u.ver || '') < NEED_SERVER)
+    setTimeout(() => toast('⚠ Máy chủ chưa cập nhật (đang chạy ' + (u.ver || 'bản cũ') + ', cần ' + NEED_SERVER + '). Vào Apps Script → Quản lý triển khai → ✏️ → Phiên bản mới.', 9000), 1500);
   const d = new Date();
   const days = ['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'];
   $('hello-date').textContent = `${days[d.getDay()]}, ${d.toLocaleDateString('vi-VN')}`;
