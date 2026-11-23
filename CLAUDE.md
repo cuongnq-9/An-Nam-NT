@@ -1,6 +1,6 @@
 # HỆ THỐNG ÂN NAM NHA TRANG – TÀI LIỆU TỔNG HỢP
 
-> Cập nhật: 23/11/2026 · Phiên bản hiện tại: **giao diện 23/11/2026-d · máy chủ 2026-11-23b**
+> Cập nhật: 23/11/2026 · Phiên bản hiện tại: **giao diện 23/11/2026-e · máy chủ 2026-11-23b**
 >
 > File này là tài liệu gốc của hệ thống, Claude đọc đầu tiên mỗi phiên làm việc. Sửa hệ thống thì cập nhật file này luôn.
 
@@ -219,6 +219,11 @@ Web app nội bộ cho chi nhánh **Ân Nam Group – Nha Trang** (FMCG). App go
 5. Lưu số đếm vào **hàng đợi trên máy** (`annt_kkq_<user>`), app tự gửi lên lại khi mạng có trở lại. Danh sách tự làm mới mỗi 20 giây.
 6. Đếm lại: danh sách chỉ ghi số lượng, dùng dữ liệu tạm cho nhanh. Mã người khác đã đếm lại thì tự ẩn.
 7. **Thủ kho chốt đợt** → ghi một khối báo cáo vào `BC Kiem ke`. Admin có thể **mở lại** đợt.
+8. **Quét liên tục** (giao diện `23/11/2026-e`): ô "Hình thức nhập" chọn giữa *Nhập từng mã* (cách cũ) và *⚡ Quét mã liên tục* (ghi chú "+1 sau mỗi lần quét mã thành công"). Vẫn bắt buộc chọn đợt đang mở và có Vị trí.
+   - Điện thoại: camera mở toàn màn hình, luôn chờ quét, nghỉ 1,5 giây sau mỗi lần đọc. Dùng lại `camStart`, không sửa phần nhận diện mã.
+   - PC/tablet: con trỏ luôn ở ô quét (máy quét kiểu bàn phím, kết thúc bằng Enter). Chưa có Vị trí thì con trỏ ở ô Vị trí.
+   - Mỗi lần quét đúng mã (khớp barcode hoặc mã hàng) = +1, batch mặc định **`Noexp`**. Sai mã thì kêu còi 2 tông (`beep('miss')`). Thẻ sản phẩm hiện 2 giây, 6 lần quét gần nhất (bấm ↶ Bỏ để xóa lần quét chưa lưu), nút Lịch sử quét mã.
+   - Số quét được gom theo đợt + vị trí + mã rồi đưa vào **cùng hàng chờ** `annt_kkq_<user>` → `kkSave`, khi ngừng quét 15 giây, bấm Lưu ngay, đủ 40 lần, đổi màn hình hoặc ẩn app. Lịch sử quét lưu trên máy ở `annt_kkcs_<user>` (tối đa 2.000 lần).
 
 ### 5.4 Công nợ
 
