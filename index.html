@@ -1133,7 +1133,7 @@ async function api(fn, ...args){
 /* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
  * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
  * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
-const APP_VER = '23/11/2026-c';
+const APP_VER = '23/11/2026-d';
 const NEED_SERVER = '2026-11-23b';      // phiên bản Code.gs tương ứng
 async function checkUpdate(auto){
   if (location.protocol === 'file:') return;
@@ -1217,7 +1217,7 @@ function localLogout(msg){
   S.staff = null; QR.ho = null; KK.q = null; KK.qUser = null; NT.data = null; NT.pendingSound = false; setBell(0); if (typeof BCS !== 'undefined') { BCS.canRecord = null; BCS.photos = []; BCS.cache = {}; }
   S.master = null; S.schedule = null; if (typeof AD !== 'undefined') { AD.data = null; AD.draft = null; }
   qrStop(); QR.loaded = false; QR.items = [];
-  store.del('annt_token');
+  store.del('annt_token'); store.del('annt_last_user');
   S.token = null; S.user = null; S.bcLoaded = false; S.upReady = false; S.filters = null; S.tetOrders = null; S.tet.data = null;
   $('screen-app').classList.add('hidden');
   $('screen-login').classList.remove('hidden');
@@ -1235,8 +1235,27 @@ async function boot(){
   if (!t) { $('screen-login').classList.remove('hidden'); return; }
   loading(true);
   try { S.token = t; S.user = await run('getSession', t); enterApp(); }
-  catch (e) { localLogout(''); }
+  catch (e) {
+    // Mất mạng: vẫn vào app bằng thông tin đăng nhập lần trước (không xóa phiên),
+    // để xem màn hình và tiếp tục quét / kiểm kê vào hàng chờ. Có mạng lại sẽ tự kiểm tra phiên.
+    const last = store.get('annt_last_user');
+    const net = !navigator.onLine || /kết nối|network|fetch|timeout|failed/i.test(String(e && e.message || ''));
+    if (net && last && last.token === t && last.user) {
+      S.token = t; S.user = last.user; S.offline = true; enterApp();
+      setTimeout(() => toast('📴 Đang mất mạng – mở app bằng dữ liệu lần trước. Dữ liệu quét/kiểm kê sẽ tự gửi khi có mạng.', 6000), 600);
+      window.addEventListener('online', recheckSession);
+    } else localLogout('');
+  }
   finally { loading(false); }
+}
+// Có mạng lại sau khi mở app lúc offline → hỏi máy chủ phiên đăng nhập còn hiệu lực không
+async function recheckSession(){
+  if (!S.offline || !S.token) return;
+  try { S.user = await run('getSession', S.token); S.offline = false; window.removeEventListener('online', recheckSession); store.set('annt_last_user', { token: S.token, user: S.user }); renderHome(); }
+  catch (e) {
+    if (/kết nối|network|fetch|timeout|failed/i.test(String(e && e.message || '')) || !navigator.onLine) return;   // vẫn chưa có mạng → đợi lần sau
+    S.offline = false; window.removeEventListener('online', recheckSession); localLogout('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.');
+  }
 }
 
 /* Màn hình được mở lại sau khi làm mới trang: chỉ những màn hình người dùng có quyền (có ô chức năng trên trang chủ) */
@@ -1251,6 +1270,7 @@ function enterApp(){
   $('screen-login').classList.add('hidden');
   $('screen-app').classList.remove('hidden');
   const u = S.user;
+  if (!S.offline) store.set('annt_last_user', { token: S.token, user: u });   // để lần sau mở được khi mất mạng
   $('u-name').textContent = u.name;
   $('u-avatar').textContent = (u.name || u.username).trim().split(/\s+/).pop().charAt(0).toUpperCase();
   $('hello-name').textContent = 'Xin chào, ' + u.name;
@@ -4271,6 +4291,11 @@ $('se-save').addEventListener('click', async () => {
 
 
 boot();
+
+/* ========= MỞ APP KHI MẤT MẠNG (service worker – tệp sw.js cạnh index.html) ========= */
+if (!IN_GAS && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
 </script>
 </body>
 </html>
