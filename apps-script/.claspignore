@@ -1,0 +1,6 @@
+# Chỉ đẩy code và manifest lên Apps Script
+**/**
+!**/*.gs
+!**/*.js
+!**/*.html
+!appsscript.json
