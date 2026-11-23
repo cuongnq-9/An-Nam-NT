@@ -1,0 +1,5 @@
+# Thông tin đăng nhập clasp: KHÔNG BAO GIỜ đưa lên GitHub
+.clasprc.json
+**/.clasprc.json
+node_modules/
+.DS_Store
