@@ -335,6 +335,26 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .db-ic{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:5px 9px;font-size:14px;cursor:pointer;white-space:nowrap}
 .db-ic.on{border-color:var(--pri);background:var(--pri-l);color:var(--pri);font-weight:700}
 .inl-cell{min-width:200px;max-width:260px;white-space:normal}
+/* Bảng công nợ gọn: chữ dài tự xuống dòng, ô nhập hẹp lại để ít phải kéo ngang */
+.dbt .tbl{font-size:13px}
+.dbt .tbl th,.dbt .tbl td{padding:8px 5px}
+.dbt .tbl td{white-space:normal}
+.dbt .tbl td.wrap{min-width:130px;max-width:170px}
+.dbt-so{font-size:12.5px;white-space:nowrap}
+.dbt-note{font-size:11px;color:var(--amber);max-width:130px;line-height:1.3;margin-top:2px}
+.dbt-sub{font-size:11.5px;color:var(--muted);line-height:1.35}
+.dbt .tbl td .badge{white-space:normal;text-align:center;border-radius:8px;max-width:84px;line-height:1.25}
+.dbt .amt-in{width:88px;font-size:13px;padding:6px}
+.dbt .inl-cell{min-width:150px;max-width:180px}
+.dbt .inl-cell input.inl-in{min-width:120px}
+/* Giữ cột Khách hàng (và ô chọn) đứng yên khi kéo ngang */
+.dbt .tbl th:first-child,.dbt .tbl td:first-child{position:sticky;left:0;z-index:2;background:#fff}
+.dbt.ed .tbl th:first-child,.dbt.ed .tbl td:first-child{width:34px;min-width:34px;max-width:34px;padding-left:4px;padding-right:4px}
+.dbt.ed .tbl th:nth-child(2),.dbt.ed .tbl td:nth-child(2){position:sticky;left:34px;z-index:2;background:#fff;box-shadow:2px 0 4px -2px rgba(0,0,0,.15)}
+.dbt:not(.ed) .tbl td:first-child{box-shadow:2px 0 4px -2px rgba(0,0,0,.15)}
+.dbt .tbl th:first-child,.dbt.ed .tbl th:nth-child(2){background:#f5f7fb}
+.dbt .tbl tbody tr:nth-child(even) td:first-child,.dbt.ed .tbl tbody tr:nth-child(even) td:nth-child(2){background:#fafbfa}
+@media (max-width:720px){ .dbt .tbl td.wrap{min-width:112px;max-width:122px} }
 .lm{display:flex;align-items:flex-start;gap:6px;margin-bottom:5px}
 .lm-t{flex:1;font-size:12.5px;line-height:1.35;color:var(--text);background:#f1f3f6;border-radius:8px;padding:5px 8px}
 .db-clock{flex:none;border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:4px 7px;font-size:12.5px;cursor:pointer;white-space:nowrap}
@@ -1113,7 +1133,7 @@ async function api(fn, ...args){
 /* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
  * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
  * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
-const APP_VER = '23/11/2026-b';
+const APP_VER = '23/11/2026-c';
 const NEED_SERVER = '2026-11-23b';      // phiên bản Code.gs tương ứng
 async function checkUpdate(auto){
   if (location.protocol === 'file:') return;
@@ -2649,24 +2669,24 @@ function renderDebt(){
   const ico = (i, k, n, on) => `<button class="db-ic ${on ? 'on' : ''}" data-th="${i}" data-k="${k}">${k === 'files' ? '📎' : k === 'msgs' ? '💬' : '📝'}${n ? ' ' + n : ''}</button>`;
   const ev = (x, k, def) => DB.edit[x.so] && DB.edit[x.so][k] !== undefined ? DB.edit[x.so][k] : def;
   $('db-list').innerHTML = !g || !g.items.length ? `<div class="card empty">${DB.q ? 'Không tìm thấy đơn phù hợp' : d.mode === 'all' ? 'Không có đơn nào còn nợ 🎉' : 'Không có đơn nào đến hạn 🎉'}</div>` :
-    `<div class="card" style="padding-top:6px">${dataTable(
-      (ed ? ['<input type="checkbox" id="db-all">'] : []).concat(['Khách hàng', 'Mã đơn', 'Ngày giao', 'Hạn thu', 'Quá hạn', 'Số tiền', 'Đã thu', 'Còn lại', 'Sale', 'Trạng thái', 'Đính kèm', 'Lời nhắn', 'Ghi chú riêng 🔒']),
+    `<div class="card dbt${ed ? ' ed' : ''}" style="padding-top:6px">${dataTable(
+      (ed ? ['<input type="checkbox" id="db-all">'] : []).concat(['Khách hàng', 'Mã đơn', 'Hạn thu', 'Số tiền', 'Đã thu', 'Còn lại', 'Trạng thái', '📎', 'Lời nhắn', 'Ghi chú riêng 🔒']),
       g.items.map((x, i) => {
         const amt = ev(x, 'amount', x.amount), paid = ev(x, 'paid', x.paid), exact = x.exact || (DB.edit[x.so] && DB.edit[x.so].amount !== undefined);
         const dA = DB.edit[x.so] && DB.edit[x.so].amount !== undefined, dP = DB.edit[x.so] && DB.edit[x.so].paid !== undefined;
         return (ed ? [`<input type="checkbox" data-ds="${i}" ${DB.sel[x.so] ? 'checked' : ''}>`] : []).concat([
-        `<b>${esc(x.name)}</b><div class="muted" style="font-size:12px">${esc(x.acc)} · Dư nợ: ${fmt(x.balance)}</div>`,
-        esc(x.so) + (x.note ? `<div style="font-size:11px;color:var(--amber)">${esc(x.note)}</div>` : ''), esc(x.date || '?'), esc(x.due || '?'),
-        x.overdue > 0 ? `<span class="tag-od">${x.overdue} ngày</span>` : (x.overdue === 0 ? 'Hôm nay' : `còn ${-x.overdue} ngày`),
-        ed ? `<input class="amt-in ${dA ? 'dirty' : ''} ${exact ? '' : 'ref'}" data-amt="${i}" inputmode="numeric" value="${fmt(amt)}"><div style="font-size:11px" class="${exact ? 'muted' : 'tag-od'}">${exact ? '✔ số chính xác' : '⚠ tham khảo – cần nhập số chính xác'}</div>`
+        `<b>${esc(x.name)}</b><div class="dbt-sub">${esc(x.acc)}${x.sale ? ' · ' + esc(x.sale) : ''}<br>Dư nợ: ${fmt(x.balance)}</div>`,
+        `<b class="dbt-so">${esc(x.so)}</b>` + (x.note ? `<div class="dbt-note">${esc(x.note)}</div>` : ''),
+        `<b>${esc(x.due || '?')}</b><div>${x.overdue > 0 ? `<span class="tag-od">Quá ${x.overdue} ngày</span>` : x.overdue === 0 ? '<span class="tag-od">Hôm nay</span>' : `<span class="dbt-sub">còn ${-x.overdue} ngày</span>`}</div><div class="dbt-sub">Giao ${esc(x.date || '?')}</div>`,
+        ed ? `<input class="amt-in ${dA ? 'dirty' : ''} ${exact ? '' : 'ref'}" data-amt="${i}" inputmode="numeric" value="${fmt(amt)}"><div style="font-size:11px" class="${exact ? 'muted' : 'tag-od'}" title="${exact ? '' : 'Cần nhập số chính xác'}">${exact ? '✔ chính xác' : '⚠ tham khảo'}</div>`
            : `<b>${fmt(x.amount)}</b>${x.exact ? '' : '<div class="muted" style="font-size:11px">tham khảo</div>'}`,
         ed ? `<input class="amt-in ${dP ? 'dirty' : ''}" data-paid="${i}" inputmode="numeric" value="${paid ? fmt(paid) : ''}" placeholder="0">` : fmt(x.paid),
         `<b>${fmt(amt - (paid || 0))}</b>`,
-        esc(x.sale), st(x.status) + (x.by ? `<div class="muted" style="font-size:11px">${esc(x.by)} ${esc(x.at)}</div>` : ''),
+        st(x.status) + (x.by ? `<div class="dbt-sub">${esc(x.by)}<br>${esc(x.at)}</div>` : ''),
         ico(i, 'files', x.files, x.files),
         `<div class="inl-cell">${x.lastMsg ? `<div class="lm"><span class="lm-t">${esc(x.lastMsg)}</span><button class="db-clock" data-th="${i}" data-k="msgs" title="Xem lịch sử trao đổi">🕘 ${x.msgs}</button></div>` : ''}
-          <div class="inl"><textarea class="inl-in inl-ta" data-msg="${i}" rows="2" placeholder="Nhập lời nhắn... (Enter để gửi)" enterkeyhint="send"></textarea><button class="inl-go" data-send="${i}" title="Gửi">➤</button></div></div>`,
-        `<div class="inl-cell"><input class="inl-in" data-note="${i}" value="${esc(x.myNote || '')}" placeholder="Ghi chú riêng (chỉ mình bạn thấy)" enterkeyhint="done"><div class="muted inl-st" id="ns-${i}"></div></div>`]); }), ed ? 1 : 0)}
+          <div class="inl"><textarea class="inl-in inl-ta" data-msg="${i}" rows="2" placeholder="Lời nhắn..." title="Enter để gửi" enterkeyhint="send"></textarea><button class="inl-go" data-send="${i}" title="Gửi">➤</button></div></div>`,
+        `<div class="inl-cell"><input class="inl-in" data-note="${i}" value="${esc(x.myNote || '')}" placeholder="Ghi chú riêng" title="Chỉ mình bạn thấy" enterkeyhint="done"><div class="muted inl-st" id="ns-${i}"></div></div>`]); }), ed ? 1 : 0)}
       <div style="text-align:right;margin-top:8px;font-weight:700">Tổng: ${fmt(g.total)}đ · Còn lại: ${fmt(g.remain)}đ</div></div>`;
   $('db-bar').classList.toggle('hidden', !ed);
   dbSelCount();
