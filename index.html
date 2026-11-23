@@ -209,6 +209,18 @@ main{max-width:1180px;margin:0 auto;padding:16px 14px 110px}
 .tbl{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}
 .tbl th{background:#f5f7fb;color:var(--muted);font-weight:600;font-size:12.5px;text-align:left;padding:10px;border-bottom:1px solid var(--line)}
 .tbl td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+.o-cards{display:none}
+@media (max-width:720px){ .o-tbl{display:none} .o-cards{display:flex;flex-direction:column;gap:10px;margin-top:12px} }
+.ocard{background:#fff;border:1px solid var(--line);border-left:4px solid var(--pri);border-radius:12px;padding:11px 13px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.oc-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.oc-so{font-size:16.5px;font-weight:800;color:var(--pri);letter-spacing:.3px;font-variant-numeric:tabular-nums;word-break:break-all}
+.oc-cus{font-size:15.5px;font-weight:700;color:var(--text);margin:3px 0 8px;line-height:1.35}
+.oc-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;border-top:1px dashed var(--line);padding-top:8px}
+.oc-grid div{min-width:0}
+.oc-grid small{display:block;font-size:11.5px;color:var(--muted)}
+.oc-grid span{font-size:13.5px;overflow-wrap:anywhere}
+.oc-doc{color:var(--amber);font-weight:600}
+.oc-doc.ok{color:var(--green)}
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;margin-top:12px}
 .tbl-wrap .tbl{margin-top:0}
 .tbl th,.tbl td{white-space:nowrap}
@@ -1101,8 +1113,8 @@ async function api(fn, ...args){
 /* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
  * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
  * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
-const APP_VER = '09/11/2026-j';
-const NEED_SERVER = '2026-11-09i';      // phiên bản Code.gs tương ứng
+const APP_VER = '21/11/2026-a';
+const NEED_SERVER = '2026-11-21a';      // phiên bản Code.gs tương ứng
 async function checkUpdate(auto){
   if (location.protocol === 'file:') return;
   try {
@@ -1485,9 +1497,24 @@ function dataTable(heads, rows, wrapCol){
   return `<div class="tbl-wrap"><table class="tbl"><thead><tr>${heads.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>
     ${rows.map(r => `<tr>${r.map((c, i) => `<td${i === wrapCol ? ' class="wrap"' : ''}>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
+/* ---- Thẻ đơn hàng cho điện thoại (màn hình hẹp hiện thẻ, màn hình rộng hiện bảng) ---- */
+const docHtml = d => d && d !== '***' ? `<span class="oc-doc ok">✔ ${esc(d)}</span>` : d === '***' ? '***' : '<span class="oc-doc">Chưa hoàn</span>';
+function orderCard(o){
+  // o: { so, customer, badge(html), fields:[[nhãn, giá trị html]] }
+  return `<div class="ocard"><div class="oc-top"><span class="oc-so">${esc(o.so || '-')}</span>${o.badge || ''}</div>
+    <div class="oc-cus">${esc(o.customer || '-')}</div>
+    <div class="oc-grid">${o.fields.filter(f => f).map(f => `<div><small>${f[0]}</small><span>${f[1]}</span></div>`).join('')}</div></div>`;
+}
+const withCards = (tableHtml, cards) => `<div class="o-tbl">${tableHtml}</div><div class="o-cards">${cards.join('')}</div>`;
 function orderTable(rows){
+  return withCards(orderTableOnly(rows), rows.map(r => orderCard({ so: r.so, customer: r.customer,
+    badge: `<span class="badge ${statusClass(r.status)}">${esc(r.status || '-')}</span>`,
+    fields: [['Ngày ĐH', esc(r.created || '-')], ['PO', esc(r.req || '-')], ['Ngày giao', esc(r.deliveryDate || '-')],
+             ['NV thực hiện', esc(r.deliveryMan || '-')], ['Hoàn chứng từ', docHtml(r.doc)]] })));
+}
+function orderTableOnly(rows){
   return `<div class="tbl-wrap"><table class="tbl"><thead><tr>
-    <th>Ngày ĐH</th><th>Sales Order</th><th>PO</th><th>Khách hàng</th><th>Trạng thái</th><th>Ngày giao</th><th>NV thực hiện</th></tr></thead><tbody>
+    <th>Ngày ĐH</th><th>Sales Order</th><th>PO</th><th>Khách hàng</th><th>Trạng thái</th><th>Ngày giao</th><th>NV thực hiện</th><th>Hoàn chứng từ</th></tr></thead><tbody>
     ${rows.map(r => `<tr>
       <td data-l="Ngày ĐH">${esc(r.created || '-')}</td>
       <td data-l="Sales Order"><b>${esc(r.so || '-')}</b></td>
@@ -1495,7 +1522,8 @@ function orderTable(rows){
       <td data-l="Khách hàng" class="wrap">${esc(r.customer || '-')}</td>
       <td data-l="Trạng thái"><span class="badge ${statusClass(r.status)}">${esc(r.status || '-')}</span></td>
       <td data-l="Ngày giao">${esc(r.deliveryDate || '-')}</td>
-      <td data-l="NV thực hiện">${esc(r.deliveryMan || '-')}</td></tr>`).join('')}
+      <td data-l="NV thực hiện">${esc(r.deliveryMan || '-')}</td>
+      <td data-l="Hoàn chứng từ">${docHtml(r.doc)}</td></tr>`).join('')}
     </tbody></table></div>`;
 }
 function renderBC(data){
@@ -1964,7 +1992,9 @@ async function loadWaiting(){
   try {
     const d = await api('getWaitingOrders');
     $('wt-note').textContent = `${d.length} đơn · cập nhật ${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
-    $('wt-list').innerHTML = d.length ? dataTable(H_WAIT, d.map(waitRow), 3) : '<div class="empty">Không có đơn chờ giao 🎉</div>';
+    $('wt-list').innerHTML = d.length ? withCards(dataTable(H_WAIT, d.map(waitRow), 3), d.map(o => orderCard({ so: o.so, customer: o.customer,
+      badge: `<span class="badge st-ship">${esc(o.time)}</span>`,
+      fields: [['PO', esc(o.req || '-')], ['Sale', esc(o.sales || '-')], ['Dept', esc(o.dept || '-')], o.by ? ['Người xuất', esc(o.by)] : null] }))) : '<div class="empty">Không có đơn chờ giao 🎉</div>';
   } catch (e) { $('wt-note').textContent = e.message; }
 }
 $('wt-reload').addEventListener('click', loadWaiting);
@@ -1997,9 +2027,11 @@ async function loadMine(){
       d.days.slice().reverse().map(x => [esc(x.day), fmt(x.truck), fmt(x.bike), '<b>' + fmt(x.total) + '</b>', '<b>' + vnd(x.money) + '</b>'])
         .concat([['<b>Cả tháng</b>', '<b>' + fmt(t.truck) + '</b>', '<b>' + fmt(t.bike) + '</b>', '<b>' + fmt(t.total) + '</b>', '<b>' + vnd(t.money) + '</b>']])) : '<div class="empty">Chưa có dữ liệu</div>';
     $('mn-n').textContent = `(${fmt(d.orders.length)})`;
-    $('mn-orders').innerHTML = d.orders.length ? dataTable(['Thời gian', 'Sales order', 'Khách hàng', 'Loại xe'],
-      d.orders.map(o => [esc(o.time), '<b>' + esc(o.so) + '</b>', esc(o.customer || '-'),
-        `<span class="badge ${o.vehicle === 'Xe máy' ? 'st-wait' : 'st-done'}">${o.vehicle}</span>`]), 2) : '<div class="empty">Chưa có đơn</div>';
+    const vb = o => `<span class="badge ${o.vehicle === 'Xe máy' ? 'st-wait' : 'st-done'}">${o.vehicle}</span>`;
+    $('mn-orders').innerHTML = d.orders.length ? withCards(dataTable(['Thời gian', 'Sales order', 'Khách hàng', 'Loại xe', 'Hoàn chứng từ'],
+      d.orders.map(o => [esc(o.time), '<b>' + esc(o.so) + '</b>', esc(o.customer || '-'), vb(o), docHtml(o.doc)]), 2),
+      d.orders.map(o => orderCard({ so: o.so, customer: o.customer, badge: vb(o),
+        fields: [['Giao lúc', esc(o.time)], ['Hoàn chứng từ', docHtml(o.doc)]] }))) : '<div class="empty">Chưa có đơn</div>';
   } catch (e) { toast(e.message); }
   finally { loading(false); }
 }
