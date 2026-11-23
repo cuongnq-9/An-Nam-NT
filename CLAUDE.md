@@ -1,6 +1,6 @@
 # HỆ THỐNG ÂN NAM NHA TRANG – TÀI LIỆU TỔNG HỢP
 
-> Cập nhật: 23/11/2026 · Phiên bản hiện tại: **giao diện 23/11/2026-c · máy chủ 2026-11-23b**
+> Cập nhật: 23/11/2026 · Phiên bản hiện tại: **giao diện 23/11/2026-d · máy chủ 2026-11-23b**
 >
 > File này là tài liệu gốc của hệ thống, Claude đọc đầu tiên mỗi phiên làm việc. Sửa hệ thống thì cập nhật file này luôn.
 
@@ -14,6 +14,7 @@
 index.html             ← toàn bộ giao diện (một file, ~4.300 dòng)
 manifest.json          ← cấu hình PWA (tên, màu, icon)
 icon-192.png, icon-512.png ← icon cài app, làm từ logo Ân Nam (PR #2)
+sw.js                  ← service worker cho app mở được khi mất mạng (PR #4)
 apps-script/
 ├── README.md          ← cách đồng bộ code Apps Script (copy tay hoặc clasp) và cài Script Properties
 ├── .clasp.json.example
@@ -38,7 +39,13 @@ CLAUDE.md              ← tài liệu này
 
 - PR #1 (đã merge): đưa `Code.gs` vào `apps-script/src/`, chuyển toàn bộ ID file/thư mục Drive sang Script Properties.
 - PR #2 (đã merge): thêm `icon-192.png`, `icon-512.png` theo logo chính thức.
-- **Đang làm, chưa merge:** service worker (`sw.js`) để app mở được khi mất mạng: tải mạng trước, mất mạng thì dùng bản lưu; cho đăng nhập offline bằng tài khoản dùng gần nhất (`annt_last_user`). Khi merge thì cập nhật dòng này và cấu trúc repo ở trên.
+- PR #3 (đã merge): thêm tài liệu `CLAUDE.md` này.
+- PR #4 (đã merge, giao diện `23/11/2026-d`): service worker `sw.js` để app mở được khi mất mạng.
+  - `index.html`, `config.js`, `manifest.json`: tải mạng trước (chờ tối đa 6 giây), mất mạng hoặc mạng chậm thì mở bản đã lưu. Cơ chế tự cập nhật `APP_VER` vẫn chạy như cũ, **không cần sửa `sw.js` mỗi lần sửa `index.html`**.
+  - Font Google và thư viện CDN được lưu sau lần tải đầu.
+  - Lệnh gọi máy chủ (POST) và lệnh kiểm tra phiên bản (`?vc=`) không đi qua bộ nhớ đệm, nên hàng đợi quét QR và kiểm kê vẫn như trước.
+  - Mất mạng vẫn vào được app bằng tài khoản dùng gần nhất (lưu trong `annt_last_user`), có mạng lại thì tự kiểm tra lại phiên.
+  - Muốn xóa sạch bộ nhớ đệm cũ trên máy người dùng thì đổi tên `CACHE` trong `sw.js`.
 
 ---
 
