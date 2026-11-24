@@ -619,6 +619,47 @@ table.grid tr.bad td{background:#fdecea}
 .pt-cd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--muted)}
 .ts-big{display:flex;align-items:center;gap:12px;padding:16px;border-radius:14px;font-size:18px;font-weight:800}
 .ts-big.on{background:var(--green-l);color:var(--green)}.ts-big.off{background:#eceff1;color:#455a64}.ts-big.err{background:var(--red-l);color:var(--red)}
+/* ---------- QUẢN LÝ PALLET ---------- */
+.pl-racks{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px}
+.pl-racks button{flex:1 0 auto;min-width:54px;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 6px;font-weight:700;cursor:pointer;font-size:14px}
+.pl-racks button small{display:block;font-weight:500;font-size:11px;color:var(--muted)}
+.pl-racks button.on{background:var(--pri);border-color:var(--pri);color:#fff}.pl-racks button.on small{color:#d7e6dc}
+.pl-grid{display:grid;grid-template-columns:28px repeat(8,minmax(0,1fr));gap:3px;font-size:11px}
+.pl-grid .h{text-align:center;color:var(--muted);font-weight:700;align-self:center}
+.pl-cell{min-height:46px;border-radius:7px;border:1.5px dashed #cfd6df;background:#fafbfc;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2px;cursor:default;overflow:hidden;line-height:1.15;text-align:center}
+.pl-cell.full{border-style:solid;cursor:pointer;color:#10261a}
+.pl-cell.full b{font-size:9.5px;letter-spacing:-.2px;white-space:nowrap}
+#pl-tabs button{padding:11px 4px;font-size:14px;white-space:nowrap}
+.pl-cell.dim{opacity:.18}
+.pl-cell.hit{outline:3px solid var(--gold);outline-offset:1px}
+.pl-lanes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.pl-lane{border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff;min-width:0}
+.pl-lane .t{font-weight:800;font-size:13.5px;margin-bottom:4px}
+.pl-pill{display:flex;justify-content:space-between;gap:6px;border-radius:8px;padding:5px 8px;margin-top:4px;font-size:12.5px;cursor:pointer;color:#10261a}
+.pl-pill span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-stat{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:13px}
+.pl-stat div{background:var(--pri-l);color:var(--pri);border-radius:10px;padding:6px 10px;font-weight:700}
+.pl-row{display:flex;gap:8px}
+.pl-row .inp{min-width:0}
+.pl-lv{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
+.pl-lv button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:10px 4px;font-weight:800;cursor:pointer;font-size:15px}
+.pl-lv button small{display:block;font-size:10.5px;font-weight:600;color:var(--muted)}
+.pl-lv button.on{background:var(--pri);border-color:var(--pri);color:#fff}.pl-lv button.on small{color:#d7e6dc}
+.pl-lv button:disabled{background:#f1f3f5;color:#9aa3ad;cursor:not-allowed}
+.pl-sug{border:1.5px solid var(--line);border-radius:12px;margin-top:6px;max-height:260px;overflow-y:auto;background:#fff}
+.pl-sug div{padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-size:14px}
+.pl-sug div:last-child{border-bottom:0}
+.pl-sug div:hover{background:var(--pri-l)}
+.pl-sug b{color:var(--pri)}
+.pl-pick{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;cursor:pointer;background:#fff}
+.pl-pick.first{border-color:var(--green);background:var(--green-l)}
+.pl-pick.sel{outline:3px solid var(--pri)}
+.pl-kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px}
+.pl-kv span:nth-child(odd){color:var(--muted)}
+.pl-hist{font-size:13px;margin-top:10px;max-height:220px;overflow-y:auto}
+.pl-hist div{padding:6px 0;border-bottom:1px solid var(--line)}
+.pl-step{font-weight:800;color:var(--pri);font-size:13px;margin:14px 0 4px}
+.pl-cur{background:var(--pri-l);border-radius:12px;padding:10px 12px;margin-top:8px;font-size:14px}
 .ts-cfg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .ts-cfg label{font-size:12px;color:var(--muted);font-weight:600}
 @media(max-width:560px){.ts-cfg{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -879,6 +920,72 @@ table.grid tr.bad td{background:#fdecea}
           <li>Đăng nhập bằng tài khoản có tính năng <b>Trạm in tem</b>, bấm Bắt đầu. Lần sau mở máy, trạm tự chạy lại.</li>
           <li>Tắt chế độ ngủ của máy tính. Người in tự kiểm tra máy đang lắp đúng cuộn giấy trước khi in.</li>
         </ol>
+      </div>
+    </div>
+
+    <!-- QUẢN LÝ PALLET -->
+    <div class="view hidden" id="v-pallet">
+      <div class="seg" id="pl-tabs" style="margin-bottom:12px"><button data-t="map" class="on">Sơ đồ kệ</button><button data-t="put">Cất hàng</button><button data-t="move">Chuyển</button><button data-t="pick">Lấy ra</button></div>
+      <div class="card">
+        <div class="pl-row"><input class="inp" id="pl-look" placeholder="Tra mã tem pallet (P-…)" autocapitalize="characters" enterkeyhint="search">
+          <button class="btn light scan-btn" id="pl-look-scan" title="Quét tem pallet"></button></div>
+      </div>
+      <!-- Sơ đồ -->
+      <div id="pl-t-map">
+        <div class="card">
+          <div class="pl-stat" id="pl-stat"></div>
+          <div class="pl-racks" id="pl-racks"></div>
+          <input class="inp" id="pl-filter" placeholder="Tìm hàng trên sơ đồ: mã, tên, dùng * (VD: *sua*hop)" style="margin-bottom:10px">
+          <div id="pl-map"></div>
+          <div class="muted" style="font-size:12px;margin-top:8px">Mỗi màu là một mặt hàng. Bấm vào ô để xem chi tiết pallet.</div>
+        </div>
+      </div>
+      <!-- Cất hàng -->
+      <div id="pl-t-put" class="hidden">
+        <div class="card">
+          <div class="pl-step">1. Tem pallet</div>
+          <div class="pl-row"><input class="inp" id="pa-tem" placeholder="Quét hoặc nhập P-XXXXXX" autocapitalize="characters"><button class="btn light scan-btn" id="pa-tem-scan"></button></div>
+          <div class="pl-step">2. Mặt hàng</div>
+          <div id="pa-prod"></div>
+          <div class="pl-row" id="pa-qrow"><input class="inp" id="pa-q" placeholder="Quét barcode, nhập mã hoặc tên (dùng *)" enterkeyhint="search"><button class="btn light scan-btn" id="pa-scan"></button></div>
+          <div id="pa-sug"></div>
+          <div class="muted" id="pl-ms" style="font-size:12px;margin-top:4px"></div>
+          <div class="pt-2col" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:4px">
+            <div style="min-width:0"><label class="f" for="pa-batch">Batch</label><input class="inp" id="pa-batch" list="pa-batches" placeholder="Batch"><datalist id="pa-batches"></datalist></div>
+            <div style="min-width:0"><label class="f" for="pa-exp">HSD</label><input class="inp" id="pa-exp" type="date" style="min-width:0"></div>
+          </div>
+          <label class="f" for="pa-qty">Số thùng trên pallet</label>
+          <input class="inp" id="pa-qty" type="number" min="1" inputmode="numeric">
+          <div class="pl-step">3. Vị trí</div>
+          <div id="pa-loc"></div>
+          <button class="btn block" id="pa-go">Cất hàng</button>
+        </div>
+      </div>
+      <!-- Chuyển vị trí -->
+      <div id="pl-t-move" class="hidden">
+        <div class="card">
+          <div class="pl-step">1. Tem pallet cần chuyển</div>
+          <div class="pl-row"><input class="inp" id="mv-tem" placeholder="Quét hoặc nhập P-XXXXXX" autocapitalize="characters"><button class="btn light scan-btn" id="mv-tem-scan"></button></div>
+          <div id="mv-cur"></div>
+          <div class="pl-step">2. Vị trí mới</div>
+          <div id="mv-loc"></div>
+          <button class="btn block" id="mv-go">Chuyển vị trí</button>
+        </div>
+      </div>
+      <!-- Lấy ra -->
+      <div id="pl-t-pick" class="hidden">
+        <div class="card">
+          <div class="pl-step">1. Mặt hàng cần lấy</div>
+          <div class="pl-row"><input class="inp" id="pk2-q" placeholder="Mã, tên (dùng *) hoặc quét barcode" enterkeyhint="search"><button class="btn light scan-btn" id="pk2-scan"></button></div>
+          <div id="pk2-sug"></div>
+          <div id="pk2-list"></div>
+          <div class="pl-step">2. Quét tem pallet lấy ra</div>
+          <div class="pl-row"><input class="inp" id="pk2-tem" placeholder="Quét hoặc nhập P-XXXXXX" autocapitalize="characters"><button class="btn light scan-btn" id="pk2-tem-scan"></button></div>
+          <div id="pk2-cur"></div>
+          <label class="f" for="pk2-qty">Số thùng lấy ra</label>
+          <div class="pl-row"><input class="inp" id="pk2-qty" type="number" min="1" inputmode="numeric"><button class="btn ghost" id="pk2-all" style="white-space:nowrap">Lấy hết</button></div>
+          <button class="btn block" id="pk2-go">Xác nhận lấy ra</button>
+        </div>
       </div>
     </div>
 
@@ -1203,6 +1310,7 @@ loadPromo(document.getElementById('promo-src').textContent);
 
 /* ========= ICONS ========= */
 const ICON = {
+  pallet:'<rect x="5" y="4" width="14" height="10" rx="1"/><path d="M9 4v4h6V4"/><path d="M3 16h18M3 20h18M5 16v4M12 16v4M19 16v4"/>',
   print:'<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
   truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
   search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
@@ -1278,8 +1386,8 @@ async function api(fn, ...args){
 /* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
  * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
  * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
-const APP_VER = '24/11/2026-a';
-const NEED_SERVER = '2026-11-24a';      // phiên bản Code.gs tương ứng
+const APP_VER = '24/11/2026-b';
+const NEED_SERVER = '2026-11-24b';      // phiên bản Code.gs tương ứng
 async function checkUpdate(auto){
   if (location.protocol === 'file:') return;
   try {
@@ -1509,6 +1617,7 @@ const VIEWS = {
   soanhang: { title: 'Soạn hàng',         icon: 'cart',   color: 'linear-gradient(135deg,#8e24aa,#5e35b1)', label: 'Soạn hàng' },
   bcsoan:   { title: 'Báo cáo soạn hàng', icon: 'cam',    color: 'linear-gradient(135deg,#6d4c41,#3e2723)', label: 'BC Soạn hàng' },
   intem:    { title: 'In tem',            icon: 'print',  color: 'linear-gradient(135deg,#546e7a,#263238)', label: 'In tem' },
+  pallet:   { title: 'Quản lý pallet',    icon: 'pallet',    color: 'linear-gradient(135deg,#8d6e63,#4e342e)', label: 'Pallet' },
   tramin:   { title: 'Trạm in tem',       icon: 'print',  color: 'linear-gradient(135deg,#3d7a57,#182e22)', label: 'Trạm in tem' },
   congno:   { title: 'Công nợ',           icon: 'money',  color: 'linear-gradient(135deg,#c62828,#7f0000)', label: 'Công nợ' },
   msg:      { title: 'Lời nhắn',           icon: 'doc',    color: 'linear-gradient(135deg,#1e88e5,#0d47a1)', label: 'Lời nhắn' },
@@ -1573,6 +1682,7 @@ function go(view){
   if (view === 'congno') DB.loading = loadDebt();
   if (view === 'bcsoan') initBcs();
   if (view === 'intem') initIntem();
+  if (view === 'pallet') initPallet();
   if (view === 'tramin') initTramin();
   if (view === 'bank') renderBank();
   if (view === 'schedule') loadSchedule();
@@ -2265,7 +2375,7 @@ function msNote(id){ $(id).innerHTML = S.master ? `Danh mục: ${S.master.items.
 document.addEventListener('click', async e => {
   const a = e.target.closest('[data-reload-master]'); if (!a) return;
   e.preventDefault();
-  try { await loadMaster(true); ['kk-ms', 'wo-ms', 'pk-ms'].forEach(msNote); toast('Đã tải lại danh mục hàng.'); } catch (x) { toast(x.message); }
+  try { await loadMaster(true); ['kk-ms', 'wo-ms', 'pk-ms', 'pl-ms'].forEach(msNote); toast('Đã tải lại danh mục hàng.'); } catch (x) { toast(x.message); }
 });
 
 /* Thẻ sản phẩm có ô nhập số lượng theo từng batch + ô nhập batch khác */
@@ -4977,6 +5087,344 @@ document.addEventListener('input', e => {
   if (e.target.id === 'ts-name') { TS.name = e.target.value.trim() || 'Trạm in kho'; store.set('annt_ts_name', TS.name); return; }
   const k = e.target.dataset && e.target.dataset.tsk; if (!k) return;
   tsCfg()[k][e.target.dataset.tsf] = parseFloat(e.target.value) || 0; store.set('annt_ts_cfg', TS.cfg);
+});
+
+/* ========= QUẢN LÝ PALLET =========
+ * Tem pallet (P-XXXXXX, in ở màn hình In tem) dán 1 lần lên pallet.
+ * Vị trí: kệ R1–R4 × 8 cột × 4 tầng (tem trên kệ chỉ có "R2-05", nhân viên chọn tầng) · R0 = khu sàn 8 dãy.
+ * Cất hàng → Chuyển vị trí → Lấy ra (gợi ý FEFO: HSD gần nhất lấy trước). */
+const PL = { tab: 'map', map: null, rack: 'R1', put: { prod: null, loc: null }, mv: { p: null, loc: null }, pk: { item: '', p: null, list: [] }, busy: false };
+const plPad = n => ('0' + n).slice(-2);
+const plTemNorm = s => { s = String(s || '').trim().toUpperCase().replace(/\s+/g, ''); const m = s.match(/P-?([A-Z0-9]{6})$/); return m ? 'P-' + m[1] : s; };
+const plCode = (rack, col, lv) => rack === 'R0' ? 'R0-' + plPad(col) : rack + '-' + plPad(col) + '-T' + lv;
+const plAt = code => PL.map ? PL.map.items.filter(p => p.loc === code) : [];
+const plFindTem = tem => PL.map ? PL.map.items.find(p => p.tem === tem) : null;
+function plParseLoc(s){
+  s = String(s || '').trim().toUpperCase().replace(/\s+/g, '');
+  const m = s.match(/R([0-9])-?(\d{1,2})(?:-?T?(\d))?$/);
+  if (!m) return null;
+  const mp = PL.map || { racks: ['R1', 'R2', 'R3', 'R4'], cols: 8, levels: 4, lanes: 8 };
+  const rack = 'R' + m[1], col = +m[2], lv = m[3] ? +m[3] : 0;
+  if (rack === 'R0') return col >= 1 && col <= mp.lanes ? { rack, col, lv: '' } : null;
+  if (mp.racks.indexOf(rack) === -1 || col < 1 || col > mp.cols || lv > mp.levels) return null;
+  return { rack, col, lv };
+}
+function plColor(item){
+  let h = 0; for (const ch of String(item)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const hue = (h * 137) % 360;
+  return `background:hsl(${hue},70%,84%);border-color:hsl(${hue},45%,52%)`;
+}
+// Tìm theo mẫu có dấu * (không phân biệt dấu): "*sua*hop" → chứa "sua" rồi "hop"
+function plMatcher(q){
+  q = norm(String(q || '').trim()); if (!q) return null;
+  if (q.indexOf('*') !== -1) {
+    const re = new RegExp(q.split('*').map(x => x.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*'));
+    return (item, name) => re.test(norm(item)) || re.test(norm(name));
+  }
+  return (item, name) => norm(item).includes(q) || norm(name).includes(q);
+}
+function plFindProd(q){
+  q = String(q || '').trim(); if (!q || !S.master) return [];
+  if (q.indexOf('*') === -1) return findProducts(q);
+  const f = plMatcher(q), out = [];
+  for (const it of S.master.items) { if (f(it.i, it.n) || it.b.some(b => f(b, ''))) out.push(it); if (out.length >= 30) break; }
+  return out;
+}
+const plExpKey = e => { const m = String(e || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? m[3] + m[2] + m[1] : '99999999'; };
+const plShortItem = s => { s = String(s); return s.length > 7 ? '…' + s.slice(-6) : s; };
+
+async function initPallet(){
+  [['pl-look-scan'], ['pa-tem-scan'], ['pa-scan'], ['mv-tem-scan'], ['pk2-scan'], ['pk2-tem-scan']].forEach(([id]) => $(id).innerHTML = ic('qr'));
+  plTab(PL.tab);
+  await plLoad();
+  if (!S.master) { try { await loadMaster(); } catch (e) { $('pl-ms').textContent = e.message; } }
+  msNote('pl-ms');
+}
+async function plLoad(){
+  try { PL.map = await api('plMap'); } catch (e) { toast(e.message); return; }
+  plRenderMap(); plRenderLoc('pa'); plRenderLoc('mv');
+  if (PL.pk.item) plRenderPickList();
+}
+function plTab(t){
+  PL.tab = t;
+  $('pl-tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  ['map', 'put', 'move', 'pick'].forEach(x => $('pl-t-' + x).classList.toggle('hidden', x !== t));
+  if (t === 'put') { plRenderProd(); plRenderLoc('pa'); }
+  if (t === 'move') { plRenderMvCur(); plRenderLoc('mv'); }
+  if (t === 'pick') plRenderPickCur();
+}
+$('pl-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) plTab(b.dataset.t); });
+
+/* ---- Sơ đồ ---- */
+function plRenderMap(){
+  const m = PL.map; if (!m) return;
+  const it = m.items, onRack = it.filter(p => p.rack !== m.floor).length, slots = m.racks.length * m.cols * m.levels;
+  $('pl-stat').innerHTML = `<div>Kệ: ${onRack}/${slots} ô có hàng</div><div>Khu sàn R0: ${it.length - onRack} pallet</div><div>Tổng: ${it.length} pallet</div>`;
+  $('pl-racks').innerHTML = m.racks.concat([m.floor]).map(r => {
+    const n = it.filter(p => p.rack === r).length, cap = r === m.floor ? '' : '/' + (m.cols * m.levels);
+    return `<button data-r="${r}" class="${PL.rack === r ? 'on' : ''}">${r === m.floor ? 'R0 sàn' : r}<small>${n}${cap}</small></button>`;
+  }).join('');
+  const f = plMatcher($('pl-filter').value), cls = p => f ? (f(p.item, p.name) ? ' hit' : ' dim') : '';
+  const cell = p => `<div class="pl-cell full${cls(p)}" style="${plColor(p.item)}" data-tem="${esc(p.tem)}" title="${esc(p.item + ' · ' + p.name)}"><b>${esc(plShortItem(p.item))}</b><span>${p.qty} th</span></div>`;
+  let h = '';
+  if (PL.rack === m.floor) {
+    h = '<div class="pl-lanes">';
+    for (let c = 1; c <= m.lanes; c++) {
+      const ps = plAt(plCode('R0', c));
+      h += `<div class="pl-lane"><div class="t">Dãy ${plPad(c)} <span class="muted" style="font-weight:600">· ${ps.length} pallet</span></div>${ps.map(p =>
+        `<div class="pl-pill${cls(p)}" style="${plColor(p.item)}" data-tem="${esc(p.tem)}"><span>${esc(p.item)} ${esc(p.name)}</span><b>${p.qty}</b></div>`).join('') || '<div class="muted" style="font-size:12.5px">Trống</div>'}</div>`;
+    }
+    h += '</div>';
+  } else {
+    h = '<div style="overflow-x:auto"><div class="pl-grid" style="min-width:330px"><div></div>';
+    for (let c = 1; c <= m.cols; c++) h += `<div class="h">${plPad(c)}</div>`;
+    for (let l = m.levels; l >= 1; l--) {
+      h += `<div class="h">T${l}</div>`;
+      for (let c = 1; c <= m.cols; c++) { const p = plAt(plCode(PL.rack, c, l))[0]; h += p ? cell(p) : '<div class="pl-cell"></div>'; }
+    }
+    h += '</div></div>';
+  }
+  $('pl-map').innerHTML = h;
+}
+$('pl-racks').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; PL.rack = b.dataset.r; plRenderMap(); });
+$('pl-filter').addEventListener('input', () => {
+  // Đang lọc mà kệ hiện tại không có hàng khớp → tự chuyển sang kệ có hàng khớp
+  const f = plMatcher($('pl-filter').value);
+  if (f && PL.map && !PL.map.items.some(p => p.rack === PL.rack && f(p.item, p.name))) {
+    const p = PL.map.items.find(p => f(p.item, p.name)); if (p) PL.rack = p.rack;
+  }
+  plRenderMap();
+});
+$('pl-map').addEventListener('click', e => { const c = e.target.closest('[data-tem]'); if (c) plShowInfo(c.dataset.tem); });
+
+/* ---- Tra cứu tem ---- */
+async function plShowInfo(tem){
+  tem = plTemNorm(tem); if (!tem) return;
+  let d; loading(true);
+  try { d = await api('plInfo', tem); } catch (e) { toast(e.message); return; } finally { loading(false); }
+  const p = d.pallet, on = p && p.status === 'Trên kệ';
+  const opName = { CAT: 'Cất hàng', CHUYEN: 'Chuyển', LAY: 'Lấy ra', LAY_HET: 'Lấy hết' };
+  const body = p ? `<div class="pl-kv">
+      <span>Vị trí</span><b>${esc(on ? p.loc : '–')}</b>
+      <span>Mặt hàng</span><span><b>${esc(p.item)}</b> ${esc(p.name)}</span>
+      <span>Batch</span><span>${esc(p.batch || '–')}</span>
+      <span>HSD</span><span>${esc(p.exp || '–')}</span>
+      <span>Còn</span><b>${p.qty} / ${p.qty0} thùng</b>
+      <span>Trạng thái</span><span><span class="badge ${on ? 'st-done' : 'st-other'}">${esc(p.status)}</span></span>
+      <span>Cất bởi</span><span>${esc(p.by)}${p.at ? ' · ' + new Date(p.at).toLocaleString('vi-VN') : ''}</span></div>`
+    : `<div class="muted">${d.temStatus ? 'Tem chưa gắn pallet nào. Trạng thái tem: <b>' + esc(d.temStatus) + '</b>' : 'Không tìm thấy tem này trong danh sách tem đã in.'}</div>`;
+  modal(`<h3>Pallet ${esc(tem)}</h3>${body}
+    ${d.hist.length ? `<div class="pl-step">Lịch sử</div><div class="pl-hist">${d.hist.map(h => `<div><b>${esc(opName[h.op] || h.op)}</b> ${h.from ? esc(h.from) + ' → ' : ''}${esc(h.to || (h.op.startsWith('LAY') ? 'xuất ' + Math.abs(h.dq) + ' thùng, còn ' + h.left : ''))}<br><span class="muted">${esc(h.time)} · ${esc(h.by)}</span></div>`).join('')}</div>` : ''}
+    <div class="modal-actions">${on ? '<button class="btn ghost" id="pli-mv">Chuyển</button><button class="btn ghost" id="pli-pk">Lấy ra</button>' : (!p && d.temStatus === 'Chưa dùng' ? '<button class="btn ghost" id="pli-put">Cất hàng</button>' : '')}<button class="btn" id="pli-x">Đóng</button></div>`);
+  $('pli-x').onclick = closeModal;
+  if ($('pli-mv')) $('pli-mv').onclick = () => { closeModal(); $('mv-tem').value = tem; plTab('move'); plMvTem(); };
+  if ($('pli-pk')) $('pli-pk').onclick = () => { closeModal(); PL.pk.item = p.item; $('pk2-q').value = p.item; $('pk2-tem').value = tem; plTab('pick'); plRenderPickList(); plPkTem(); };
+  if ($('pli-put')) $('pli-put').onclick = () => { closeModal(); $('pa-tem').value = tem; plTab('put'); };
+}
+const plLook = () => { const v = $('pl-look').value; if (v.trim()) plShowInfo(v); };
+$('pl-look').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); plLook(); } });
+async function plScanInto(inputId, title, after){
+  const code = await scanOnce(title); if (!code) return;
+  $(inputId).value = code; if (after) after(code);
+}
+$('pl-look-scan').addEventListener('click', () => plScanInto('pl-look', 'Quét tem pallet', plLook));
+
+/* ---- Ô chọn vị trí (dùng cho Cất hàng & Chuyển) ---- */
+function plRenderLoc(pre){
+  const st = pre === 'pa' ? PL.put : PL.mv, l = st.loc, self = pre === 'mv' && st.p ? st.p.tem : '';
+  const box = $(pre + '-loc'); if (!box) return;
+  if (!$(pre + '-locin')) {   // ô nhập vẽ 1 lần, chỉ vẽ lại phần chọn tầng
+    box.innerHTML = `<div class="pl-row"><input class="inp" id="${pre}-locin" placeholder="Tem vị trí: R2-05 / R0-03" autocapitalize="characters">
+      <button class="btn light scan-btn" id="${pre}-locscan">${ic('qr')}</button></div><div id="${pre}-lvbox"></div>`;
+    const set = v => {
+      const x = plParseLoc(v);
+      if (!x) { if (String(v).trim()) { beep('err'); toast('Mã vị trí không hợp lệ. Dạng R1-05 … R4-08 hoặc R0-01 … R0-08.'); } st.loc = null; }
+      else {
+        const me = pre === 'mv' && st.p ? st.p.tem : '';
+        if (x.lv && plAt(plCode(x.rack, x.col, x.lv)).some(p => p.tem !== me)) { toast('Tầng T' + x.lv + ' đang có pallet, chọn tầng khác.'); x.lv = 0; }
+        st.loc = x; beep('ok');
+      }
+      plRenderLoc(pre);
+    };
+    const inp = $(pre + '-locin');
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); inp.dataset.v = inp.value; set(inp.value); } });
+    inp.addEventListener('change', () => { if (inp.dataset.v !== inp.value) { inp.dataset.v = inp.value; set(inp.value); } });
+    $(pre + '-locscan').onclick = async () => { const c = await scanOnce('Quét tem vị trí trên kệ'); if (c) { inp.dataset.v = c; set(c); } };
+  }
+  const inp = $(pre + '-locin'), want = l ? l.rack + '-' + plPad(l.col) : '';
+  if (!l || plParseLoc(inp.value) === null || inp.value.toUpperCase().indexOf(want) === -1) { inp.value = want; inp.dataset.v = want; }
+  let lv = '', note = 'Quét tem vị trí trên kệ (VD R2-05) hoặc nhập R0-03 cho khu sàn.';
+  if (l && l.rack !== 'R0') {
+    const mp = PL.map || { levels: 4 };
+    lv = '<div class="pl-lv">';
+    for (let n = 1; n <= mp.levels; n++) {
+      const occ = plAt(plCode(l.rack, l.col, n)).filter(p => p.tem !== self)[0];
+      if (occ && l.lv === n) l.lv = 0;
+      lv += `<button data-lv="${n}" class="${l.lv === n ? 'on' : ''}" ${occ ? 'disabled' : ''}>T${n}<small>${occ ? esc(plShortItem(occ.item)) : 'Trống'}</small></button>`;
+    }
+    lv += '</div>';
+    note = l.lv ? `Vị trí: <b>${plCode(l.rack, l.col, l.lv)}</b>` : `Kệ <b>${l.rack}-${plPad(l.col)}</b> · chọn tầng`;
+  } else if (l) note = `Khu sàn <b>R0 · dãy ${plPad(l.col)}</b> · đang có ${plAt(plCode('R0', l.col)).filter(p => p.tem !== self).length} pallet`;
+  const lb = $(pre + '-lvbox');
+  lb.innerHTML = `${lv}<div class="muted" style="font-size:12.5px;margin-top:6px">${note}</div>`;
+  lb.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => { st.loc.lv = +b.dataset.lv; plRenderLoc(pre); });
+}
+function plLocOk(st){
+  const l = st.loc;
+  if (!l) { toast('Chưa có vị trí. Quét tem vị trí trên kệ.'); return null; }
+  if (l.rack !== 'R0' && !l.lv) { toast('Chọn tầng T1–T4.'); return null; }
+  return l;
+}
+
+/* ---- Cất hàng ---- */
+function plRenderProd(){
+  const p = PL.put.prod;
+  $('pa-prod').innerHTML = p ? `<div class="chip" style="margin-top:0"><div><b>${esc(p.i)}</b><div style="font-size:13.5px">${esc(p.n || '')}</div></div><button class="btn light" id="pa-prod-x" style="padding:6px 10px">Đổi</button></div>` : '';
+  $('pa-qrow').classList.toggle('hidden', !!p);
+  if (p) {
+    $('pa-prod-x').onclick = () => { PL.put.prod = null; $('pa-q').value = ''; plRenderProd(); $('pa-q').focus(); };
+    $('pa-batches').innerHTML = (batchesOf(p.i) || []).map(b => `<option value="${esc(b)}">`).join('');
+  }
+}
+function plSugList(boxId, list, onPick){
+  const box = $(boxId);
+  if (!list.length) { box.innerHTML = '<div class="muted" style="font-size:13px;margin-top:6px">Không tìm thấy mặt hàng. Thử gõ * giữa các chữ, VD: *sua*hop</div>'; return; }
+  box.innerHTML = `<div class="pl-sug">${list.map((p, i) => `<div data-i="${i}"><b>${esc(p.i)}</b> ${esc(p.n || '')}</div>`).join('')}</div>`;
+  box.querySelectorAll('[data-i]').forEach(d => d.onclick = () => { box.innerHTML = ''; onPick(list[+d.dataset.i]); });
+}
+function paSearch(fromScan){
+  if (!S.master) { toast('Đang tải danh mục hàng…'); return; }
+  const list = plFindProd($('pa-q').value);
+  if (fromScan && list.length === 1) { $('pa-sug').innerHTML = ''; paPick(list[0]); return; }
+  plSugList('pa-sug', list, paPick);
+}
+function paPick(p){ PL.put.prod = p; $('pa-batch').value = ''; plRenderProd(); }
+let paT = null;
+$('pa-q').addEventListener('input', () => { clearTimeout(paT); paT = setTimeout(() => { if ($('pa-q').value.trim().length >= 2) paSearch(false); else $('pa-sug').innerHTML = ''; }, 250); });
+$('pa-q').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); clearTimeout(paT); paSearch(true); } });
+$('pa-scan').addEventListener('click', () => plScanInto('pa-q', 'Quét mã vạch sản phẩm', () => paSearch(true)));
+const paTem = () => {
+  const t = plTemNorm($('pa-tem').value); $('pa-tem').value = t; $('pa-tem').dataset.v = t;
+  if (!/^P-[A-Z0-9]{6}$/.test(t)) { if (t) { beep('err'); toast('Mã tem pallet dạng P-XXXXXX.'); } return; }
+  if (plFindTem(t)) { beep('err'); toast('Tem ' + t + ' đang gắn pallet khác trên kệ. Dán tem mới.'); return; }
+  beep('ok'); if (!PL.put.prod) $('pa-q').focus();
+};
+$('pa-tem').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); paTem(); } });
+$('pa-tem').addEventListener('change', e => { if (e.target.dataset.v !== e.target.value) paTem(); });
+$('pa-tem-scan').addEventListener('click', () => plScanInto('pa-tem', 'Quét tem pallet mới', paTem));
+$('pa-go').addEventListener('click', async () => {
+  if (PL.busy) return;
+  const tem = plTemNorm($('pa-tem').value), p = PL.put.prod, qty = +$('pa-qty').value;
+  if (!/^P-[A-Z0-9]{6}$/.test(tem)) return toast('Quét tem pallet trước.');
+  if (!p) return toast('Chọn mặt hàng.');
+  if (!(qty > 0)) return toast('Nhập số thùng trên pallet.');
+  const l = plLocOk(PL.put); if (!l) return;
+  PL.busy = true; loading(true);
+  try {
+    const r = await api('plPutaway', { tem, item: p.i, name: p.n || '', batch: $('pa-batch').value.trim(), exp: $('pa-exp').value, qty, rack: l.rack, col: l.col, lv: l.lv, reqId: reqId('pl') });
+    beep('ok'); toast('Đã cất ' + tem + ' vào ' + (r.loc || plCode(l.rack, l.col, l.lv)) + '.', 3500);
+    $('pa-tem').value = ''; $('pa-qty').value = ''; $('pa-batch').value = ''; $('pa-exp').value = '';
+    PL.put.loc = null;   // giữ mặt hàng để cất tiếp pallet cùng mã
+    await plLoad();
+  } catch (e) { beep('err'); toast(e.message, 4500); }
+  finally { PL.busy = false; loading(false); }
+});
+
+/* ---- Chuyển vị trí ---- */
+function plRenderMvCur(){
+  const p = PL.mv.p;
+  $('mv-cur').innerHTML = p ? `<div class="pl-cur">Đang ở <b>${esc(p.loc)}</b> · ${esc(p.item)} ${esc(p.name)} · còn ${p.qty} thùng${p.exp ? ' · HSD ' + esc(p.exp) : ''}</div>` : '';
+}
+function plMvTem(){
+  const t = plTemNorm($('mv-tem').value); $('mv-tem').value = t; $('mv-tem').dataset.v = t; if (!t) return;
+  const p = plFindTem(t);
+  if (!p) { beep('err'); toast('Tem ' + t + ' không có pallet nào trên kệ.'); PL.mv.p = null; }
+  else { beep('ok'); PL.mv.p = p; }
+  plRenderMvCur(); plRenderLoc('mv');
+}
+$('mv-tem').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); plMvTem(); } });
+$('mv-tem').addEventListener('change', e => { if (e.target.dataset.v !== e.target.value) plMvTem(); });
+$('mv-tem-scan').addEventListener('click', () => plScanInto('mv-tem', 'Quét tem pallet cần chuyển', plMvTem));
+$('mv-go').addEventListener('click', async () => {
+  if (PL.busy) return;
+  const p = PL.mv.p; if (!p) return toast('Quét tem pallet cần chuyển.');
+  const l = plLocOk(PL.mv); if (!l) return;
+  PL.busy = true; loading(true);
+  try {
+    const r = await api('plMove', { tem: p.tem, rack: l.rack, col: l.col, lv: l.lv, reqId: reqId('pl') });
+    beep('ok'); toast('Đã chuyển ' + p.tem + ': ' + (r.from || p.loc) + ' → ' + (r.loc || '') + '.', 3500);
+    $('mv-tem').value = ''; PL.mv = { p: null, loc: null };
+    await plLoad(); plRenderMvCur();
+  } catch (e) { beep('err'); toast(e.message, 4500); }
+  finally { PL.busy = false; loading(false); }
+});
+
+/* ---- Lấy ra (FEFO) ---- */
+function plRenderPickList(){
+  const it = PL.pk.item, box = $('pk2-list');
+  if (!it || !PL.map) { box.innerHTML = ''; return; }
+  const list = PL.map.items.filter(p => p.item === it).sort((a, b) => plExpKey(a.exp).localeCompare(plExpKey(b.exp)) || a.at - b.at);
+  PL.pk.list = list;
+  if (!list.length) { box.innerHTML = `<div class="pl-cur">Mã ${esc(it)} không có pallet nào trên kệ.</div>`; return; }
+  const tot = list.reduce((s, p) => s + p.qty, 0), sel = PL.pk.p ? PL.pk.p.tem : '';
+  box.innerHTML = `<div class="muted" style="font-size:12.5px;margin-top:8px">${list.length} pallet · ${tot} thùng · xếp theo HSD gần nhất (FEFO)</div>` + list.map((p, i) =>
+    `<div class="pl-pick${i === 0 ? ' first' : ''}${p.tem === sel ? ' sel' : ''}" data-tem="${esc(p.tem)}">
+      <div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(p.loc)}</b>${i === 0 ? '<span class="badge st-done">Lấy trước</span>' : ''}</div>
+      <div style="font-size:13.5px">${esc(p.tem)} · HSD <b>${esc(p.exp || 'không có')}</b>${p.batch ? ' · batch ' + esc(p.batch) : ''} · còn <b>${p.qty}</b> thùng</div></div>`).join('');
+  box.querySelectorAll('[data-tem]').forEach(d => d.onclick = () => { $('pk2-tem').value = d.dataset.tem; plPkTem(); });
+}
+function pkSearch2(fromScan){
+  if (!S.master) { toast('Đang tải danh mục hàng…'); return; }
+  const q = $('pk2-q').value.trim(); if (!q) return;
+  let list = plFindProd(q);
+  // Gợi ý thêm mã đang có trên kệ mà danh mục chưa có
+  if (PL.map) { const f = plMatcher(q), seen = new Set(list.map(p => p.i));
+    PL.map.items.forEach(p => { if (!seen.has(p.item) && f(p.item, p.name)) { seen.add(p.item); list.push({ i: p.item, n: p.name, b: [] }); } }); }
+  const onShelf = new Set(PL.map ? PL.map.items.map(p => p.item) : []);
+  list.sort((a, b) => (onShelf.has(b.i) ? 1 : 0) - (onShelf.has(a.i) ? 1 : 0));
+  if (fromScan && list.length === 1) { $('pk2-sug').innerHTML = ''; pkPickItem(list[0]); return; }
+  plSugList('pk2-sug', list.slice(0, 30), pkPickItem);
+}
+function pkPickItem(p){ PL.pk.item = p.i; PL.pk.p = null; $('pk2-q').value = p.i + ' ' + (p.n || ''); plRenderPickList(); plRenderPickCur(); }
+let pk2T = null;
+$('pk2-q').addEventListener('input', () => { clearTimeout(pk2T); pk2T = setTimeout(() => { if ($('pk2-q').value.trim().length >= 2) pkSearch2(false); else $('pk2-sug').innerHTML = ''; }, 250); });
+$('pk2-q').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); clearTimeout(pk2T); pkSearch2(true); } });
+$('pk2-scan').addEventListener('click', () => plScanInto('pk2-q', 'Quét mã vạch sản phẩm', () => pkSearch2(true)));
+function plRenderPickCur(){
+  const p = PL.pk.p, box = $('pk2-cur');
+  if (!p) { box.innerHTML = ''; return; }
+  const first = PL.pk.list[0], warn = first && first.tem !== p.tem && plExpKey(first.exp) < plExpKey(p.exp);
+  box.innerHTML = `<div class="pl-cur">${esc(p.tem)} ở <b>${esc(p.loc)}</b> · ${esc(p.item)} ${esc(p.name)} · HSD ${esc(p.exp || '–')} · còn <b>${p.qty}</b> thùng</div>` +
+    (warn ? `<div class="pt-warn" style="display:block">⚠ Chưa đúng FEFO: pallet ${esc(first.tem)} ở ${esc(first.loc)} có HSD ${esc(first.exp)} gần hơn.</div>` : '');
+}
+function plPkTem(){
+  const t = plTemNorm($('pk2-tem').value); $('pk2-tem').value = t; $('pk2-tem').dataset.v = t; if (!t) return;
+  const p = plFindTem(t);
+  if (!p) { beep('err'); toast('Tem ' + t + ' không có pallet nào trên kệ.'); PL.pk.p = null; plRenderPickCur(); return; }
+  if (PL.pk.item !== p.item) { PL.pk.item = p.item; $('pk2-q').value = p.item + ' ' + p.name; $('pk2-sug').innerHTML = ''; }
+  PL.pk.p = p; plRenderPickList();
+  const first = PL.pk.list[0];
+  beep(first && first.tem !== p.tem && plExpKey(first.exp) < plExpKey(p.exp) ? 'miss' : 'ok');
+  plRenderPickCur(); $('pk2-qty').focus();
+}
+$('pk2-tem').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); plPkTem(); } });
+$('pk2-tem').addEventListener('change', e => { if (e.target.dataset.v !== e.target.value) plPkTem(); });
+$('pk2-tem-scan').addEventListener('click', () => plScanInto('pk2-tem', 'Quét tem pallet lấy ra', plPkTem));
+$('pk2-all').addEventListener('click', () => { if (PL.pk.p) $('pk2-qty').value = PL.pk.p.qty; else toast('Quét tem pallet trước.'); });
+$('pk2-go').addEventListener('click', async () => {
+  if (PL.busy) return;
+  const p = PL.pk.p, q = +$('pk2-qty').value;
+  if (!p) return toast('Quét tem pallet lấy ra.');
+  if (!(q > 0)) return toast('Nhập số thùng lấy ra.');
+  if (q > p.qty) return toast('Pallet chỉ còn ' + p.qty + ' thùng.');
+  PL.busy = true; loading(true);
+  try {
+    const r = await api('plPick', { tem: p.tem, qty: q, reqId: reqId('pl') });
+    beep('ok'); toast(r.closed ? 'Đã lấy hết pallet ' + p.tem + '. Bóc tem bỏ đi.' : 'Đã lấy ' + q + ' thùng. Pallet còn ' + r.left + ' thùng.', 4000);
+    $('pk2-tem').value = ''; $('pk2-qty').value = ''; PL.pk.p = null;
+    await plLoad(); plRenderPickCur();
+  } catch (e) { beep('err'); toast(e.message, 4500); }
+  finally { PL.busy = false; loading(false); }
 });
 
 boot();
