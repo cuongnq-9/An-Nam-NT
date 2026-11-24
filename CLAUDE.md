@@ -286,6 +286,11 @@ Web app nội bộ cho chi nhánh **Ân Nam Group – Nha Trang** (FMCG). App go
 
 **Thứ tự popup khi mở app:** sinh nhật trước, lời nhắn sau.
 
+### 5.6 Đơn hàng Tết
+
+- Sale chọn nhóm khách hàng (GT/MTI), app tính khuyến mãi theo Scheme. Cùng một hàm tính khuyến mãi chạy ở cả máy chủ và giao diện.
+- Gửi đơn → ghi vào `DonTet` và email cho CS.
+
 ### 5.7 In tem
 
 ```
@@ -299,11 +304,6 @@ Máy trạm (tramin) ── printNext mỗi 5 giây ──▶ nhận lệnh cũ 
 - **Máy trạm:** cài driver Xprinter XP-TT426B làm máy in mặc định, tạo 2 khổ giấy 104×50 mm và 108×22 mm. Mở Chrome bằng `chrome.exe --kiosk-printing <link app>#tramin`, đăng nhập tài khoản có `tramin`, bấm Bắt đầu. Trạm nhớ trạng thái (`annt_ts_auto`), mở lại tự chạy. Căn khổ lưu ở `annt_ts_cfg`, tên trạm ở `annt_ts_name`.
 - Mỗi hàng tem in thành 1 trang (`@page` = rộng trang × cao tem). QR tạo bằng thư viện `qrcode-generator@1.4.4` (jsDelivr), mã hóa đúng chuỗi mã nên màn hình quét hiện tại đọc được.
 - Máy chủ chỉ đọc 400 dòng cuối của `Lenh in`. Khi không có lệnh mới, `printNext` chỉ ghi nhịp "còn sống" vào bộ nhớ tạm và đọc sheet tối đa 60 giây một lần.
-
-### 5.6 Đơn hàng Tết
-
-- Sale chọn nhóm khách hàng (GT/MTI), app tính khuyến mãi theo Scheme. Cùng một hàm tính khuyến mãi chạy ở cả máy chủ và giao diện.
-- Gửi đơn → ghi vào `DonTet` và email cho CS.
 
 ---
 
