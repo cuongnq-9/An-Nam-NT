@@ -1,6 +1,6 @@
 # HỆ THỐNG ÂN NAM NHA TRANG – TÀI LIỆU TỔNG HỢP
 
-> Cập nhật: 23/11/2026 · Phiên bản hiện tại: **giao diện 23/11/2026-e · máy chủ 2026-11-23b**
+> Cập nhật: 24/11/2026 · Phiên bản hiện tại: **giao diện 24/11/2026-a · máy chủ 2026-11-24a**
 >
 > File này là tài liệu gốc của hệ thống, Claude đọc đầu tiên mỗi phiên làm việc. Sửa hệ thống thì cập nhật file này luôn.
 
@@ -34,6 +34,10 @@ CLAUDE.md              ← tài liệu này
 - Hàm mới gọi từ giao diện phải được thêm vào `API_FUNCS` trong `Code.gs`.
 - **Không sửa phần nhận diện mã QR/barcode** ở màn hình quét (đang chạy ổn).
 - Chủ dự án (anh John Nguyen, quản lý logistics/vận hành) trao đổi bằng **tiếng Việt**.
+
+**Thay đổi ngày 24/11/2026**
+
+- Tính năng **In tem** (giao diện `24/11/2026-a`, máy chủ `2026-11-24a`): màn hình `intem` gửi lệnh in, màn hình `tramin` chạy trên máy tính cạnh máy in tem Xprinter XP-TT426B. Sheet mới `Lenh in`, `Tem pallet` → chạy `setup()` một lần. Chi tiết ở mục 5.7.
 
 **Thay đổi ngày 23/11/2026**
 
@@ -131,6 +135,8 @@ Web app nội bộ cho chi nhánh **Ân Nam Group – Nha Trang** (FMCG). App go
 | `msg` | **Lời nhắn** | Hộp thư / Đã gửi / Soạn lời nhắn nhiều người nhận, thông báo toàn bộ (Admin) |
 | `bday` | **Sinh nhật** | Bài đăng sinh nhật, dòng thời gian lời chúc kèm ảnh, bảng tin 60 ngày |
 | `admin` | **Quản trị** | Người dùng (vai trò, tính năng riêng, phạm vi dữ liệu, ngày sinh, đặt lại mật khẩu), đợt kiểm kê, nhập tồn kho, CCTV |
+| `intem` | **In tem** | 3 loại tem: Rã đông 35×22 (3 tem/hàng), Tem pallet 50×50 (mã ngẫu nhiên → QR), Tùy chỉnh 50×50 (3 phần 50/20/30%). Xem trước, Lệnh in của tôi (đếm ngược 5 phút, Hủy) |
+| `tramin` | **Trạm in tem** | Mở trên máy tính cạnh máy in: hỏi lệnh mỗi 5 giây, in thẳng (Chrome `--kiosk-printing`), căn khổ giấy, In thử |
 | `settings` | **Cài đặt** | Tài khoản, đổi mật khẩu, ngày sinh của tôi, phiên bản giao diện và máy chủ, đăng xuất |
 
 ### 3.3 Hiển thị trên điện thoại
@@ -171,6 +177,8 @@ Web app nội bộ cho chi nhánh **Ân Nam Group – Nha Trang** (FMCG). App go
 | **Loi chuc** | Thời gian · Mã bài (`BD-<username>-<năm>`) · Username · Người gửi · Nội dung · ID ảnh |
 | **Loi nhan** | Thời gian · Mã (`MSG-…`) · Loại (Thông báo / Lời nhắn) · Người gửi · Tên người gửi · Người nhận (`*` = tất cả) · Tên người nhận · Nội dung |
 | **Loi nhan da xem** | Mã · Username · Thời gian |
+| **Lenh in** | Mã lệnh (`IN-yyMMddHHmmss-nnn`) · Gửi lúc · Username · Người gửi · Loại tem (Rã đông / Pallet / Tùy chỉnh) · Khổ · Số tem · Nội dung (JSON) · Hạn in · Trạng thái (Chờ in / Đang in / Đã in / Đã hủy / Lỗi) · Trạm in · Nhận lúc · In lúc · Ghi chú |
+| **Tem pallet** | Mã tem (`P-` + 6 ký tự, bỏ 0/O/1/I/5/S/8/B) · Lệnh in · Ngày tạo · Trạng thái (Chưa dùng / Đã hủy (không in); sau này tính năng Pallet ghi Đang dùng / Đã đóng) · Dùng lúc · Đóng lúc |
 
 **Thuộc tính Script (PropertiesService):** `SCHEDULE_JSON` (lịch giao hàng), `KK_CAMPAIGNS` (các đợt kiểm kê), `KKLC_*`, `DEBT_SYNC_AT`, `BD_FOLDER_ID`, các khóa chống ghi trùng.
 
@@ -278,6 +286,20 @@ Web app nội bộ cho chi nhánh **Ân Nam Group – Nha Trang** (FMCG). App go
 
 **Thứ tự popup khi mở app:** sinh nhật trước, lời nhắn sau.
 
+### 5.7 In tem
+
+```
+Người dùng (intem) ── printRequest ──▶ sheet "Lenh in" (Chờ in, hạn = gửi + 5 phút)
+Máy trạm (tramin) ── printNext mỗi 5 giây ──▶ nhận lệnh cũ nhất còn hạn (Đang in) ──▶ in ──▶ printDone (Đã in / Lỗi)
+```
+
+- **Quyền:** tính năng `intem` cho Thủ kho, Customer service, Admin, Kế toán. Tính năng `tramin` (Trạm in) cho Admin, hoặc gán riêng cho một tài khoản dùng trên máy trạm (Quản trị → Tính năng riêng).
+- **Quy tắc 5 phút:** lệnh chưa in sau 5 phút tự chuyển "Đã hủy", không dồn lại. "Đang in" quá 3 phút mà trạm không báo lại → "Lỗi" (không in lại tự động để tránh in trùng). Lệnh tem pallet bị hủy thì mã tem của lệnh đó chuyển "Đã hủy (không in)".
+- Số tem làm tròn lên cho đủ hàng (2 hoặc 3 tem/hàng), tối đa 200 tem/lệnh. Người dùng tự kiểm tra máy đang lắp đúng cuộn giấy, app chỉ nhắc khổ giấy.
+- **Máy trạm:** cài driver Xprinter XP-TT426B làm máy in mặc định, tạo 2 khổ giấy 104×50 mm và 108×22 mm. Mở Chrome bằng `chrome.exe --kiosk-printing <link app>#tramin`, đăng nhập tài khoản có `tramin`, bấm Bắt đầu. Trạm nhớ trạng thái (`annt_ts_auto`), mở lại tự chạy. Căn khổ lưu ở `annt_ts_cfg`, tên trạm ở `annt_ts_name`.
+- Mỗi hàng tem in thành 1 trang (`@page` = rộng trang × cao tem). QR tạo bằng thư viện `qrcode-generator@1.4.4` (jsDelivr), mã hóa đúng chuỗi mã nên màn hình quét hiện tại đọc được.
+- Máy chủ chỉ đọc 400 dòng cuối của `Lenh in`. Khi không có lệnh mới, `printNext` chỉ ghi nhịp "còn sống" vào bộ nhớ tạm và đọc sheet tối đa 60 giây một lần.
+
 ### 5.6 Đơn hàng Tết
 
 - Sale chọn nhóm khách hàng (GT/MTI), app tính khuyến mãi theo Scheme. Cùng một hàm tính khuyến mãi chạy ở cả máy chủ và giao diện.
@@ -297,9 +319,9 @@ Vai trò chạy ngầm, **không hiển thị** cho người dùng. Admin có th
 | **manager** | Quét, Đơn Tết, Công nợ | Giao, Bàn giao | Xem "Đơn của tôi" của mọi NV giao hàng |
 | **sale** | Quét, Đơn Tết, Công nợ | Giao, Bàn giao | Phạm vi **chỉ khách hàng của mình** (`own`) |
 | **deliveryman** | Quét, Đơn chờ giao, Đơn của tôi | Xuất, Giao, Bàn giao | Không thấy lịch chung, thấy kế hoạch riêng |
-| **store keeper** | Quét, Đơn chờ giao, Kiểm kê, Hủy hàng, Soạn hàng, BC soạn hàng | Xuất, Giao, Bàn giao | Chốt đợt kiểm kê, ghi ảnh soạn hàng |
-| **customer service** | Quét, Đơn Tết, BC soạn hàng | Hoàn CT, Bàn giao | |
-| **accountant** | Quét, Công nợ | Hoàn CT, Bàn giao | Ngang Admin trong Công nợ: sửa số tiền, import, khách hàng |
+| **store keeper** | Quét, Đơn chờ giao, Kiểm kê, Hủy hàng, Soạn hàng, BC soạn hàng, In tem | Xuất, Giao, Bàn giao | Chốt đợt kiểm kê, ghi ảnh soạn hàng |
+| **customer service** | Quét, Đơn Tết, BC soạn hàng, In tem | Hoàn CT, Bàn giao | |
+| **accountant** | Quét, Công nợ, In tem | Hoàn CT, Bàn giao | Ngang Admin trong Công nợ: sửa số tiền, import, khách hàng |
 
 > Trong sheet User, vai trò ghi là `store keeper` và `customer service`. Trong code, khóa vai trò viết liền: `storekeeper`, `customerservice`.
 
@@ -322,6 +344,7 @@ Vai trò chạy ngầm, **không hiển thị** cho người dùng. Admin có th
 | `msg` | Lời nhắn |
 | `notif` | Thông báo |
 | `ho` | Hand Over |
+| `print` / `pt` / `ts` | In tem (máy chủ) / màn hình In tem / Trạm in |
 
 - Hằng số tên sheet: `SH_*`. Tiêu đề cột: `*_HEADERS`.
 
@@ -374,6 +397,9 @@ Vai trò chạy ngầm, **không hiển thị** cho người dùng. Admin có th
 ---
 
 ## 10. Việc còn dở / đề xuất
+
+- [ ] **Quản lý pallet bằng tem QR** (đã duyệt thiết kế 24/11/2026, chưa làm): tem pallet dán 1 lần, kệ R1–R4 × 8 cột × 4 tầng (tem vị trí chỉ có Kệ-Cột, nhân viên chọn tầng), R0 là khu sàn 8 dãy. Bước: Cất hàng, Chuyển vị trí, Lấy ra (FEFO). Dùng chung sheet `Tem pallet`.
+- [ ] Căn khổ in thật trên máy XP-TT426B (In thử ở màn hình Trạm in) và xác nhận Chrome chọn đúng khổ giấy theo `@page`.
 
 - [ ] **Tích hợp GPS Gotrack365 và camera Hikvision** vào dashboard. Đã bàn bước 1 (kiểm tra API, link xem trực tiếp), **chưa làm**, đang chờ anh quyết định.
 - [ ] **Đơn đang mở từng lấy số tiền từ Total amount** mà không có Sales amount: hiện vẫn giữ số cũ. Cần quyết định có tự xóa về trống hay không.

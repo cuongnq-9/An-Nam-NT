@@ -596,6 +596,32 @@ table.grid tr.bad td{background:#fdecea}
 .spin{width:42px;height:42px;border-radius:50%;border:4px solid var(--pri-l);border-top-color:var(--pri);animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .muted{color:var(--muted)}
+/* In tem / Trạm in */
+.pt-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pt-types button{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 4px;font:inherit;font-weight:700;font-size:13.5px;color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.pt-types button small{font-weight:500;font-size:11.5px;color:var(--muted)}
+.pt-types button.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.pt-types button.on small{color:rgba(255,255,255,.85)}
+.pt-prev{display:flex;justify-content:center;align-items:flex-start;padding:14px;background:#eef1ee;border-radius:12px;overflow:hidden}
+.pt-prev .lb{box-shadow:0 1px 4px rgba(0,0,0,.18);border-radius:1.5mm}
+.pt-zoom{transform-origin:top center}
+.pt-st{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;font-size:13.5px;font-weight:600;margin-bottom:12px}
+.pt-st.on{background:var(--green-l);color:var(--green)}.pt-st.off{background:var(--amber-l);color:var(--amber)}
+.pt-dot{width:10px;height:10px;border-radius:50%;background:currentColor;flex:none}
+#pt-form input[type=date]{min-width:0;width:100%}
+#pt-form .pt-2col>div{min-width:0}
+.pt-warn{margin-top:12px;padding:9px 12px;border-radius:10px;background:var(--amber-l);color:var(--amber);font-size:13.5px;font-weight:600}
+.pt-job{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}
+.pt-job:last-child{border-bottom:0}
+.pt-job .id{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--muted)}
+.pt-job .ds{font-weight:600;font-size:14px}
+.pt-job .rt{text-align:right;flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.pt-cd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--muted)}
+.ts-big{display:flex;align-items:center;gap:12px;padding:16px;border-radius:14px;font-size:18px;font-weight:800}
+.ts-big.on{background:var(--green-l);color:var(--green)}.ts-big.off{background:#eceff1;color:#455a64}.ts-big.err{background:var(--red-l);color:var(--red)}
+.ts-cfg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.ts-cfg label{font-size:12px;color:var(--muted);font-weight:600}
+@media(max-width:560px){.ts-cfg{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -802,6 +828,58 @@ table.grid tr.bad td{background:#fdecea}
         <button class="btn block red" id="wo-save">Lưu báo cáo hủy</button>
       </div>
       <div class="card hidden" id="wo-hist-card"><h4>Đã báo cáo trong phiên này</h4><div id="wo-hist"></div></div>
+    </div>
+
+    <!-- IN TEM -->
+    <div class="view hidden" id="v-intem">
+      <div id="pt-st"></div>
+      <div class="card">
+        <div class="pt-types" id="pt-type">
+          <button data-pt="thaw">🧊 Tem rã đông<small>35×22 mm · 3 tem/hàng</small></button>
+          <button data-pt="pal" class="on">📦 Tem pallet<small>50×50 mm · 2 tem/hàng</small></button>
+          <button data-pt="cus">✏️ Tùy chỉnh<small>50×50 mm · 2 tem/hàng</small></button>
+        </div>
+        <div id="pt-form"></div>
+        <label class="f">Xem trước (kích thước thật)</label>
+        <div class="pt-prev" id="pt-prev"></div>
+        <label class="f" for="pt-n">Số tem</label>
+        <input class="inp" id="pt-n" type="number" min="1" max="200" inputmode="numeric">
+        <div class="muted" id="pt-nnote" style="font-size:12.5px;margin-top:4px"></div>
+        <div class="pt-warn" id="pt-warn"></div>
+        <button class="btn block" id="pt-send" style="margin-top:12px">Gửi lệnh in</button>
+      </div>
+      <div class="card">
+        <div class="grp-head"><div><div class="t">Lệnh in của tôi</div><div class="note">24 giờ gần nhất · lệnh chờ quá 5 phút sẽ tự hủy</div></div>
+          <button class="btn ghost" id="pt-reload" style="padding:8px 12px;white-space:nowrap;flex:none">Tải lại</button></div>
+        <div id="pt-jobs" style="margin-top:6px"></div>
+      </div>
+    </div>
+
+    <!-- TRẠM IN TEM (máy tính cạnh máy in) -->
+    <div class="view hidden" id="v-tramin">
+      <div class="card">
+        <div id="ts-stat"></div>
+        <label class="f" for="ts-name">Tên trạm in</label>
+        <input class="inp" id="ts-name" placeholder="VD: Trạm in kho">
+        <button class="btn block" id="ts-run" style="margin-top:12px">Bắt đầu nhận lệnh in</button>
+        <div class="muted" style="font-size:12.5px;margin-top:8px">Để máy tính này luôn mở màn hình này. Trạm hỏi máy chủ mỗi 5 giây, chỉ in lệnh gửi trong 5 phút gần nhất.</div>
+      </div>
+      <div class="card"><h4>Lệnh đã xử lý</h4><div id="ts-log" class="muted" style="font-size:13.5px">Chưa có lệnh nào.</div></div>
+      <div class="card">
+        <h4>Căn khổ giấy</h4>
+        <div class="muted" style="font-size:12.5px;margin-bottom:10px">Mỗi hàng tem được in thành 1 trang. Chỉnh rồi bấm In thử cho tới khi tem nằm đúng ô.</div>
+        <div id="ts-cfg"></div>
+      </div>
+      <div class="card">
+        <h4>Cài đặt máy trạm (làm một lần)</h4>
+        <ol style="padding-left:20px;line-height:1.75;margin:6px 0 0;font-size:14px">
+          <li>Cài driver Xprinter XP-TT426B, đặt làm <b>máy in mặc định</b>.</li>
+          <li>Trong driver tạo 2 khổ giấy: <b>104 × 50 mm</b> (cuộn 50×50, 2 tem) và <b>108 × 22 mm</b> (cuộn 35×22, 3 tem).</li>
+          <li>Tạo shortcut Chrome: <code>chrome.exe --kiosk-printing &lt;link app&gt;#tramin</code> để in thẳng, không hiện hộp thoại.</li>
+          <li>Đăng nhập bằng tài khoản có tính năng <b>Trạm in tem</b>, bấm Bắt đầu. Lần sau mở máy, trạm tự chạy lại.</li>
+          <li>Tắt chế độ ngủ của máy tính. Người in tự kiểm tra máy đang lắp đúng cuộn giấy trước khi in.</li>
+        </ol>
+      </div>
     </div>
 
     <!-- CHỨNG TỪ CHỜ HOÀN TRẢ -->
@@ -1125,6 +1203,7 @@ loadPromo(document.getElementById('promo-src').textContent);
 
 /* ========= ICONS ========= */
 const ICON = {
+  print:'<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
   truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
   search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
   bank:'<path d="M3 22h18"/><path d="M6 18v-7M10 18v-7M14 18v-7M18 18v-7"/><path d="M12 2 20 7H4z"/>',
@@ -1199,8 +1278,8 @@ async function api(fn, ...args){
 /* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
  * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
  * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
-const APP_VER = '23/11/2026-e';
-const NEED_SERVER = '2026-11-23b';      // phiên bản Code.gs tương ứng
+const APP_VER = '24/11/2026-a';
+const NEED_SERVER = '2026-11-24a';      // phiên bản Code.gs tương ứng
 async function checkUpdate(auto){
   if (location.protocol === 'file:') return;
   try {
@@ -1429,6 +1508,8 @@ const VIEWS = {
   huyhang:  { title: 'BC Hủy hàng',       icon: 'trash',  color: 'linear-gradient(135deg,#e53935,#b71c1c)', label: 'BC Hủy hàng' },
   soanhang: { title: 'Soạn hàng',         icon: 'cart',   color: 'linear-gradient(135deg,#8e24aa,#5e35b1)', label: 'Soạn hàng' },
   bcsoan:   { title: 'Báo cáo soạn hàng', icon: 'cam',    color: 'linear-gradient(135deg,#6d4c41,#3e2723)', label: 'BC Soạn hàng' },
+  intem:    { title: 'In tem',            icon: 'print',  color: 'linear-gradient(135deg,#546e7a,#263238)', label: 'In tem' },
+  tramin:   { title: 'Trạm in tem',       icon: 'print',  color: 'linear-gradient(135deg,#3d7a57,#182e22)', label: 'Trạm in tem' },
   congno:   { title: 'Công nợ',           icon: 'money',  color: 'linear-gradient(135deg,#c62828,#7f0000)', label: 'Công nợ' },
   msg:      { title: 'Lời nhắn',           icon: 'doc',    color: 'linear-gradient(135deg,#1e88e5,#0d47a1)', label: 'Lời nhắn' },
   bday:     { title: 'Sinh nhật',          icon: 'doc',    color: 'linear-gradient(135deg,#ec407a,#ad1457)', label: 'Sinh nhật' },
@@ -1463,6 +1544,8 @@ function go(view){
   if (S.view === 'scan' && view !== 'scan') qrStop();
   if (S.view === 'kiemke' && view !== 'kiemke') { try { kcsSheetClose(); kcsFlush(); } catch (e) {} }
   if (S.view === 'bcsoan' && view !== 'bcsoan' && typeof bcsCamStop === 'function') bcsCamStop();
+  if (S.view === 'intem' && view !== 'intem') ptStop();
+  if (S.view === 'tramin' && view !== 'tramin' && TS.run) tsStop(true);   // rời màn hình: dừng nhưng lần sau mở lại vẫn tự chạy
   if (S.user && S.user.mustChange && view !== 'settings') { toast('Vui lòng đổi mật khẩu trước khi sử dụng.'); view = 'settings'; }
   S.view = view;
   // Ghi nhớ màn hình đang mở → bấm làm mới (F5 / kéo xuống) vẫn ở lại đúng màn hình này
@@ -1489,6 +1572,8 @@ function go(view){
   if (view === 'msg') loadMsg();
   if (view === 'congno') DB.loading = loadDebt();
   if (view === 'bcsoan') initBcs();
+  if (view === 'intem') initIntem();
+  if (view === 'tramin') initTramin();
   if (view === 'bank') renderBank();
   if (view === 'schedule') loadSchedule();
   if (view === 'home') { HERO.off = 0; HERO.ses = null; loadHero(); loadBdHome(); }
@@ -4619,6 +4704,280 @@ $('se-save').addEventListener('click', async () => {
   finally { loading(false); }
 });
 
+
+/* ========= IN TEM =========
+ * Người dùng gửi lệnh → máy chủ (sheet "Lenh in") → máy trạm in (#tramin) tự nhận lệnh và in ra máy tem.
+ * Lệnh chờ quá 5 phút tự hủy. Cùng 1 hàm vẽ tem cho phần xem trước và trang in. */
+const PT_TYPES = {
+  thaw: { name: 'Rã đông',   w: 35, h: 22, cols: 3, size: '35×22', cfg: '35' },
+  pal:  { name: 'Pallet',    w: 50, h: 50, cols: 2, size: '50×50', cfg: '50' },
+  cus:  { name: 'Tùy chỉnh', w: 50, h: 50, cols: 2, size: '50×50', cfg: '50' }
+};
+const PT_LABEL_CSS = `.lb{box-sizing:border-box;overflow:hidden;background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;flex:none}
+.lb-pal{width:50mm;height:50mm;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5mm}
+.lb-pal svg{width:37mm;height:37mm;display:block}
+.lb-pal .cd{font-weight:900;font-size:6mm;letter-spacing:.4mm;margin-top:.6mm;white-space:nowrap}
+.lb-thaw{width:35mm;height:22mm;display:flex;flex-direction:column;justify-content:center;gap:1.8mm;padding:0 1.5mm}
+.lb-thaw div{white-space:nowrap;line-height:1.15;overflow:hidden}
+.lb-cus{width:50mm;height:50mm;display:grid;grid-template-rows:50% 20% 30%;padding:2mm}
+.lb-cus>div{display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;line-height:1.15;min-width:0;min-height:0;overflow-wrap:anywhere}
+.lb-cus .p1{font-weight:700;white-space:pre-line}
+.lb-cus .p2{white-space:pre-line;border-top:.2mm solid #000;border-bottom:.2mm solid #000}
+.lb-cus .p3{font-weight:900;white-space:nowrap}`;
+(function(){ const s = document.createElement('style'); s.textContent = PT_LABEL_CSS; document.head.appendChild(s); })();
+const PT = { type: 'pal', n: { thaw: 3, pal: 20, cus: 2 }, d1: '', d2: '', c1: '', c2: '', c3: '', data: null, skew: 0, list: null, tick: null, sending: false };
+const ptIso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const ptVn = s => { const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? m[3] + '/' + m[2] + '/' + m[1] : String(s || ''); };
+
+function loadQrLib(){
+  return window.qrcode ? Promise.resolve() : new Promise((ok, fail) => {
+    const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+    s.onload = ok; s.onerror = () => fail(new Error('Không tải được thư viện tạo mã QR.')); document.head.appendChild(s);
+  });
+}
+/** Mã QR dạng SVG (vuông, có lề 2 ô) – cần gọi loadQrLib() trước */
+function ptQrSvg(text){
+  const q = window.qrcode(0, 'M'); q.addData(String(text)); q.make();
+  const n = q.getModuleCount(), m = 2; let d = '';
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    if (!q.isDark(y, x)) continue;
+    let w = 1; while (x + w < n && q.isDark(y, x + w)) w++;
+    d += `M${x + m} ${y + m}h${w}v1h-${w}z`; x += w - 1;
+  }
+  return `<svg viewBox="0 0 ${n + 2 * m} ${n + 2 * m}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+}
+/** HTML 1 tem. kind: thaw | pal | cus ; d: { code } | { d1, d2 } (dd/mm/yyyy) | { c1, c2, c3 } */
+function ptLabel(kind, d){
+  if (kind === 'pal') return `<div class="lb lb-pal">${ptQrSvg(d.code)}<div class="cd">${esc(d.code)}</div></div>`;
+  if (kind === 'thaw') return `<div class="lb lb-thaw"><div class="ptfit" data-max="3.3">Ngày rã đông: <b>${esc(d.d1)}</b></div><div class="ptfit" data-max="3.3">HSD sau rã đông: <b>${esc(d.d2)}</b></div></div>`;
+  return `<div class="lb lb-cus"><div class="p1 ptfit" data-max="6.2">${esc(d.c1)}</div><div class="p2 ptfit" data-max="3.8">${esc(d.c2)}</div><div class="p3 ptfit" data-max="15">${esc(d.c3)}</div></div>`;
+}
+/** Co chữ cho vừa ô (đơn vị data-max: mm) */
+function ptFit(root){
+  root.querySelectorAll('.ptfit').forEach(el => {
+    let fs = parseFloat(el.dataset.max) * 3.7795; el.style.fontSize = fs + 'px';
+    let g = 0;
+    while ((el.scrollWidth > el.clientWidth + 0.5 || el.scrollHeight > el.clientHeight + 0.5) && fs > 4 && g++ < 80) { fs *= 0.95; el.style.fontSize = fs + 'px'; }
+  });
+}
+
+function initIntem(){
+  if (!PT.d1) { const t = new Date(), h = new Date(); h.setMonth(h.getMonth() + 6); PT.d1 = ptIso(t); PT.d2 = ptIso(h); }
+  ptForm(); ptLoad();
+  clearInterval(PT.tick); PT.tick = setInterval(ptTick, 1000);
+}
+function ptStop(){ clearInterval(PT.tick); PT.tick = null; }
+function ptForm(){
+  const t = PT.type, T = PT_TYPES[t];
+  document.querySelectorAll('#pt-type button').forEach(b => b.classList.toggle('on', b.dataset.pt === t));
+  if (t === 'thaw') $('pt-form').innerHTML = `<div class="pt-2col" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
+      <div><label class="f" for="pt-d1">Ngày rã đông</label><input class="inp" type="date" id="pt-d1" value="${PT.d1}"></div>
+      <div><label class="f" for="pt-d2">HSD sau rã đông</label><input class="inp" type="date" id="pt-d2" value="${PT.d2}"></div></div>`;
+  else if (t === 'pal') $('pt-form').innerHTML = `<div class="muted" style="font-size:13.5px;margin-top:12px">Hệ thống tự tạo mã ngẫu nhiên không trùng (VD: P-7KQ3HX), in thành mã QR to, mã chữ ở dưới. Mã thật được tạo khi gửi lệnh.</div>`;
+  else $('pt-form').innerHTML = `<label class="f" for="pt-c1">Phần 1 · chữ vừa · 50% tem (xuống dòng được)</label><textarea class="inp" id="pt-c1" rows="2" placeholder="VD: MÌ Ý SPAGHETTI 500G">${esc(PT.c1)}</textarea>
+      <label class="f" for="pt-c2">Phần 2 · chữ nhỏ · 20% tem</label><input class="inp" id="pt-c2" value="${esc(PT.c2)}" placeholder="VD: Khách: Siêu thị Nha Trang">
+      <label class="f" for="pt-c3">Phần 3 · chữ to nhất · 1 dòng · 30% tem</label><input class="inp" id="pt-c3" value="${esc(PT.c3)}" placeholder="VD: SO-26112401">`;
+  $('pt-n').value = PT.n[t];
+  $('pt-warn').innerHTML = `⚠ Kiểm tra máy in đang lắp cuộn <b>${T.size} mm</b> trước khi in.`;
+  ptPreview();
+}
+async function ptPreview(){
+  const t = PT.type, T = PT_TYPES[t], box = $('pt-prev');
+  const d = t === 'pal' ? { code: 'P-XXXXXX' } : t === 'thaw' ? { d1: ptVn(PT.d1) || '__/__/____', d2: ptVn(PT.d2) || '__/__/____' } : { c1: PT.c1, c2: PT.c2, c3: PT.c3 };
+  if (t === 'pal') { try { await loadQrLib(); } catch (e) { box.innerHTML = '<div class="muted">' + esc(e.message) + '</div>'; return; } }
+  if (PT.type !== t) return;
+  const z = t === 'thaw' ? 1.6 : 1;
+  box.innerHTML = `<div class="pt-zoom" style="transform:scale(${z});height:${T.h * z}mm">${ptLabel(t, d)}</div>`;
+  ptFit(box);
+  const n = Math.max(1, Math.floor(+$('pt-n').value || 0)), r = Math.ceil(n / T.cols) * T.cols;
+  $('pt-nnote').textContent = (r !== n ? `Sẽ in ${r} tem cho đủ hàng. ` : '') + `${r / T.cols} hàng × ${T.cols} tem · khổ ${T.size} mm · tối đa 200 tem/lệnh`;
+}
+async function ptLoad(){
+  try {
+    const d = await api('printList');
+    PT.list = d; PT.skew = d.now - Date.now(); ptRender();
+  } catch (e) { $('pt-jobs').innerHTML = '<div class="muted">' + esc(e.message) + '</div>'; }
+}
+function ptStationOn(){ const s = PT.list && PT.list.station; return !!(s && s.at && (Date.now() + PT.skew) - s.at < 60000); }
+function ptRender(){
+  const d = PT.list; if (!d) return;
+  const s = d.station, on = ptStationOn();
+  $('pt-st').innerHTML = on
+    ? `<div class="pt-st on"><span class="pt-dot"></span>Trạm in đang chạy${s.name ? ' · ' + esc(s.name) : ''}</div>`
+    : `<div class="pt-st off"><span class="pt-dot"></span>Trạm in đang tắt. Lệnh gửi bây giờ chỉ được giữ 5 phút, quá hạn sẽ tự hủy.</div>`;
+  const cls = { 'Chờ in': 'st-wait', 'Đang in': 'st-ship', 'Đã in': 'st-done', 'Đã hủy': 'st-cancel', 'Lỗi': 'st-cancel' };
+  $('pt-jobs').innerHTML = d.items.length ? d.items.map(j => {
+    const c = j.content || {};
+    const ds = j.type === 'Rã đông' ? `${j.qty} tem rã đông · ${esc(c.d1 || '')} → ${esc(c.d2 || '')}`
+      : j.type === 'Pallet' ? `${j.qty} tem pallet · ${esc((c.codes || []).join(', '))}${c.more ? ' … +' + c.more : ''}`
+      : `${j.qty} tem tùy chỉnh · ${esc(c.c3 || String(c.c1 || '').split('\n')[0])}`;
+    const live = j.status === 'Chờ in';
+    return `<div class="pt-job"><div style="min-width:0"><div class="ds">${ds}</div><div class="id">${esc(j.id)} · gửi ${esc(j.time)}</div>
+      ${j.note ? `<div class="muted" style="font-size:12.5px">${esc(j.note)}</div>` : ''}${j.printedAt ? `<div class="muted" style="font-size:12.5px">In lúc ${esc(j.printedAt)}</div>` : ''}</div>
+      <div class="rt"><span class="badge ${cls[j.status] || 'st-other'}">${esc(j.status)}</span>
+      ${live ? `<span class="pt-cd" data-exp="${j.expire}"></span><button class="btn light" data-ptcancel="${esc(j.id)}" style="padding:5px 10px;font-size:12.5px">Hủy</button>` : ''}</div></div>`;
+  }).join('') : '<div class="muted" style="padding:8px 0">Chưa có lệnh in nào trong 24 giờ qua.</div>';
+  ptTick(true);
+}
+let ptTickN = 0;
+function ptTick(only){
+  const now = Date.now() + PT.skew; let expired = false;
+  document.querySelectorAll('#pt-jobs .pt-cd').forEach(el => {
+    const left = Math.max(0, +el.dataset.exp - now);
+    if (!left) expired = true;
+    el.textContent = 'còn ' + Math.floor(left / 60000) + ':' + String(Math.floor(left / 1000) % 60).padStart(2, '0');
+  });
+  if (only === true) return;
+  ptTickN++;
+  const busy = PT.list && PT.list.items.some(j => j.status === 'Chờ in' || j.status === 'Đang in');
+  if ((busy && ptTickN % 5 === 0) || ptTickN % 20 === 0 || (expired && ptTickN % 3 === 0)) ptLoad();
+}
+async function ptSend(){
+  if (PT.sending) return;
+  const t = PT.type, req = { type: t, qty: Math.floor(+$('pt-n').value || 0), reqId: 'pt-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7) };
+  if (req.qty < 1) { toast('Nhập số tem cần in.'); return; }
+  if (t === 'thaw') { if (!PT.d1 || !PT.d2) { toast('Nhập đủ Ngày rã đông và HSD sau rã đông.'); return; } req.d1 = PT.d1; req.d2 = PT.d2; }
+  if (t === 'cus') { if (!(PT.c1 + PT.c2 + PT.c3).trim()) { toast('Nhập nội dung tem.'); return; } req.c1 = PT.c1; req.c2 = PT.c2; req.c3 = PT.c3; }
+  PT.sending = true; $('pt-send').disabled = true;
+  try {
+    const r = await api('printRequest', req);
+    const on = r.station && r.station.at && Date.now() + PT.skew - r.station.at < 60000;
+    toast(r.dup ? 'Lệnh này đã được gửi rồi.' : on ? `Đã gửi lệnh ${r.id} (${r.qty} tem).` : `Đã gửi lệnh ${r.id}. Trạm in đang tắt: nếu 5 phút nữa trạm chưa chạy, lệnh sẽ tự hủy.`, 4500);
+    ptLoad();
+  } catch (e) { toast(e.message, 5000); }
+  finally { PT.sending = false; $('pt-send').disabled = false; }
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('#pt-type [data-pt],[data-ptcancel],#pt-send,#pt-reload'); if (!b) return;
+  if (b.dataset.pt) { PT.type = b.dataset.pt; ptForm(); return; }
+  if (b.id === 'pt-send') { ptSend(); return; }
+  if (b.id === 'pt-reload') { ptLoad(); return; }
+  if (b.dataset.ptcancel) {
+    b.disabled = true;
+    try { await api('printCancel', b.dataset.ptcancel); toast('Đã hủy lệnh ' + b.dataset.ptcancel); } catch (err) { toast(err.message, 4500); }
+    ptLoad();
+  }
+});
+document.addEventListener('input', e => {
+  const id = e.target.id; if (!/^pt-(n|d1|d2|c1|c2|c3)$/.test(id)) return;
+  const v = e.target.value;
+  if (id === 'pt-n') PT.n[PT.type] = v; else PT[id.slice(3)] = v;
+  ptPreview();
+});
+
+/* ========= TRẠM IN TEM (máy tính cạnh máy in) =========
+ * Chrome mở với cờ --kiosk-printing → window.print() in thẳng ra máy in mặc định, không hiện hộp thoại.
+ * Mỗi hàng tem = 1 trang: khổ trang (pw × chiều cao tem), lề trái ml, khoảng cách gap, lề trên mt (mm). */
+const TS_DEF = { '50': { pw: 104, gap: 2, ml: 1, mt: 0 }, '35': { pw: 108, gap: 1.5, ml: 0, mt: 0 } };
+const TS = { run: false, busy: false, timer: null, wake: null, last: 0, err: '', log: [], cfg: null, name: '' };
+function tsCfg(){
+  if (!TS.cfg) { const c = store.get('annt_ts_cfg') || {}; TS.cfg = { '50': Object.assign({}, TS_DEF['50'], c['50']), '35': Object.assign({}, TS_DEF['35'], c['35']) }; }
+  return TS.cfg;
+}
+function initTramin(){
+  TS.name = store.get('annt_ts_name') || 'Trạm in kho';
+  $('ts-name').value = TS.name;
+  tsCfgRender(); tsRender();
+  if (store.get('annt_ts_auto') && !TS.run) tsStart();
+}
+function tsCfgRender(){
+  const c = tsCfg(), f = (k, key, lb) => `<div><label for="ts-${k}-${key}">${lb}</label><input class="inp" type="number" step="0.5" id="ts-${k}-${key}" data-tsk="${k}" data-tsf="${key}" value="${c[k][key]}"></div>`;
+  $('ts-cfg').innerHTML = ['50', '35'].map(k => `<div style="margin-bottom:14px"><b>${k === '50' ? 'Cuộn 50×50 mm · 2 tem (Pallet, Tùy chỉnh)' : 'Cuộn 35×22 mm · 3 tem (Rã đông)'}</b>
+    <div class="ts-cfg" style="margin-top:6px">${f(k, 'pw', 'Rộng trang (mm)')}${f(k, 'gap', 'Cách giữa tem (mm)')}${f(k, 'ml', 'Lề trái (mm)')}${f(k, 'mt', 'Lề trên (mm)')}</div>
+    <button class="btn light" data-tstest="${k}" style="margin-top:8px;padding:8px 12px">In thử 1 hàng</button></div>`).join('');
+}
+function tsRender(){
+  const st = $('ts-stat'); if (!st) return;
+  const ago = TS.last ? Math.round((Date.now() - TS.last) / 1000) : null;
+  st.innerHTML = !TS.run ? `<div class="ts-big off"><span class="pt-dot"></span>Trạm đang dừng</div>`
+    : TS.err ? `<div class="ts-big err"><span class="pt-dot"></span>Lỗi kết nối: ${esc(TS.err)}</div>`
+    : `<div class="ts-big on"><span class="pt-dot"></span>Đang nhận lệnh in${ago != null ? ' · hỏi lúc ' + ago + ' giây trước' : ''}</div>`;
+  $('ts-run').textContent = TS.run ? 'Dừng trạm in' : 'Bắt đầu nhận lệnh in';
+  $('ts-run').classList.toggle('red', TS.run);
+  $('ts-log').innerHTML = TS.log.length ? TS.log.map(x => `<div style="padding:6px 0;border-bottom:1px solid var(--line)"><b>${esc(x.time)}</b> · ${esc(x.text)}</div>`).join('') : 'Chưa có lệnh nào.';
+}
+async function tsStart(){
+  TS.run = true; TS.err = ''; store.set('annt_ts_auto', true);
+  try { if (navigator.wakeLock) TS.wake = await navigator.wakeLock.request('screen'); } catch (e) {}
+  tsRender(); clearTimeout(TS.timer); tsPoll();
+}
+function tsStop(keepAuto){
+  TS.run = false; clearTimeout(TS.timer);
+  if (!keepAuto) store.del('annt_ts_auto');
+  try { if (TS.wake) TS.wake.release(); } catch (e) {} TS.wake = null;
+  tsRender();
+}
+async function tsPoll(){
+  if (!TS.run || TS.busy) return;
+  TS.busy = true; let job = null;
+  try {
+    job = await api('printNext', TS.name);
+    TS.last = Date.now(); TS.err = '';
+    if (job) await tsPrintJob(job);
+  } catch (e) { TS.err = e.message; }
+  finally {
+    TS.busy = false; tsRender();
+    if (TS.run) TS.timer = setTimeout(tsPoll, job ? 800 : 5000);
+  }
+}
+function tsItems(job){
+  const c = job.content || {};
+  if (job.kind === 'pal') return (c.codes || []).map(code => ({ code }));
+  if (job.kind === 'thaw') return Array.from({ length: job.qty }, () => ({ d1: c.d1, d2: c.d2 }));
+  return Array.from({ length: job.qty }, () => ({ c1: c.c1 || '', c2: c.c2 || '', c3: c.c3 || '' }));
+}
+async function tsPrintJob(job){
+  const time = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  try {
+    if (!PT_TYPES[job.kind]) throw new Error('Loại tem không rõ: ' + job.type);
+    await tsPrint(job.kind, tsItems(job));
+    await api('printDone', job.id, true);
+    TS.log.unshift({ time, text: `Đã in ${job.id}: ${job.qty} tem ${job.type} (${job.by})` });
+  } catch (e) {
+    try { await api('printDone', job.id, false, e.message); } catch (e2) {}
+    TS.log.unshift({ time, text: `Lỗi ${job.id}: ${e.message}` });
+  }
+  TS.log = TS.log.slice(0, 30);
+}
+/** In danh sách tem qua iframe ẩn: mỗi hàng (2 hoặc 3 tem) là 1 trang */
+async function tsPrint(kind, items){
+  const T = PT_TYPES[kind], c = tsCfg()[T.cfg];
+  if (kind === 'pal') await loadQrLib();
+  const rows = [];
+  for (let i = 0; i < items.length; i += T.cols) rows.push(items.slice(i, i + T.cols));
+  const html = `<!doctype html><html><head><meta charset="utf-8"><style>
+@page{size:${c.pw}mm ${T.h}mm;margin:0}
+html,body{margin:0;padding:0;background:#fff}
+.pg{width:${c.pw}mm;height:${T.h}mm;box-sizing:border-box;padding:${c.mt}mm 0 0 ${c.ml}mm;display:flex;gap:${c.gap}mm;overflow:hidden;break-after:page;page-break-after:always}
+.pg:last-child{break-after:auto;page-break-after:auto}
+${PT_LABEL_CSS}</style></head><body>${rows.map(r => `<div class="pg">${r.map(d => ptLabel(kind, d)).join('')}</div>`).join('')}</body></html>`;
+  const fr = document.createElement('iframe');
+  fr.style.cssText = `position:fixed;left:-10000px;top:0;width:${c.pw + 10}mm;height:${T.h + 10}mm;border:0`;
+  document.body.appendChild(fr);
+  try {
+    const doc = fr.contentDocument; doc.open(); doc.write(html); doc.close();
+    await new Promise(r => setTimeout(r, 150));
+    try { await doc.fonts.ready; } catch (e) {}
+    ptFit(doc);
+    fr.contentWindow.focus();
+    fr.contentWindow.print();
+    await new Promise(r => setTimeout(r, 1000));
+  } finally { setTimeout(() => fr.remove(), 3000); }
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('#ts-run,[data-tstest]'); if (!b) return;
+  if (b.id === 'ts-run') { TS.run ? tsStop() : tsStart(); return; }
+  const k = b.dataset.tstest, today = new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  try {
+    if (k === '50') await tsPrint('cus', [{ c1: 'IN THỬ\nCuộn 50×50', c2: TS.name, c3: 'TEST-50' }, { c1: 'IN THỬ\nCuộn 50×50', c2: TS.name, c3: 'TEST-50' }]);
+    else await tsPrint('thaw', [1, 2, 3].map(() => ({ d1: today, d2: today })));
+  } catch (err) { toast(err.message, 5000); }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'ts-name') { TS.name = e.target.value.trim() || 'Trạm in kho'; store.set('annt_ts_name', TS.name); return; }
+  const k = e.target.dataset && e.target.dataset.tsk; if (!k) return;
+  tsCfg()[k][e.target.dataset.tsf] = parseFloat(e.target.value) || 0; store.set('annt_ts_cfg', TS.cfg);
+});
 
 boot();
 

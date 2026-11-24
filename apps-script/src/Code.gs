@@ -51,20 +51,21 @@ const ROLE_LABELS = {
  */
 const COMMON_FEATURES = ['bc', 'update', 'lookup', 'bank', 'schedule'];
 const ROLE_FEATURES = {
-  admin:           ['scan', 'waiting', 'mine', 'tetnew', 'tetlist', 'kiemke', 'huyhang', 'soanhang', 'bcsoan', 'congno'],
+  admin:           ['scan', 'waiting', 'mine', 'tetnew', 'tetlist', 'kiemke', 'huyhang', 'soanhang', 'bcsoan', 'congno', 'intem', 'tramin'],
   manager:         ['scan', 'tetnew', 'tetlist', 'congno'],
   sale:            ['scan', 'tetnew', 'tetlist', 'congno'],
   deliveryman:     ['scan', 'waiting', 'mine'],
-  storekeeper:     ['scan', 'waiting', 'kiemke', 'huyhang', 'soanhang', 'bcsoan'],
-  customerservice: ['scan', 'tetnew', 'tetlist', 'bcsoan'],
-  accountant:      ['scan', 'congno']
+  storekeeper:     ['scan', 'waiting', 'kiemke', 'huyhang', 'soanhang', 'bcsoan', 'intem'],
+  customerservice: ['scan', 'tetnew', 'tetlist', 'bcsoan', 'intem'],
+  accountant:      ['scan', 'congno', 'intem']
 };
 // Danh sách tính năng riêng mà admin có thể gán cho từng user trên màn hình Quản trị
 const FEATURE_LABELS = {
   scan: 'Quét mã QR', waiting: 'Đơn chờ giao', mine: 'Đơn của tôi (giao hàng)',
   tetnew: 'Lên đơn Tết', tetlist: 'Đơn Tết đã gửi',
   kiemke: 'Kiểm kê', huyhang: 'BC Hủy hàng', soanhang: 'Soạn hàng',
-  bcsoan: 'Báo cáo soạn hàng', congno: 'Công nợ'
+  bcsoan: 'Báo cáo soạn hàng', congno: 'Công nợ',
+  intem: 'In tem', tramin: 'Trạm in tem (máy tính cạnh máy in)'
 };
 /* Phạm vi dữ liệu mặc định theo vai trò:
  *   own = chỉ xem đơn của chính mình, không có bộ lọc (Sale)
@@ -90,7 +91,7 @@ const PERM = {
 };
 
 /* ================== WEB APP ================== */
-const CODE_VERSION = '2026-11-23b';
+const CODE_VERSION = '2026-11-24a';
 
 function doGet(e) {
   // Kiểm tra kết nối: mở <link /exec>?ping=1 trên trình duyệt để xem máy chủ có chạy không
@@ -117,7 +118,8 @@ const API_FUNCS = {
   getOpsMaster, kkGetState, kkSave, kkSummary, kkFinish, adminImportStock, adminCreateCampaign, adminReopenCampaign, kkClaim, kkRelease,
   whSaveWriteOff, pickSearch, pickConfirm, pickOrders, pickComplete, pickHistory,
   listStaff, docsPending, adminSetPrioBy, bdHome, bdPost, bdWish, bdImage, setMyDob, getMyDob, msgInbox, msgSend, msgRead, debtReport, debtSetStatus, debtCustList, debtCustSave, debtCustDelete, debtOpenSave, debtSetAmount, debtExport, debtSaveRows, debtOrders, notifList, notifRead,
-  debtThread, debtPostMsg, debtSaveNote, debtUpload, debtFile, cctvList, adminSaveCctv, bcsUpload, bcsSave, bcsSearch, bcsPhoto
+  debtThread, debtPostMsg, debtSaveNote, debtUpload, debtFile, cctvList, adminSaveCctv, bcsUpload, bcsSave, bcsSearch, bcsPhoto,
+  printRequest, printList, printCancel, printNext, printDone
 };
 function doPost(e) {
   let out;
@@ -191,6 +193,9 @@ function setup() {
   DriveApp.getFolderById(QLCN_FOLDER_ID).getName();    // thư mục QL Cong no (tệp đính kèm công nợ)
   appSheet_(SH_BCS, BCS_HEADERS);
   DriveApp.getFolderById(BCS_FOLDER_ID).getName();     // thư mục ảnh soạn hàng
+  // In tem: hàng chờ lệnh in + danh sách mã tem pallet đã tạo
+  printSheet_();
+  appSheet_(SH_TEM, TEM_HEADERS);
 
   let t = ss.getSheetByName(SHEET_TET);
   if (!t) {
@@ -3500,4 +3505,209 @@ function msgRead(token, ids) {
     sh.getRange(sh.getLastRow() + 1, 1, add.length, 3).setValues(add.map(id => [id, u.username, now]));
   }
   return { ok: true, marked: add.length };
+}
+/* ================== IN TEM (hàng chờ lệnh in → máy trạm in cạnh máy in tem) ==================
+ * Người dùng (tính năng "intem") gửi lệnh → sheet "Lenh in" (Chờ in).
+ * Máy trạm (tính năng "tramin") hỏi printNext mỗi 5 giây, in, rồi báo printDone.
+ * Lệnh chờ quá 5 phút mà chưa in → "Đã hủy", không dồn lại.
+ * Loại tem:  thaw = Rã đông 35×22 mm, 3 tem/hàng · pal = Tem pallet 50×50, 2 tem/hàng · cus = Tùy chỉnh 50×50, 2 tem/hàng
+ */
+const SH_PRINT = 'Lenh in';
+const PRINT_HEADERS = ['Mã lệnh', 'Gửi lúc', 'Username', 'Người gửi', 'Loại tem', 'Khổ', 'Số tem', 'Nội dung',
+                       'Hạn in', 'Trạng thái', 'Trạm in', 'Nhận lúc', 'In lúc', 'Ghi chú'];
+const SH_TEM = 'Tem pallet';
+const TEM_HEADERS = ['Mã tem', 'Lệnh in', 'Ngày tạo', 'Trạng thái', 'Dùng lúc', 'Đóng lúc'];
+const PRINT_TYPES = {
+  thaw: { name: 'Rã đông',   size: '35×22', cols: 3 },
+  pal:  { name: 'Pallet',    size: '50×50', cols: 2 },
+  cus:  { name: 'Tùy chỉnh', size: '50×50', cols: 2 }
+};
+const PRINT_LIFE_MS = 5 * 60000;        // lệnh chỉ được in trong 5 phút kể từ lúc gửi
+const PRINT_STUCK_MS = 3 * 60000;       // "Đang in" quá 3 phút mà trạm không báo lại → "Lỗi"
+const PRINT_SCAN_ROWS = 400;            // chỉ đọc 400 dòng cuối của sheet Lenh in
+const TEM_ALPHA = 'ACDEFGHJKLMNPQRTUVWXY234679';   // bỏ ký tự dễ nhầm: 0/O, 1/I, 5/S, 8/B
+const PS_ = { WAIT: 'Chờ in', PRINTING: 'Đang in', DONE: 'Đã in', CANCEL: 'Đã hủy', ERR: 'Lỗi' };
+
+function printSheet_() {
+  const sh = appSheet_(SH_PRINT, PRINT_HEADERS);
+  safe_(() => { sh.getRange('A:A').setNumberFormat('@'); sh.getRange('H:H').setNumberFormat('@'); });
+  return sh;
+}
+function printCanUse_(u) { if (!hasFeature_(u, 'intem') && u.role !== 'admin') throw new Error('Bạn không có quyền dùng chức năng In tem.'); }
+function printIsStation_(u) { if (!hasFeature_(u, 'tramin') && u.role !== 'admin') throw new Error('Tài khoản này chưa được cấp quyền Trạm in tem.'); }
+const printTime_ = v => v instanceof Date ? v.getTime() : 0;
+
+/** Đọc các dòng cuối của sheet Lenh in: { sh, start, rows } (start = số dòng của rows[0]) */
+function printRows_() {
+  const sh = printSheet_(), last = sh.getLastRow();
+  if (last < 2) return { sh, start: 2, rows: [] };
+  const start = Math.max(2, last - PRINT_SCAN_ROWS + 1);
+  return { sh, start, rows: sh.getRange(start, 1, last - start + 1, PRINT_HEADERS.length).getValues() };
+}
+/** Hủy lệnh quá 5 phút, đánh dấu lỗi lệnh "Đang in" bị treo. Ghi lại các ô đã đổi. */
+function printExpire_(d) {
+  const now = Date.now();
+  d.rows.forEach((r, i) => {
+    let st = null, note = '';
+    if (r[9] === PS_.WAIT && now - printTime_(r[1]) > PRINT_LIFE_MS) { st = PS_.CANCEL; note = 'Quá 5 phút chưa in, tự hủy'; }
+    else if (r[9] === PS_.PRINTING && now - printTime_(r[11]) > PRINT_STUCK_MS) { st = PS_.ERR; note = 'Trạm in không báo kết quả, kiểm tra tem đã ra chưa'; }
+    if (!st) return;
+    r[9] = st; r[13] = note;
+    d.sh.getRange(d.start + i, 10).setValue(st);
+    d.sh.getRange(d.start + i, 14).setValue(note);
+    if (st === PS_.CANCEL) printVoidCodes_(r);
+  });
+}
+/** Lệnh tem pallet bị hủy (chưa in) → mã tem của lệnh đó chuyển "Đã hủy" để không bị dùng nhầm */
+function printVoidCodes_(r) {
+  if (String(r[4]) !== PRINT_TYPES.pal.name) return;
+  const sh = appSheet_(SH_TEM, TEM_HEADERS), n = sh.getLastRow() - 1;
+  if (n < 1) return;
+  const v = sh.getRange(2, 2, n, 3).getValues(), id = String(r[0]);
+  v.forEach((x, i) => { if (String(x[0]) === id && x[2] === 'Chưa dùng') sh.getRange(i + 2, 4).setValue('Đã hủy (không in)'); });
+}
+function printJobOut_(r) {
+  let content = {};
+  try { content = JSON.parse(String(r[7] || '{}')); } catch (e) {}
+  const fmt = v => v instanceof Date ? Utilities.formatDate(v, 'GMT+7', 'HH:mm:ss dd/MM') : '';
+  return { id: String(r[0]), t: printTime_(r[1]), time: fmt(r[1]), user: String(r[2]), by: String(r[3]),
+           type: String(r[4]), size: String(r[5]), qty: Number(r[6]) || 0, content: content,
+           expire: printTime_(r[8]), status: String(r[9]), station: String(r[10]), printedAt: fmt(r[12]), note: String(r[13] || '') };
+}
+function printStation_() {
+  try { return JSON.parse(CacheService.getScriptCache().get('print_station') || 'null'); } catch (e) { return null; }
+}
+function printNewCodes_(n) {
+  const sh = appSheet_(SH_TEM, TEM_HEADERS), used = {};
+  if (sh.getLastRow() >= 2) sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues().forEach(r => { used[String(r[0])] = 1; });
+  const out = [];
+  while (out.length < n) {
+    let c = 'P-';
+    for (let k = 0; k < 6; k++) c += TEM_ALPHA.charAt(Math.floor(Math.random() * TEM_ALPHA.length));
+    if (!used[c]) { used[c] = 1; out.push(c); }
+  }
+  return out;
+}
+/** iso yyyy-mm-dd hoặc dd/mm/yyyy → dd/mm/yyyy */
+function printDate_(v, label) {
+  const s = String(v || '').trim();
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return m[3] + '/' + m[2] + '/' + m[1];
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return ('0' + m[1]).slice(-2) + '/' + ('0' + m[2]).slice(-2) + '/' + m[3];
+  throw new Error('Chưa nhập ' + label + '.');
+}
+
+/** Gửi lệnh in. req = { type, qty, d1, d2, c1, c2, c3, reqId } */
+function printRequest(token, req) {
+  const u = requireUser_(token); printCanUse_(u);
+  req = req || {};
+  const T = PRINT_TYPES[req.type];
+  if (!T) throw new Error('Loại tem không hợp lệ.');
+  if (reqSeen_(req.reqId)) return { dup: true };
+  let qty = Math.floor(Number(req.qty) || 0);
+  if (qty < 1) throw new Error('Nhập số tem cần in.');
+  if (qty > 200) throw new Error('Mỗi lệnh in tối đa 200 tem.');
+  qty = Math.ceil(qty / T.cols) * T.cols;            // in đủ hàng (2 hoặc 3 tem/hàng)
+  let content;
+  if (req.type === 'thaw') content = { d1: printDate_(req.d1, 'Ngày rã đông'), d2: printDate_(req.d2, 'HSD sau rã đông') };
+  else if (req.type === 'cus') {
+    content = { c1: String(req.c1 || '').slice(0, 200), c2: String(req.c2 || '').slice(0, 120), c3: String(req.c3 || '').replace(/[\r\n]+/g, ' ').slice(0, 60) };
+    if (!(content.c1 + content.c2 + content.c3).trim()) throw new Error('Nhập nội dung tem.');
+  }
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    if (reqSeen_(req.reqId)) return { dup: true };
+    const now = new Date();
+    const id = 'IN-' + Utilities.formatDate(now, 'GMT+7', 'yyMMddHHmmss') + '-' + ('00' + Math.floor(Math.random() * 1000)).slice(-3);
+    if (req.type === 'pal') {
+      const codes = printNewCodes_(qty);
+      content = { codes: codes };
+      const sh = appSheet_(SH_TEM, TEM_HEADERS), st = sh.getLastRow() + 1;
+      safe_(() => sh.getRange(st, 1, codes.length, 2).setNumberFormat('@'));
+      sh.getRange(st, 1, codes.length, 4).setValues(codes.map(c => [c, id, now, 'Chưa dùng']));
+    }
+    const sh = printSheet_(), row = sh.getLastRow() + 1;
+    sh.getRange(row, 1, 1, PRINT_HEADERS.length).setValues([[id, now, u.username, u.name, T.name, T.size, qty, JSON.stringify(content),
+      new Date(now.getTime() + PRINT_LIFE_MS), PS_.WAIT, '', '', '', '']]);
+    safe_(() => sh.getRange(row, 2).setNumberFormat('dd/MM/yyyy HH:mm:ss'));
+    safe_(() => sh.getRange(row, 9).setNumberFormat('dd/MM/yyyy HH:mm:ss'));
+    CacheService.getScriptCache().put('print_pending', '1', 900);
+    reqMark_(req.reqId);
+    return { id: id, qty: qty, station: printStation_() };
+  } finally { lock.releaseLock(); }
+}
+
+/** Lệnh in của tôi trong 24 giờ (admin: all = true để xem của mọi người) + trạng thái trạm in */
+function printList(token, all) {
+  const u = requireUser_(token); printCanUse_(u);
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  let d;
+  try { d = printRows_(); printExpire_(d); } finally { lock.releaseLock(); }
+  const me = key_(u.username), since = Date.now() - 24 * 3600000, items = [];
+  for (let i = d.rows.length - 1; i >= 0 && items.length < 50; i--) {
+    const r = d.rows[i];
+    if (printTime_(r[1]) < since) break;
+    if (!(all && u.role === 'admin') && key_(r[2]) !== me) continue;
+    const j = printJobOut_(r);
+    if (j.type === 'Pallet') j.content = { codes: (j.content.codes || []).slice(0, 4), more: Math.max(0, (j.content.codes || []).length - 4) };
+    items.push(j);
+  }
+  return { now: Date.now(), station: printStation_(), items: items };
+}
+
+function printCancel(token, id) {
+  const u = requireUser_(token); printCanUse_(u);
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const d = printRows_(); printExpire_(d);
+    const i = d.rows.findIndex(r => String(r[0]) === String(id));
+    if (i === -1) throw new Error('Không tìm thấy lệnh in ' + id + '.');
+    const r = d.rows[i];
+    if (key_(r[2]) !== key_(u.username) && u.role !== 'admin') throw new Error('Bạn chỉ hủy được lệnh của mình.');
+    if (r[9] !== PS_.WAIT) throw new Error('Lệnh đang ở trạng thái "' + r[9] + '", không hủy được.');
+    d.sh.getRange(d.start + i, 10).setValue(PS_.CANCEL);
+    d.sh.getRange(d.start + i, 14).setValue('Người gửi hủy');
+    printVoidCodes_(r);
+    return true;
+  } finally { lock.releaseLock(); }
+}
+
+/** Máy trạm: báo đang chạy + nhận lệnh cũ nhất còn hạn (null nếu không có). Lệnh đọc cả sheet tối đa mỗi 60 giây khi không có lệnh mới. */
+function printNext(token, stationName) {
+  const u = requireUser_(token); printIsStation_(u);
+  const cache = CacheService.getScriptCache();
+  const name = String(stationName || u.name || u.username).slice(0, 40);
+  cache.put('print_station', JSON.stringify({ at: Date.now(), name: name }), 600);
+  if (!cache.get('print_pending') && cache.get('print_scan')) return null;
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const d = printRows_(); printExpire_(d);
+    cache.put('print_scan', '1', 60);
+    const now = Date.now();
+    const i = d.rows.findIndex(r => r[9] === PS_.WAIT && now - printTime_(r[1]) <= PRINT_LIFE_MS);
+    if (i === -1) { cache.remove('print_pending'); return null; }
+    const r = d.rows[i];
+    r[9] = PS_.PRINTING; r[10] = name; r[11] = new Date();
+    d.sh.getRange(d.start + i, 10, 1, 3).setValues([[r[9], r[10], r[11]]]);
+    safe_(() => d.sh.getRange(d.start + i, 12).setNumberFormat('dd/MM/yyyy HH:mm:ss'));
+    const job = printJobOut_(r);
+    job.kind = Object.keys(PRINT_TYPES).find(k => PRINT_TYPES[k].name === job.type) || '';
+    return job;
+  } finally { lock.releaseLock(); }
+}
+
+/** Máy trạm báo kết quả: ok = true → Đã in; false → Lỗi (kèm lý do) */
+function printDone(token, id, ok, err) {
+  const u = requireUser_(token); printIsStation_(u);
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const d = printRows_();
+    const i = d.rows.findIndex(r => String(r[0]) === String(id));
+    if (i === -1) return false;
+    const row = d.start + i;
+    if (ok) { d.sh.getRange(row, 10).setValue(PS_.DONE); d.sh.getRange(row, 13).setValue(new Date()); safe_(() => d.sh.getRange(row, 13).setNumberFormat('dd/MM/yyyy HH:mm:ss')); }
+    else { d.sh.getRange(row, 10).setValue(PS_.ERR); d.sh.getRange(row, 14).setValue(String(err || 'Lỗi khi in').slice(0, 300)); }
+    return true;
+  } finally { lock.releaseLock(); }
 }
