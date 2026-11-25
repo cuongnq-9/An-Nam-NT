@@ -1,0 +1,128 @@
+# Tự động đưa apps-script/src/Code.gs lên Google Apps Script và cập nhật
+# bản triển khai ĐANG DÙNG lên "Phiên bản mới" (link /exec giữ nguyên).
+#
+# Chạy khi: có thay đổi trong apps-script/src/ trên nhánh main,
+#           hoặc bấm tay ở tab Actions → "Cập nhật Apps Script" → Run workflow.
+#
+# Cần 3 GitHub Secrets (Settings → Secrets and variables → Actions):
+#   CLASPRC_JSON   nội dung file ~/.clasprc.json (token đăng nhập clasp)
+#   SCRIPT_ID      Mã tập lệnh (Apps Script → Cài đặt dự án ⚙)
+#   DEPLOYMENT_ID  Mã triển khai (đoạn giữa /s/ và /exec trong link web app)
+# Hướng dẫn cài một lần: apps-script/TU-DONG-CAP-NHAT.md
+#
+# Không có ID nào được viết trong file này (repo công khai).
+
+name: Cập nhật Apps Script
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps-script/src/**'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-apps-script
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+      SCRIPT_ID: ${{ secrets.SCRIPT_ID }}
+      DEPLOYMENT_ID: ${{ secrets.DEPLOYMENT_ID }}
+    steps:
+      - name: Kiểm tra đã cài đủ Secrets chưa
+        id: check
+        run: |
+          missing=""
+          [ -z "$CLASPRC_JSON" ]  && missing="$missing CLASPRC_JSON"
+          [ -z "$SCRIPT_ID" ]     && missing="$missing SCRIPT_ID"
+          [ -z "$DEPLOYMENT_ID" ] && missing="$missing DEPLOYMENT_ID"
+          if [ -n "$missing" ]; then
+            echo "::warning::Chưa cài Secrets:$missing. Bỏ qua lần này, xem apps-script/TU-DONG-CAP-NHAT.md"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::add-mask::$SCRIPT_ID"
+            echo "::add-mask::$DEPLOYMENT_ID"
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.check.outputs.ready == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.ready == 'true'
+        with:
+          node-version: '20'
+
+      - name: Cài clasp
+        if: steps.check.outputs.ready == 'true'
+        run: npm install -g @google/clasp@2.4.2
+
+      - name: Đăng nhập clasp
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+          chmod 600 ~/.clasprc.json
+          node -e "JSON.parse(require('fs').readFileSync(process.env.HOME + '/.clasprc.json','utf8'))" \
+            || { echo "::error::Secret CLASPRC_JSON không phải JSON hợp lệ. Dán lại toàn bộ nội dung file .clasprc.json."; exit 1; }
+
+      - name: Lấy code hiện tại trên Apps Script
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          # Kéo toàn bộ dự án về trước (index.html, appsscript.json, các file khác
+          # không có trong repo) để khi đẩy lên KHÔNG làm mất file nào.
+          mkdir -p "$RUNNER_TEMP/gas"
+          cd "$RUNNER_TEMP/gas"
+          printf '{"scriptId":"%s","rootDir":".","fileExtension":"gs"}' "$SCRIPT_ID" > .clasp.json
+          clasp pull
+          echo "Các file đang có trên Apps Script:"
+          ls -1 | grep -v '^\.clasp.json$'
+          if [ ! -f Code.gs ]; then
+            echo "::error::Trên Apps Script không có file tên 'Code'. Dừng lại để tránh tạo file trùng hàm."
+            exit 1
+          fi
+
+      - name: Thay code mới từ GitHub
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          cd apps-script/src
+          shopt -s nullglob
+          for f in *.gs *.html *.js appsscript.json; do
+            cp -v "$f" "$RUNNER_TEMP/gas/$f"
+          done
+
+      - name: Đẩy code lên Apps Script
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          cd "$RUNNER_TEMP/gas"
+          clasp push --force
+
+      - name: Cập nhật bản triển khai đang dùng (Phiên bản mới, giữ nguyên link)
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          cd "$RUNNER_TEMP/gas"
+          VER=$(grep -oE "CODE_VERSION *= *'[^']+'" Code.gs | grep -oE "'[^']+'" | tr -d "'")
+          echo "CODE_VERSION=$VER" >> "$GITHUB_ENV"
+          clasp deploy --deploymentId "$DEPLOYMENT_ID" --description "GitHub ${GITHUB_SHA::7} · máy chủ $VER"
+
+      - name: Kiểm tra máy chủ đã chạy bản mới
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          URL="https://script.google.com/macros/s/$DEPLOYMENT_ID/exec?ping=1"
+          for i in 1 2 3 4 5 6; do
+            OUT=$(curl -sL --max-time 30 "$URL" || true)
+            if echo "$OUT" | grep -q "\"version\":\"$CODE_VERSION\""; then
+              echo "✅ Máy chủ đang chạy bản $CODE_VERSION"
+              echo "### ✅ Đã cập nhật Apps Script: máy chủ $CODE_VERSION" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::warning::Đã triển khai nhưng ping chưa thấy bản $CODE_VERSION. Mở Cài đặt trong app để kiểm tra."

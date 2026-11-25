@@ -11,6 +11,10 @@ apps-script/
 └── src/                   ← code Apps Script (Code.gs, appsscript.json, ...)
 ```
 
+## Tự động cập nhật (khuyên dùng)
+
+GitHub Actions (`.github/workflows/deploy-apps-script.yml`) tự đẩy `src/Code.gs` lên Apps Script và cập nhật bản triển khai đang dùng (giữ link `/exec`) mỗi khi `apps-script/src/` trên `main` thay đổi. Cài một lần theo **[TU-DONG-CAP-NHAT.md](TU-DONG-CAP-NHAT.md)**. Hai cách dưới đây là cách làm tay dự phòng.
+
 ## Cách 1 – Không cần cài gì (copy tay)
 
 1. Mở dự án Apps Script → mỗi file (`Code.gs`, `*.gs`, `*.html`) copy nội dung.

@@ -15,8 +15,10 @@ index.html             ← toàn bộ giao diện (một file, ~4.300 dòng)
 manifest.json          ← cấu hình PWA (tên, màu, icon)
 icon-192.png, icon-512.png ← icon cài app, làm từ logo Ân Nam (PR #2)
 sw.js                  ← service worker cho app mở được khi mất mạng (PR #4)
+.github/workflows/deploy-apps-script.yml ← tự đẩy Code.gs lên Apps Script khi main thay đổi
 apps-script/
 ├── README.md          ← cách đồng bộ code Apps Script (copy tay hoặc clasp) và cài Script Properties
+├── TU-DONG-CAP-NHAT.md ← hướng dẫn cài tự động cập nhật (một lần) cho anh John
 ├── .clasp.json.example
 ├── .claspignore
 └── src/Code.gs        ← code máy chủ (PR #1)
@@ -342,6 +344,8 @@ Vai trò chạy ngầm, **không hiển thị** cho người dùng. Admin có th
 ---
 
 ## 8. Quy trình cập nhật (mỗi lần sửa)
+
+**Tự động (từ 25/11/2026):** GitHub Actions `Cập nhật Apps Script` chạy mỗi khi `apps-script/src/**` trên `main` thay đổi: `clasp pull` toàn bộ dự án (giữ file `index`, `appsscript.json` chỉ có trên Apps Script), thay `Code.gs` bằng bản repo, `clasp push`, `clasp deploy -i <DEPLOYMENT_ID>` (giữ link `/exec`), rồi ping kiểm tra `CODE_VERSION`. Cần 3 GitHub Secrets `CLASPRC_JSON`, `SCRIPT_ID`, `DEPLOYMENT_ID` (cài theo `apps-script/TU-DONG-CAP-NHAT.md`). Chưa có Secrets thì workflow chỉ cảnh báo và bỏ qua. Khi đã bật: **repo là bản gốc**, sửa trực tiếp trên Apps Script sẽ bị ghi đè. Vẫn phải chạy `setup()` bằng tay khi có sheet/cột mới. Khi đó chỉ cần bước 4 và 5 bên dưới cho máy chủ; bước 1 đến 3 là cách làm tay dự phòng.
 
 1. Dán **Code.gs** vào Apps Script và lưu (Ctrl+S), hoặc `clasp push` (xem `apps-script/README.md`). Lần cập nhật nào **có sheet hoặc cột mới** thì chạy `setup()` một lần. Code có ID mới thì thêm khóa vào Script Properties trước.
 2. **Triển khai → Quản lý triển khai → ✏️ → Phiên bản: "Phiên bản mới" → Triển khai.** Không chọn "Triển khai mới", vì làm vậy tạo ra link khác. (Dùng clasp: `clasp deploy -i <DEPLOYMENT_ID>`.)
