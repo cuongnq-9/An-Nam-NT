@@ -40,7 +40,8 @@ const TET_HEADERS  = ['Mã đơn', 'Thời gian gửi', 'Username', 'Nhân viên
 
 const ROLE_LABELS = {
   admin: 'Admin', manager: 'Manager', sale: 'Sale', deliveryman: 'Delivery man',
-  storekeeper: 'Store keeper', customerservice: 'Customer service', accountant: 'Accountant'
+  storekeeper: 'Store keeper', customerservice: 'Customer service', accountant: 'Accountant',
+  printstation: 'Trạm in tem (máy cạnh máy in)'
 };
 /* ---------- PHÂN NHÓM TÍNH NĂNG THEO VAI TRÒ ----------
  * COMMON_FEATURES : tính năng chung, ai đăng nhập cũng thấy.
@@ -57,7 +58,8 @@ const ROLE_FEATURES = {
   deliveryman:     ['scan', 'waiting', 'mine'],
   storekeeper:     ['scan', 'waiting', 'kiemke', 'huyhang', 'soanhang', 'bcsoan', 'intem', 'pallet'],
   customerservice: ['scan', 'tetnew', 'tetlist', 'bcsoan', 'intem'],
-  accountant:      ['scan', 'congno', 'intem']
+  accountant:      ['scan', 'congno', 'intem'],
+  printstation:    ['tramin']        // tài khoản riêng cho máy trạm in: chỉ màn hình Trạm in
 };
 // Danh sách tính năng riêng mà admin có thể gán cho từng user trên màn hình Quản trị
 const FEATURE_LABELS = {
@@ -91,7 +93,7 @@ const PERM = {
 };
 
 /* ================== WEB APP ================== */
-const CODE_VERSION = '2026-11-25b';
+const CODE_VERSION = '2026-11-25c';
 
 function doGet(e) {
   // Kiểm tra kết nối: mở <link /exec>?ping=1 trên trình duyệt để xem máy chủ có chạy không
@@ -128,11 +130,22 @@ function doPost(e) {
     const req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     const fn = API_FUNCS[req.fn];
     if (!fn) throw new Error('Hàm không hợp lệ: ' + req.fn);
+    stationGuard_(req);
     out = { ok: true, data: fn.apply(null, req.args || []) };
   } catch (err) {
     out = { ok: false, error: String((err && err.message) || err) };
   }
   return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
+}
+
+/* Tài khoản Trạm in (vai trò print station) chỉ được gọi các hàm của Trạm in và đăng nhập/đổi mật khẩu */
+const STATION_FUNCS = ['login', 'getSession', 'logout', 'changePassword', 'printNext', 'printDone'];
+function stationGuard_(req) {
+  if (STATION_FUNCS.indexOf(req.fn) !== -1) return;
+  const tk = req.args && req.args[0];
+  if (typeof tk !== 'string' || !tk) return;
+  const s = readSession_(tk);
+  if (s && s.u && s.u.role === 'printstation') throw new Error('Tài khoản Trạm in chỉ dùng được màn hình Trạm in.');
 }
 
 /* ================== CÀI ĐẶT BAN ĐẦU (chạy 1 lần) ================== */
@@ -149,7 +162,7 @@ function setup() {
     u.getRange('E:F').setNumberFormat('@');
     u.getRange(2, 1, 1, 7).setValues([['admin', 'admin', 'Quản trị viên', '', '123456', '', 'Active']]);
     const roleRule = SpreadsheetApp.newDataValidation()
-      .requireValueInList(['admin', 'manager', 'sale', 'deliveryman', 'store keeper', 'customer service', 'accountant'], true).build();
+      .requireValueInList(['admin', 'manager', 'sale', 'deliveryman', 'store keeper', 'customer service', 'accountant', 'print station'], true).build();
     u.getRange('B2:B1000').setDataValidation(roleRule);
     const stRule = SpreadsheetApp.newDataValidation().requireValueInList(['Active', 'Khóa'], true).build();
     u.getRange('G2:G1000').setDataValidation(stRule);
@@ -163,6 +176,13 @@ function setup() {
   const curH = u.getRange(1, 1, 1, USER_HEADERS.length).getValues()[0];
   USER_HEADERS.forEach((h, i) => { if (String(curH[i]).trim() !== h) safe_(() => u.getRange(1, i + 1).setValue(h)); });
   safe_(() => u.getRange(1, 1, 1, USER_HEADERS.length).setFontWeight('bold'));
+  // Danh sách chọn vai trò ở cột B: thêm "print station" (tài khoản Trạm in) nếu ô đang dùng danh sách chọn
+  safe_(() => {
+    const r = u.getRange('B2:B1000'), dv = r.getDataValidation();
+    if (!dv || dv.getCriteriaType() !== SpreadsheetApp.DataValidationCriteria.VALUE_IN_LIST) return;
+    const list = dv.getCriteriaValues()[0] || [];
+    if (list.indexOf('print station') === -1) r.setDataValidation(dv.copy().requireValueInList(list.concat(['print station']), dv.getCriteriaValues()[1]).build());
+  });
 
   // Luôn cập nhật danh sách vai trò (kể cả khi sheet User đã tồn tại)
   safe_(() => u.getRange('B2:B1000').setDataValidation(SpreadsheetApp.newDataValidation()
@@ -356,7 +376,7 @@ function can_(u, perm) {
 function publicUser_(u) {
   return {
     username: u.username, name: u.name, role: u.role, email: u.email, mustChange: !!u.mustChange, ver: CODE_VERSION,
-    common: COMMON_FEATURES.slice(),
+    common: u.role === 'printstation' ? [] : COMMON_FEATURES.slice(),
     features: featuresOf_(u),
     scanModes: scanModesOf_(u),
     scope: scopeOf_(u),
@@ -521,7 +541,7 @@ function requireAdmin_(token) {
   return u;
 }
 const ROLE_SHEET_VALUE = { admin: 'admin', manager: 'manager', sale: 'sale', deliveryman: 'deliveryman',
-  storekeeper: 'store keeper', customerservice: 'customer service', accountant: 'accountant' };
+  storekeeper: 'store keeper', customerservice: 'customer service', accountant: 'accountant', printstation: 'print station' };
 
 function adminListUsers(token) {
   requireAdmin_(token);

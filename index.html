@@ -1386,8 +1386,8 @@ async function api(fn, ...args){
 /* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
  * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
  * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
-const APP_VER = '25/11/2026-c';
-const NEED_SERVER = '2026-11-25b';      // phiên bản Code.gs tương ứng
+const APP_VER = '25/11/2026-e';
+const NEED_SERVER = '2026-11-25c';      // phiên bản Code.gs tương ứng
 async function checkUpdate(auto){
   if (location.protocol === 'file:') return;
   try {
@@ -1519,6 +1519,8 @@ function restoreView(){
   const ok = v === 'settings' || v === 'docs' || v === 'bday' || v === 'msg' || (v === 'tramin' && (S.user.features || []).includes('tramin')) || !!document.querySelector('#v-home [data-go="' + v + '"]');
   return ok ? v : 'home';
 }
+/* Tài khoản Trạm in (vai trò printstation): chỉ dùng màn hình Trạm in + Cài đặt, không trang chủ, không thông báo */
+const isStation = () => !!(S.user && S.user.role === 'printstation');
 function enterApp(){
   $('screen-login').classList.add('hidden');
   $('screen-app').classList.remove('hidden');
@@ -1535,6 +1537,7 @@ function enterApp(){
   $('hello-date').textContent = `${days[d.getDay()]}, ${d.toLocaleDateString('vi-VN')}`;
   $('s-user').textContent = u.username; $('s-name').textContent = u.name; $('s-ver').textContent = u.ver || 'bản cũ';
   renderHome();
+  if (isStation()) { go(u.mustChange ? 'settings' : 'tramin'); return; }
   go(u.mustChange ? 'settings' : restoreView());
   // Nạp lại hàng chờ quét còn dở (VD: phiên hết hạn trước đó) và gửi tiếp ở nền
   QR.authErr = false; QR.netErr = ''; QR.backoff = 0;
@@ -1561,6 +1564,7 @@ function playNotif(n){
   setTimeout(() => { if (audioCtx && audioCtx.state === 'running') { beep('notify'); $('nt-bell').classList.add('ring'); setTimeout(() => $('nt-bell').classList.remove('ring'), 2000); } }, 60);
 }, { passive: true }));
 async function checkNotif(){
+  if (isStation()) return;
   if (!S.user || S.user.mustChange || document.hidden) return;
   try {
     const d = await api('notifList'); NT.data = d; setBell(d.unread);
@@ -1635,7 +1639,7 @@ function tile(k){ const v = VIEWS[k]; return `<button class="app-tile" data-go="
 function renderHome(){
   const u = S.user;
   const common = (u.common || []).filter(k => VIEWS[k]);
-  const mine = (u.features || []).filter(k => VIEWS[k] && k !== 'tramin').concat(['docs']);   // Trạm in: không có ô, mở bằng link <app>#tramin trên máy cạnh máy in   // Chứng từ chờ hoàn trả: mọi nhân viên
+  const mine = isStation() ? ['tramin'] : (u.features || []).filter(k => VIEWS[k] && k !== 'tramin').concat(['docs']);   // Trạm in: không có ô, mở bằng link <app>#tramin trên máy cạnh máy in   // Chứng từ chờ hoàn trả: mọi nhân viên
   $('apps-common').innerHTML = common.map(tile).join('');
   $('apps-mine').innerHTML = mine.map(tile).join('');
   $('sec-mine').classList.toggle('hidden', !mine.length);
@@ -1656,6 +1660,7 @@ function go(view){
   if (S.view === 'intem' && view !== 'intem') ptStop();
   if (S.view === 'tramin' && view !== 'tramin' && TS.run) tsStop(true);   // rời màn hình: dừng nhưng lần sau mở lại vẫn tự chạy
   if (S.user && S.user.mustChange && view !== 'settings') { toast('Vui lòng đổi mật khẩu trước khi sử dụng.'); view = 'settings'; }
+  else if (isStation() && view !== 'tramin' && view !== 'settings') view = 'tramin';
   S.view = view;
   // Ghi nhớ màn hình đang mở → bấm làm mới (F5 / kéo xuống) vẫn ở lại đúng màn hình này
   try { history.replaceState(null, '', view === 'home' ? location.pathname + location.search : '#' + view); } catch (e) {}
@@ -4976,7 +4981,7 @@ document.addEventListener('input', e => {
 /* ========= TRẠM IN TEM (máy tính cạnh máy in) =========
  * Chrome mở với cờ --kiosk-printing → window.print() in thẳng ra máy in mặc định, không hiện hộp thoại.
  * Mỗi hàng tem = 1 trang: khổ trang (pw × chiều cao tem), lề trái ml, khoảng cách gap, lề trên mt (mm). */
-const TS_DEF = { '50': { pw: 104, gap: 2, ml: 1, mt: 0 }, '35': { pw: 108, gap: 1.5, ml: 0, mt: 0 } };
+const TS_DEF = { '50': { pw: 104, gap: 2, ml: 1, mt: 0, rot: 0 }, '35': { pw: 108, gap: 1.5, ml: 0, mt: 0, rot: 0 } };
 const TS = { run: false, busy: false, timer: null, wake: null, last: 0, err: '', log: [], cfg: null, name: '' };
 function tsCfg(){
   if (!TS.cfg) { const c = store.get('annt_ts_cfg') || {}; TS.cfg = { '50': Object.assign({}, TS_DEF['50'], c['50']), '35': Object.assign({}, TS_DEF['35'], c['35']) }; }
@@ -4991,7 +4996,8 @@ function initTramin(){
 function tsCfgRender(){
   const c = tsCfg(), f = (k, key, lb) => `<div><label for="ts-${k}-${key}">${lb}</label><input class="inp" type="number" step="0.5" id="ts-${k}-${key}" data-tsk="${k}" data-tsf="${key}" value="${c[k][key]}"></div>`;
   $('ts-cfg').innerHTML = ['50', '35'].map(k => `<div style="margin-bottom:14px"><b>${k === '50' ? 'Cuộn 50×50 mm · 2 tem (Pallet, Tùy chỉnh)' : 'Cuộn 35×22 mm · 3 tem (Rã đông)'}</b>
-    <div class="ts-cfg" style="margin-top:6px">${f(k, 'pw', 'Rộng trang (mm)')}${f(k, 'gap', 'Cách giữa tem (mm)')}${f(k, 'ml', 'Lề trái (mm)')}${f(k, 'mt', 'Lề trên (mm)')}</div>
+    <div class="ts-cfg" style="margin-top:6px">${f(k, 'pw', 'Rộng trang (mm)')}${f(k, 'gap', 'Cách giữa tem (mm)')}${f(k, 'ml', 'Lề trái (mm)')}${f(k, 'mt', 'Lề trên (mm)')}
+      <div><label for="ts-${k}-rot">Xoay trang in</label><select class="inp" id="ts-${k}-rot" data-tsk="${k}" data-tsf="rot">${[[0, 'Không xoay'], [90, 'Lật ngang ↻ 90°'], [270, 'Lật ngang ↺ 90°'], [180, 'Ngược đầu 180°']].map(([v, t]) => `<option value="${v}"${+c[k].rot === v ? ' selected' : ''}>${t}</option>`).join('')}</select></div></div>
     <button class="btn light" data-tstest="${k}" style="margin-top:8px;padding:8px 12px">In thử 1 hàng</button></div>`).join('');
 }
 function tsRender(){
@@ -5053,14 +5059,18 @@ async function tsPrint(kind, items){
   if (kind === 'pal') await loadQrLib();
   const rows = [];
   for (let i = 0; i < items.length; i += T.cols) rows.push(items.slice(i, i + T.cols));
+  // Xoay trang in ngay trong app (không phải cài hướng giấy trên máy tính): trang 90°/270° đổi chiều rộng ↔ cao, nội dung xoay theo
+  const rot = +c.rot || 0, side = rot === 90 || rot === 270, W = side ? T.h : c.pw, H = side ? c.pw : T.h;
+  const tf = rot === 90 ? `translate(${T.h}mm,0) rotate(90deg)` : rot === 270 ? `translate(0,${c.pw}mm) rotate(-90deg)` : rot === 180 ? `translate(${c.pw}mm,${T.h}mm) rotate(180deg)` : 'none';
   const html = `<!doctype html><html><head><meta charset="utf-8"><style>
-@page{size:${c.pw}mm ${T.h}mm;margin:0}
+@page{size:${W}mm ${H}mm;margin:0}
 html,body{margin:0;padding:0;background:#fff}
-.pg{width:${c.pw}mm;height:${T.h}mm;box-sizing:border-box;padding:${c.mt}mm 0 0 ${c.ml}mm;display:flex;gap:${c.gap}mm;overflow:hidden;break-after:page;page-break-after:always}
-.pg:last-child{break-after:auto;page-break-after:auto}
-${PT_LABEL_CSS}</style></head><body>${rows.map(r => `<div class="pg">${r.map(d => ptLabel(kind, d)).join('')}</div>`).join('')}</body></html>`;
+.pw{width:${W}mm;height:${H}mm;position:relative;overflow:hidden;break-after:page;page-break-after:always}
+.pw:last-child{break-after:auto;page-break-after:auto}
+.pg{position:absolute;left:0;top:0;transform-origin:0 0;transform:${tf};width:${c.pw}mm;height:${T.h}mm;box-sizing:border-box;padding:${c.mt}mm 0 0 ${c.ml}mm;display:flex;gap:${c.gap}mm;overflow:hidden}
+${PT_LABEL_CSS}</style></head><body>${rows.map(r => `<div class="pw"><div class="pg">${r.map(d => ptLabel(kind, d)).join('')}</div></div>`).join('')}</body></html>`;
   const fr = document.createElement('iframe');
-  fr.style.cssText = `position:fixed;left:-10000px;top:0;width:${c.pw + 10}mm;height:${T.h + 10}mm;border:0`;
+  fr.style.cssText = `position:fixed;left:-10000px;top:0;width:${W + 10}mm;height:${H + 10}mm;border:0`;
   document.body.appendChild(fr);
   try {
     const doc = fr.contentDocument; doc.open(); doc.write(html); doc.close();
