@@ -1,6 +1,6 @@
 # HỆ THỐNG ÂN NAM NHA TRANG – TÀI LIỆU TỔNG HỢP
 
-> Cập nhật: 25/11/2026 · Phiên bản hiện tại: **giao diện 25/11/2026-f · máy chủ 2026-11-25c**
+> Cập nhật: 25/11/2026 · Phiên bản hiện tại: **giao diện 25/11/2026-g · máy chủ 2026-11-25d**
 >
 > File này là tài liệu gốc của hệ thống, Claude đọc đầu tiên mỗi phiên làm việc. Sửa hệ thống thì cập nhật file này luôn.
 
@@ -344,9 +344,9 @@ Vai trò chạy ngầm, **không hiển thị** cho người dùng. Admin có th
 | **store keeper** | Quét, Đơn chờ giao, Kiểm kê, Hủy hàng, Soạn hàng, BC soạn hàng, In tem, Quản lý pallet | Xuất, Giao, Bàn giao | Chốt đợt kiểm kê, ghi ảnh soạn hàng |
 | **customer service** | Quét, Đơn Tết, BC soạn hàng, In tem | Hoàn CT, Bàn giao | |
 | **accountant** | Quét, Công nợ, In tem | Hoàn CT, Bàn giao | Ngang Admin trong Công nợ: sửa số tiền, import, khách hàng |
-| **print station** (`printstation`) | Chỉ Trạm in tem | Không | Tài khoản riêng cho máy tính cạnh máy in (VD user `tramin`). Đăng nhập vào thẳng Trạm in, không có trang chủ, tính năng chung, thông báo. Máy chủ chặn mọi hàm ngoài `STATION_FUNCS` (`stationGuard_`). Từ máy chủ `2026-11-25c`. Giao diện cũng coi là máy trạm khi tài khoản (không phải admin) chỉ có đúng 1 tính năng riêng `tramin` (`isStation`, từ `25/11/2026-f`). Admin vẫn có tính năng `tramin` nhưng không có ô trên trang chủ |
+| **tramin** (từ máy chủ `2026-11-25d`; trước đó là `print station`, vẫn được hiểu là `tramin`) | Chỉ Trạm in tem | Không | Tài khoản riêng cho máy tính cạnh máy in (VD user `tramin`). Đăng nhập vào thẳng Trạm in, không có trang chủ, tính năng chung, thông báo. Máy chủ chặn mọi hàm ngoài `STATION_FUNCS` (`stationGuard_`). Từ máy chủ `2026-11-25c`. Giao diện cũng coi là máy trạm khi tài khoản (không phải admin) chỉ có đúng 1 tính năng riêng `tramin` (`isStation`, từ `25/11/2026-f`). Admin vẫn có tính năng `tramin` nhưng không có ô trên trang chủ |
 
-> Trong sheet User, vai trò ghi là `store keeper`, `customer service` và `print station`. Trong code, khóa vai trò viết liền: `storekeeper`, `customerservice`.
+> Trong sheet User, vai trò ghi là `store keeper`, `customer service` và `tramin`. Trong code, khóa vai trò viết liền: `storekeeper`, `customerservice`.
 
 ---
 

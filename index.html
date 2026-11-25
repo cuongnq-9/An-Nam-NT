@@ -1386,8 +1386,8 @@ async function api(fn, ...args){
 /* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
  * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
  * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
-const APP_VER = '25/11/2026-f';
-const NEED_SERVER = '2026-11-25c';      // phiên bản Code.gs tương ứng
+const APP_VER = '25/11/2026-g';
+const NEED_SERVER = '2026-11-25d';      // phiên bản Code.gs tương ứng
 async function checkUpdate(auto){
   if (location.protocol === 'file:') return;
   try {
@@ -1519,9 +1519,9 @@ function restoreView(){
   const ok = v === 'settings' || v === 'docs' || v === 'bday' || v === 'msg' || (v === 'tramin' && (S.user.features || []).includes('tramin')) || !!document.querySelector('#v-home [data-go="' + v + '"]');
   return ok ? v : 'home';
 }
-/* Tài khoản Trạm in (vai trò printstation): chỉ dùng màn hình Trạm in + Cài đặt, không trang chủ, không thông báo */
+/* Tài khoản Trạm in (vai trò tramin): chỉ dùng màn hình Trạm in + Cài đặt, không trang chủ, không thông báo */
 // Tính cả tài khoản chỉ được gán đúng 1 tính năng riêng "Trạm in tem" (không phải admin)
-const isStation = () => !!(S.user && (S.user.role === 'printstation' ||
+const isStation = () => !!(S.user && (S.user.role === 'tramin' || S.user.role === 'printstation' ||
   (S.user.role !== 'admin' && (S.user.features || []).length === 1 && S.user.features[0] === 'tramin')));
 function enterApp(){
   $('screen-login').classList.add('hidden');
