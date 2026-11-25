@@ -1386,8 +1386,8 @@ async function api(fn, ...args){
 /* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
  * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
  * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
-const APP_VER = '25/11/2026-d';
-const NEED_SERVER = '2026-11-25b';      // phiên bản Code.gs tương ứng
+const APP_VER = '25/11/2026-e';
+const NEED_SERVER = '2026-11-25c';      // phiên bản Code.gs tương ứng
 async function checkUpdate(auto){
   if (location.protocol === 'file:') return;
   try {
@@ -1519,6 +1519,8 @@ function restoreView(){
   const ok = v === 'settings' || v === 'docs' || v === 'bday' || v === 'msg' || (v === 'tramin' && (S.user.features || []).includes('tramin')) || !!document.querySelector('#v-home [data-go="' + v + '"]');
   return ok ? v : 'home';
 }
+/* Tài khoản Trạm in (vai trò printstation): chỉ dùng màn hình Trạm in + Cài đặt, không trang chủ, không thông báo */
+const isStation = () => !!(S.user && S.user.role === 'printstation');
 function enterApp(){
   $('screen-login').classList.add('hidden');
   $('screen-app').classList.remove('hidden');
@@ -1535,6 +1537,7 @@ function enterApp(){
   $('hello-date').textContent = `${days[d.getDay()]}, ${d.toLocaleDateString('vi-VN')}`;
   $('s-user').textContent = u.username; $('s-name').textContent = u.name; $('s-ver').textContent = u.ver || 'bản cũ';
   renderHome();
+  if (isStation()) { go(u.mustChange ? 'settings' : 'tramin'); return; }
   go(u.mustChange ? 'settings' : restoreView());
   // Nạp lại hàng chờ quét còn dở (VD: phiên hết hạn trước đó) và gửi tiếp ở nền
   QR.authErr = false; QR.netErr = ''; QR.backoff = 0;
@@ -1561,6 +1564,7 @@ function playNotif(n){
   setTimeout(() => { if (audioCtx && audioCtx.state === 'running') { beep('notify'); $('nt-bell').classList.add('ring'); setTimeout(() => $('nt-bell').classList.remove('ring'), 2000); } }, 60);
 }, { passive: true }));
 async function checkNotif(){
+  if (isStation()) return;
   if (!S.user || S.user.mustChange || document.hidden) return;
   try {
     const d = await api('notifList'); NT.data = d; setBell(d.unread);
@@ -1635,7 +1639,7 @@ function tile(k){ const v = VIEWS[k]; return `<button class="app-tile" data-go="
 function renderHome(){
   const u = S.user;
   const common = (u.common || []).filter(k => VIEWS[k]);
-  const mine = (u.features || []).filter(k => VIEWS[k] && k !== 'tramin').concat(['docs']);   // Trạm in: không có ô, mở bằng link <app>#tramin trên máy cạnh máy in   // Chứng từ chờ hoàn trả: mọi nhân viên
+  const mine = isStation() ? ['tramin'] : (u.features || []).filter(k => VIEWS[k] && k !== 'tramin').concat(['docs']);   // Trạm in: không có ô, mở bằng link <app>#tramin trên máy cạnh máy in   // Chứng từ chờ hoàn trả: mọi nhân viên
   $('apps-common').innerHTML = common.map(tile).join('');
   $('apps-mine').innerHTML = mine.map(tile).join('');
   $('sec-mine').classList.toggle('hidden', !mine.length);
@@ -1656,6 +1660,7 @@ function go(view){
   if (S.view === 'intem' && view !== 'intem') ptStop();
   if (S.view === 'tramin' && view !== 'tramin' && TS.run) tsStop(true);   // rời màn hình: dừng nhưng lần sau mở lại vẫn tự chạy
   if (S.user && S.user.mustChange && view !== 'settings') { toast('Vui lòng đổi mật khẩu trước khi sử dụng.'); view = 'settings'; }
+  else if (isStation() && view !== 'tramin' && view !== 'settings') view = 'tramin';
   S.view = view;
   // Ghi nhớ màn hình đang mở → bấm làm mới (F5 / kéo xuống) vẫn ở lại đúng màn hình này
   try { history.replaceState(null, '', view === 'home' ? location.pathname + location.search : '#' + view); } catch (e) {}
