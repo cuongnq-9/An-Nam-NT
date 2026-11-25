@@ -1199,8 +1199,8 @@ async function api(fn, ...args){
 /* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
  * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
  * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
-const APP_VER = '23/11/2026-e';
-const NEED_SERVER = '2026-11-23b';      // phiên bản Code.gs tương ứng
+const APP_VER = '25/11/2026-a';
+const NEED_SERVER = '2026-11-25a';      // phiên bản Code.gs tương ứng
 async function checkUpdate(auto){
   if (location.protocol === 'file:') return;
   try {
@@ -2285,7 +2285,7 @@ function kkRenderQ(){
   const st = j => j.state === 'ok' ? '<span style="color:var(--green);font-weight:700">✔ Đã lưu</span>'
     : j.state === 'err' ? `<span style="color:var(--red);font-weight:700">✖ ${esc(j.msg)}</span> <button class="btn light" data-kkretry="${j.id}" style="padding:3px 9px;font-size:12px">Gửi lại</button> <button class="btn light" data-kkdel="${j.id}" style="padding:3px 9px;font-size:12px">Bỏ</button>`
     : `<span style="color:var(--amber);font-weight:700">⏳ ${j.msg === 'net' ? 'Chờ có mạng' : 'Đang gửi'}</span>`;
-  $('kk-hist').innerHTML = q.slice(0, 60).map(j => `<div class="hrow">${j.data.map(p => p.entries.map(e => `<div><b>${esc(p.itemNumber)}</b> · ${esc(e.batchNumber)} <span class="hq">${fmt(e.qty)}</span></div>`).join('')).join('')}
+  $('kk-hist').innerHTML = q.slice(0, 60).map(j => `<div class="hrow">${j.cs ? `<div>⚡ <b>${fmt(j.data.length)} lượt quét liên tục</b> · ${fmt(new Set(j.data.map(p => p.itemNumber)).size)} mã</div>` : j.data.map(p => p.entries.map(e => `<div><b>${esc(p.itemNumber)}</b> · ${esc(e.batchNumber)} <span class="hq">${fmt(e.qty)}</span></div>`).join('')).join('')}
     <div class="muted">${esc(j.loc)} · ${esc(j.time)} · ${esc(j.cname || '')} · ${st(j)}</div></div>`).join('');
   try { if (KCS.on) kcsRender(); } catch (e) {}       // cập nhật trạng thái ✔ Đã lưu ở danh sách quét liên tục
 }
@@ -2453,16 +2453,14 @@ function kcsFlush(){
   const groups = {};
   buf.slice().reverse().forEach(h => { const k = h.cid + '\u0001' + h.loc; (groups[k] = groups[k] || []).push(h); });
   Object.keys(groups).forEach(k => {
-    const list = groups[k], by = {};
-    list.forEach(h => {
-      const p = by[h.item] || (by[h.item] = { barcode: h.bc || '', itemNumber: h.item, productName: h.name, e: {} });
-      p.e[h.batch] = (p.e[h.batch] || 0) + 1;
-    });
-    const data = Object.keys(by).map(i => ({ barcode: by[i].barcode, itemNumber: by[i].itemNumber, productName: by[i].productName,
-      entries: Object.keys(by[i].e).map(b => ({ batchNumber: b, qty: by[i].e[b] })) }));
+    // KHÔNG cộng dồn: mỗi lượt quét = 1 dòng riêng (SL 1) kèm giờ quét của chính nó, theo đúng thứ tự quét
+    // (anh John 25/11/2026: cần xem lại thứ tự thời gian quét từng mã). Máy chủ ghi giờ theo entries[].ts.
+    const list = groups[k];
+    const data = list.map(h => ({ barcode: h.bc || '', itemNumber: h.item, productName: h.name,
+      entries: [{ batchNumber: h.batch, qty: 1, ts: h.t }] }));
     const last = list[list.length - 1], id = reqId('KK');
-    KK.q.unshift({ id: id, cid: last.cid, cname: last.cname, loc: last.loc, data: data, ts: last.t,
-                   time: kcsTime(last.t), state: 'pending', msg: '' });
+    KK.q.unshift({ id: id, cid: last.cid, cname: last.cname, loc: last.loc, data: data, ts: last.t, cs: true,
+                   time: kcsTime(list[0].t) + '–' + kcsTime(last.t), state: 'pending', msg: '' });
     list.forEach(h => { h.st = 'sent'; h.job = id; });
   });
   kkSaveQ(); kcsSave(); kkRenderQ(); kkPump(); kcsRender();

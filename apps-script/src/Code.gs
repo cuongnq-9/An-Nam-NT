@@ -90,7 +90,7 @@ const PERM = {
 };
 
 /* ================== WEB APP ================== */
-const CODE_VERSION = '2026-11-23b';
+const CODE_VERSION = '2026-11-25a';
 
 function doGet(e) {
   // Kiểm tra kết nối: mở <link /exec>?ping=1 trên trình duyệt để xem máy chủ có chạy không
@@ -1752,7 +1752,8 @@ function kkSave(token, p) {
   (p.data || []).forEach(it => (it.entries || []).forEach(e => {
     const q = num_(e.qty);
     if ((q > 0 || (round === 2 && q === 0)) && String(e.batchNumber || '').trim()) {
-      rows.push([c.id, ts, u.username, u.name, loc || 'Đếm lại lần 2', round, String(it.barcode || ''), String(it.itemNumber || '').trim(),
+      // Quét liên tục gửi giờ quét riêng của từng lượt (entries[].ts) → mỗi dòng đúng thời điểm quét
+      rows.push([c.id, e.ts ? scanTime_(e.ts) : ts, u.username, u.name, loc || 'Đếm lại lần 2', round, String(it.barcode || ''), String(it.itemNumber || '').trim(),
                  String(it.productName || ''), String(e.batchNumber).trim(), q]);
     }
   }));
