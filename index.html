@@ -950,11 +950,9 @@ table.grid tr.bad td{background:#fdecea}
           <div class="pl-row" id="pa-qrow"><input class="inp" id="pa-q" placeholder="Quét barcode, nhập mã hoặc tên (dùng *)" enterkeyhint="search"><button class="btn light scan-btn" id="pa-scan"></button></div>
           <div id="pa-sug"></div>
           <div class="muted" id="pl-ms" style="font-size:12px;margin-top:4px"></div>
-          <div class="pt-2col" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:4px">
-            <div style="min-width:0"><label class="f" for="pa-batch">Batch</label><input class="inp" id="pa-batch" list="pa-batches" placeholder="Batch"><datalist id="pa-batches"></datalist></div>
-            <div style="min-width:0"><label class="f" for="pa-exp">HSD</label><input class="inp" id="pa-exp" type="date" style="min-width:0"></div>
-          </div>
-          <label class="f" for="pa-qty">Số thùng trên pallet</label>
+          <label class="f" for="pa-batch">Batch</label>
+          <input class="inp" id="pa-batch" list="pa-batches" placeholder="Batch number"><datalist id="pa-batches"></datalist>
+          <label class="f" for="pa-qty">Số lượng</label>
           <input class="inp" id="pa-qty" type="number" min="1" inputmode="numeric">
           <div class="pl-step">3. Vị trí</div>
           <div id="pa-loc"></div>
@@ -982,7 +980,7 @@ table.grid tr.bad td{background:#fdecea}
           <div class="pl-step">2. Quét tem pallet lấy ra</div>
           <div class="pl-row"><input class="inp" id="pk2-tem" placeholder="Quét hoặc nhập P-XXXXXX" autocapitalize="characters"><button class="btn light scan-btn" id="pk2-tem-scan"></button></div>
           <div id="pk2-cur"></div>
-          <label class="f" for="pk2-qty">Số thùng lấy ra</label>
+          <label class="f" for="pk2-qty">Số lượng lấy ra</label>
           <div class="pl-row"><input class="inp" id="pk2-qty" type="number" min="1" inputmode="numeric"><button class="btn ghost" id="pk2-all" style="white-space:nowrap">Lấy hết</button></div>
           <button class="btn block" id="pk2-go">Xác nhận lấy ra</button>
         </div>
@@ -1386,7 +1384,7 @@ async function api(fn, ...args){
 /* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
  * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
  * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
-const APP_VER = '25/11/2026-g';
+const APP_VER = '25/11/2026-h';
 const NEED_SERVER = '2026-11-25d';      // phiên bản Code.gs tương ứng
 async function checkUpdate(auto){
   if (location.protocol === 'file:') return;
@@ -5102,7 +5100,7 @@ document.addEventListener('input', e => {
 /* ========= QUẢN LÝ PALLET =========
  * Tem pallet (P-XXXXXX, in ở màn hình In tem) dán 1 lần lên pallet.
  * Vị trí: kệ R1–R4 × 8 cột × 4 tầng (tem trên kệ chỉ có "R2-05", nhân viên chọn tầng) · R0 = khu sàn 8 dãy.
- * Cất hàng → Chuyển vị trí → Lấy ra (gợi ý FEFO: HSD gần nhất lấy trước). */
+ * Cất hàng → Chuyển vị trí → Lấy ra (gợi ý FEFO theo batch: batch chính là HSD, batch gần nhất lấy trước). */
 const PL = { tab: 'map', map: null, rack: 'R1', put: { prod: null, loc: null }, mv: { p: null, loc: null }, pk: { item: '', p: null, list: [] }, busy: false };
 const plPad = n => ('0' + n).slice(-2);
 const plTemNorm = s => { s = String(s || '').trim().toUpperCase().replace(/\s+/g, ''); const m = s.match(/P-?([A-Z0-9]{6})$/); return m ? 'P-' + m[1] : s; };
@@ -5140,7 +5138,25 @@ function plFindProd(q){
   for (const it of S.master.items) { if (f(it.i, it.n) || it.b.some(b => f(b, ''))) out.push(it); if (out.length >= 30) break; }
   return out;
 }
-const plExpKey = e => { const m = String(e || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? m[3] + m[2] + m[1] : '99999999'; };
+// Batch = hạn sử dụng (theo anh John 25/11/2026). Đổi batch thành khóa yyyymmdd để xếp FEFO:
+// nhận dd/mm/yyyy, dd-mm-yy, yyyymmdd, ddmmyyyy, ddmmyy; batch không đọc được thì xếp sau, theo chữ.
+function plBatchKey(b){
+  const s = String(b || '').trim(); if (!s) return '9';
+  const ok = (y, m, d) => m >= 1 && m <= 12 && d >= 1 && d <= 31;
+  const k = (y, m, d) => '0' + y + ('0' + m).slice(-2) + ('0' + d).slice(-2);
+  let m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2}|\d{4})$/);
+  if (m) { const y = m[3].length === 2 ? 2000 + +m[3] : +m[3]; if (ok(y, +m[2], +m[1])) return k(y, +m[2], +m[1]); }
+  m = s.match(/^(\d{4})[\/.\-](\d{1,2})[\/.\-](\d{1,2})$/);
+  if (m && ok(+m[1], +m[2], +m[3])) return k(+m[1], +m[2], +m[3]);
+  if (/^\d{8}$/.test(s)) {
+    if (/^20/.test(s) && ok(+s.slice(0, 4), +s.slice(4, 6), +s.slice(6))) return k(+s.slice(0, 4), +s.slice(4, 6), +s.slice(6));
+    if (ok(+s.slice(4), +s.slice(2, 4), +s.slice(0, 2))) return k(+s.slice(4), +s.slice(2, 4), +s.slice(0, 2));
+  }
+  if (/^\d{6}$/.test(s) && ok(0, +s.slice(2, 4), +s.slice(0, 2))) return k(2000 + +s.slice(4), +s.slice(2, 4), +s.slice(0, 2));
+  return '8' + s.toUpperCase();
+}
+const plBatch = p => p.batch || p.exp || '';   // pallet cũ chỉ có HSD thì hiện HSD ở chỗ batch
+const plExpKey = p => plBatchKey(plBatch(p));
 const plShortItem = s => { s = String(s); return s.length > 7 ? '…' + s.slice(-6) : s; };
 
 async function initPallet(){
@@ -5175,7 +5191,7 @@ function plRenderMap(){
     return `<button data-r="${r}" class="${PL.rack === r ? 'on' : ''}">${r === m.floor ? 'R0 sàn' : r}<small>${n}${cap}</small></button>`;
   }).join('');
   const f = plMatcher($('pl-filter').value), cls = p => f ? (f(p.item, p.name) ? ' hit' : ' dim') : '';
-  const cell = p => `<div class="pl-cell full${cls(p)}" style="${plColor(p.item)}" data-tem="${esc(p.tem)}" title="${esc(p.item + ' · ' + p.name)}"><b>${esc(plShortItem(p.item))}</b><span>${p.qty} th</span></div>`;
+  const cell = p => `<div class="pl-cell full${cls(p)}" style="${plColor(p.item)}" data-tem="${esc(p.tem)}" title="${esc(p.item + ' · ' + p.name)}"><b>${esc(plShortItem(p.item))}</b><span>${p.qty}</span></div>`;
   let h = '';
   if (PL.rack === m.floor) {
     h = '<div class="pl-lanes">';
@@ -5217,14 +5233,13 @@ async function plShowInfo(tem){
   const body = p ? `<div class="pl-kv">
       <span>Vị trí</span><b>${esc(on ? p.loc : '–')}</b>
       <span>Mặt hàng</span><span><b>${esc(p.item)}</b> ${esc(p.name)}</span>
-      <span>Batch</span><span>${esc(p.batch || '–')}</span>
-      <span>HSD</span><span>${esc(p.exp || '–')}</span>
-      <span>Còn</span><b>${p.qty} / ${p.qty0} thùng</b>
+      <span>Batch</span><span>${esc(plBatch(p) || '–')}</span>
+      <span>Số lượng còn</span><b>${p.qty} / ${p.qty0}</b>
       <span>Trạng thái</span><span><span class="badge ${on ? 'st-done' : 'st-other'}">${esc(p.status)}</span></span>
       <span>Cất bởi</span><span>${esc(p.by)}${p.at ? ' · ' + new Date(p.at).toLocaleString('vi-VN') : ''}</span></div>`
     : `<div class="muted">${d.temStatus ? 'Tem chưa gắn pallet nào. Trạng thái tem: <b>' + esc(d.temStatus) + '</b>' : 'Không tìm thấy tem này trong danh sách tem đã in.'}</div>`;
   modal(`<h3>Pallet ${esc(tem)}</h3>${body}
-    ${d.hist.length ? `<div class="pl-step">Lịch sử</div><div class="pl-hist">${d.hist.map(h => `<div><b>${esc(opName[h.op] || h.op)}</b> ${h.from ? esc(h.from) + ' → ' : ''}${esc(h.to || (h.op.startsWith('LAY') ? 'xuất ' + Math.abs(h.dq) + ' thùng, còn ' + h.left : ''))}<br><span class="muted">${esc(h.time)} · ${esc(h.by)}</span></div>`).join('')}</div>` : ''}
+    ${d.hist.length ? `<div class="pl-step">Lịch sử</div><div class="pl-hist">${d.hist.map(h => `<div><b>${esc(opName[h.op] || h.op)}</b> ${h.from ? esc(h.from) + ' → ' : ''}${esc(h.to || (h.op.startsWith('LAY') ? 'lấy ' + Math.abs(h.dq) + ', còn ' + h.left : ''))}<br><span class="muted">${esc(h.time)} · ${esc(h.by)}</span></div>`).join('')}</div>` : ''}
     <div class="modal-actions">${on ? '<button class="btn ghost" id="pli-mv">Chuyển</button><button class="btn ghost" id="pli-pk">Lấy ra</button>' : (!p && d.temStatus === 'Chưa dùng' ? '<button class="btn ghost" id="pli-put">Cất hàng</button>' : '')}<button class="btn" id="pli-x">Đóng</button></div>`);
   $('pli-x').onclick = closeModal;
   if ($('pli-mv')) $('pli-mv').onclick = () => { closeModal(); $('mv-tem').value = tem; plTab('move'); plMvTem(); };
@@ -5308,7 +5323,9 @@ function paSearch(fromScan){
   if (fromScan && list.length === 1) { $('pa-sug').innerHTML = ''; paPick(list[0]); return; }
   plSugList('pa-sug', list, paPick);
 }
-function paPick(p){ PL.put.prod = p; $('pa-batch').value = ''; plRenderProd(); }
+function paPick(p){ PL.put.prod = p; $('pa-batch').value = ''; plRenderProd(); $('pa-batch').focus(); }
+// Quét tem pallet mới → xóa trống thông tin sản phẩm để nhân viên nhập lại từ đầu
+function paClearProd(){ PL.put.prod = null; $('pa-q').value = ''; $('pa-sug').innerHTML = ''; $('pa-batch').value = ''; $('pa-qty').value = ''; plRenderProd(); }
 let paT = null;
 $('pa-q').addEventListener('input', () => { clearTimeout(paT); paT = setTimeout(() => { if ($('pa-q').value.trim().length >= 2) paSearch(false); else $('pa-sug').innerHTML = ''; }, 250); });
 $('pa-q').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); clearTimeout(paT); paSearch(true); } });
@@ -5317,7 +5334,7 @@ const paTem = () => {
   const t = plTemNorm($('pa-tem').value); $('pa-tem').value = t; $('pa-tem').dataset.v = t;
   if (!/^P-[A-Z0-9]{6}$/.test(t)) { if (t) { beep('err'); toast('Mã tem pallet dạng P-XXXXXX.'); } return; }
   if (plFindTem(t)) { beep('err'); toast('Tem ' + t + ' đang gắn pallet khác trên kệ. Dán tem mới.'); return; }
-  beep('ok'); if (!PL.put.prod) $('pa-q').focus();
+  beep('ok'); paClearProd(); $('pa-q').focus();
 };
 $('pa-tem').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); paTem(); } });
 $('pa-tem').addEventListener('change', e => { if (e.target.dataset.v !== e.target.value) paTem(); });
@@ -5327,14 +5344,14 @@ $('pa-go').addEventListener('click', async () => {
   const tem = plTemNorm($('pa-tem').value), p = PL.put.prod, qty = +$('pa-qty').value;
   if (!/^P-[A-Z0-9]{6}$/.test(tem)) return toast('Quét tem pallet trước.');
   if (!p) return toast('Chọn mặt hàng.');
-  if (!(qty > 0)) return toast('Nhập số thùng trên pallet.');
+  if (!(qty > 0)) return toast('Nhập số lượng trên pallet.');
   const l = plLocOk(PL.put); if (!l) return;
   PL.busy = true; loading(true);
   try {
-    const r = await api('plPutaway', { tem, item: p.i, name: p.n || '', batch: $('pa-batch').value.trim(), exp: $('pa-exp').value, qty, rack: l.rack, col: l.col, lv: l.lv, reqId: reqId('pl') });
+    const r = await api('plPutaway', { tem, item: p.i, name: p.n || '', batch: $('pa-batch').value.trim(), exp: '', qty, rack: l.rack, col: l.col, lv: l.lv, reqId: reqId('pl') });
     beep('ok'); toast('Đã cất ' + tem + ' vào ' + (r.loc || plCode(l.rack, l.col, l.lv)) + '.', 3500);
-    $('pa-tem').value = ''; $('pa-qty').value = ''; $('pa-batch').value = ''; $('pa-exp').value = '';
-    PL.put.loc = null;   // giữ mặt hàng để cất tiếp pallet cùng mã
+    $('pa-tem').value = ''; paClearProd();
+    PL.put.loc = null;
     await plLoad();
   } catch (e) { beep('err'); toast(e.message, 4500); }
   finally { PL.busy = false; loading(false); }
@@ -5343,7 +5360,7 @@ $('pa-go').addEventListener('click', async () => {
 /* ---- Chuyển vị trí ---- */
 function plRenderMvCur(){
   const p = PL.mv.p;
-  $('mv-cur').innerHTML = p ? `<div class="pl-cur">Đang ở <b>${esc(p.loc)}</b> · ${esc(p.item)} ${esc(p.name)} · còn ${p.qty} thùng${p.exp ? ' · HSD ' + esc(p.exp) : ''}</div>` : '';
+  $('mv-cur').innerHTML = p ? `<div class="pl-cur">Đang ở <b>${esc(p.loc)}</b> · ${esc(p.item)} ${esc(p.name)} · còn ${p.qty}${plBatch(p) ? ' · batch ' + esc(plBatch(p)) : ''}</div>` : '';
 }
 function plMvTem(){
   const t = plTemNorm($('mv-tem').value); $('mv-tem').value = t; $('mv-tem').dataset.v = t; if (!t) return;
@@ -5373,14 +5390,14 @@ $('mv-go').addEventListener('click', async () => {
 function plRenderPickList(){
   const it = PL.pk.item, box = $('pk2-list');
   if (!it || !PL.map) { box.innerHTML = ''; return; }
-  const list = PL.map.items.filter(p => p.item === it).sort((a, b) => plExpKey(a.exp).localeCompare(plExpKey(b.exp)) || a.at - b.at);
+  const list = PL.map.items.filter(p => p.item === it).sort((a, b) => plExpKey(a).localeCompare(plExpKey(b)) || a.at - b.at);
   PL.pk.list = list;
   if (!list.length) { box.innerHTML = `<div class="pl-cur">Mã ${esc(it)} không có pallet nào trên kệ.</div>`; return; }
   const tot = list.reduce((s, p) => s + p.qty, 0), sel = PL.pk.p ? PL.pk.p.tem : '';
-  box.innerHTML = `<div class="muted" style="font-size:12.5px;margin-top:8px">${list.length} pallet · ${tot} thùng · xếp theo HSD gần nhất (FEFO)</div>` + list.map((p, i) =>
+  box.innerHTML = `<div class="muted" style="font-size:12.5px;margin-top:8px">${list.length} pallet · tổng SL ${tot} · xếp theo batch gần hết hạn nhất (FEFO)</div>` + list.map((p, i) =>
     `<div class="pl-pick${i === 0 ? ' first' : ''}${p.tem === sel ? ' sel' : ''}" data-tem="${esc(p.tem)}">
       <div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(p.loc)}</b>${i === 0 ? '<span class="badge st-done">Lấy trước</span>' : ''}</div>
-      <div style="font-size:13.5px">${esc(p.tem)} · HSD <b>${esc(p.exp || 'không có')}</b>${p.batch ? ' · batch ' + esc(p.batch) : ''} · còn <b>${p.qty}</b> thùng</div></div>`).join('');
+      <div style="font-size:13.5px">${esc(p.tem)} · batch <b>${esc(plBatch(p) || 'không có')}</b> · còn <b>${p.qty}</b></div></div>`).join('');
   box.querySelectorAll('[data-tem]').forEach(d => d.onclick = () => { $('pk2-tem').value = d.dataset.tem; plPkTem(); });
 }
 function pkSearch2(fromScan){
@@ -5403,9 +5420,9 @@ $('pk2-scan').addEventListener('click', () => plScanInto('pk2-q', 'Quét mã v�
 function plRenderPickCur(){
   const p = PL.pk.p, box = $('pk2-cur');
   if (!p) { box.innerHTML = ''; return; }
-  const first = PL.pk.list[0], warn = first && first.tem !== p.tem && plExpKey(first.exp) < plExpKey(p.exp);
-  box.innerHTML = `<div class="pl-cur">${esc(p.tem)} ở <b>${esc(p.loc)}</b> · ${esc(p.item)} ${esc(p.name)} · HSD ${esc(p.exp || '–')} · còn <b>${p.qty}</b> thùng</div>` +
-    (warn ? `<div class="pt-warn" style="display:block">⚠ Chưa đúng FEFO: pallet ${esc(first.tem)} ở ${esc(first.loc)} có HSD ${esc(first.exp)} gần hơn.</div>` : '');
+  const first = PL.pk.list[0], warn = first && first.tem !== p.tem && plExpKey(first) < plExpKey(p);
+  box.innerHTML = `<div class="pl-cur">${esc(p.tem)} ở <b>${esc(p.loc)}</b> · ${esc(p.item)} ${esc(p.name)} · batch ${esc(plBatch(p) || '–')} · còn <b>${p.qty}</b></div>` +
+    (warn ? `<div class="pt-warn" style="display:block">⚠ Chưa đúng FEFO: pallet ${esc(first.tem)} ở ${esc(first.loc)} có batch ${esc(plBatch(first))} gần hết hạn hơn.</div>` : '');
 }
 function plPkTem(){
   const t = plTemNorm($('pk2-tem').value); $('pk2-tem').value = t; $('pk2-tem').dataset.v = t; if (!t) return;
@@ -5414,7 +5431,7 @@ function plPkTem(){
   if (PL.pk.item !== p.item) { PL.pk.item = p.item; $('pk2-q').value = p.item + ' ' + p.name; $('pk2-sug').innerHTML = ''; }
   PL.pk.p = p; plRenderPickList();
   const first = PL.pk.list[0];
-  beep(first && first.tem !== p.tem && plExpKey(first.exp) < plExpKey(p.exp) ? 'miss' : 'ok');
+  beep(first && first.tem !== p.tem && plExpKey(first) < plExpKey(p) ? 'miss' : 'ok');
   plRenderPickCur(); $('pk2-qty').focus();
 }
 $('pk2-tem').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); plPkTem(); } });
@@ -5425,12 +5442,12 @@ $('pk2-go').addEventListener('click', async () => {
   if (PL.busy) return;
   const p = PL.pk.p, q = +$('pk2-qty').value;
   if (!p) return toast('Quét tem pallet lấy ra.');
-  if (!(q > 0)) return toast('Nhập số thùng lấy ra.');
-  if (q > p.qty) return toast('Pallet chỉ còn ' + p.qty + ' thùng.');
+  if (!(q > 0)) return toast('Nhập số lượng lấy ra.');
+  if (q > p.qty) return toast('Pallet chỉ còn ' + p.qty + '.');
   PL.busy = true; loading(true);
   try {
     const r = await api('plPick', { tem: p.tem, qty: q, reqId: reqId('pl') });
-    beep('ok'); toast(r.closed ? 'Đã lấy hết pallet ' + p.tem + '. Bóc tem bỏ đi.' : 'Đã lấy ' + q + ' thùng. Pallet còn ' + r.left + ' thùng.', 4000);
+    beep('ok'); toast(r.closed ? 'Đã lấy hết pallet ' + p.tem + '. Bóc tem bỏ đi.' : 'Đã lấy ' + q + '. Pallet còn ' + r.left + '.', 4000);
     $('pk2-tem').value = ''; $('pk2-qty').value = ''; PL.pk.p = null;
     await plLoad(); plRenderPickCur();
   } catch (e) { beep('err'); toast(e.message, 4500); }
