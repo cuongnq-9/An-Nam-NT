@@ -1,6 +1,6 @@
 # HỆ THỐNG ÂN NAM NHA TRANG – TÀI LIỆU TỔNG HỢP
 
-> Cập nhật: 23/11/2026 · Phiên bản hiện tại: **giao diện 25/11/2026-a · máy chủ 2026-11-25a**
+> Cập nhật: 23/11/2026 · Phiên bản hiện tại: **giao diện 25/11/2026-a · máy chủ 2026-11-25b**
 >
 > File này là tài liệu gốc của hệ thống, Claude đọc đầu tiên mỗi phiên làm việc. Sửa hệ thống thì cập nhật file này luôn.
 

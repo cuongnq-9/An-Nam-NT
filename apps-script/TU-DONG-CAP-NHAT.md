@@ -28,11 +28,11 @@ Không cần cài gì trên máy, làm hoàn toàn trên trình duyệt máy tí
 1. Mở https://shell.cloud.google.com (lần đầu bấm **Đồng ý / Start** nếu được hỏi). Chờ hiện khung đen có dấu nhắc `$`.
 2. Copy dòng dưới, dán vào khung đen, bấm **Enter**:
    ```
-   npx -y @google/clasp@2.4.2 login --no-localhost
+   npx -y @google/clasp@3.4.1 login --no-localhost
    ```
 3. Màn hình hiện một đường link dài. Bấm vào link → chọn tài khoản Google → bấm **Cho phép (Allow)**.
 4. Trình duyệt chuyển sang một trang báo lỗi kiểu *"Không thể kết nối localhost"*. **Như vậy là đúng.** Copy **toàn bộ địa chỉ** trên thanh địa chỉ của trang đó (bắt đầu bằng `http://localhost...`).
-5. Quay lại khung đen, dán địa chỉ vừa copy, bấm **Enter**. Thấy chữ `Authorization successful` là xong.
+5. Quay lại khung đen, dán địa chỉ vừa copy, bấm **Enter**. Thấy chữ `You are logged in as ...` là xong.
 6. Dán tiếp dòng này, bấm **Enter**:
    ```
    cat ~/.clasprc.json
