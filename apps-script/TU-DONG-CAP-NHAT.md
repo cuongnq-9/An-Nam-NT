@@ -12,7 +12,9 @@ Các file chỉ có trên Apps Script (như `index`, `appsscript.json`) được
 
 ## Cài đặt một lần (khoảng 10 phút)
 
-Dùng **đúng tài khoản Google đang sở hữu dự án Apps Script** cho cả 6 bước.
+Dùng **đúng tài khoản Google anh vẫn dùng để mở file Sheet "AN NAM NHA TRANG"** cho cả 6 bước.
+
+> **Mở Apps Script như mọi khi:** mở file Google Sheet "AN NAM NHA TRANG" → menu **Tiện ích mở rộng → Apps Script**. Bước 3 và 4 làm ở trang này.
 
 ### Bước 1. Bật Apps Script API
 
@@ -39,11 +41,11 @@ Không cần cài gì trên máy, làm hoàn toàn trên trình duyệt máy tí
 
 ### Bước 3. Lấy Mã tập lệnh (SCRIPT_ID)
 
-Mở dự án Apps Script → **⚙ Cài đặt dự án** → mục **Mã tập lệnh** → bấm **Sao chép**.
+Từ file Sheet → **Tiện ích mở rộng → Apps Script** → bấm biểu tượng **⚙ (Cài đặt dự án)** ở cột bên trái → mục **Mã tập lệnh** → bấm **Sao chép**.
 
 ### Bước 4. Lấy Mã triển khai (DEPLOYMENT_ID)
 
-Trong Apps Script → **Triển khai → Quản lý triển khai** → chọn bản Web app đang dùng → copy **Mã triển khai**.
+Vẫn ở trang Apps Script đó → nút xanh **Triển khai** (góc trên bên phải) → **Quản lý triển khai** → chọn bản Web app đang dùng → copy **Mã triển khai**.
 
 (Đó cũng chính là đoạn nằm giữa `/s/` và `/exec` trong link web app: `https://script.google.com/macros/s/`**`MÃ-Ở-ĐÂY`**`/exec`.)
 
@@ -67,7 +69,11 @@ Secrets được GitHub mã hóa, **không ai xem được**, kể cả khi repo
 
 ## Từ nay trở đi
 
-- **Không cần** dán Code.gs và tạo Phiên bản mới bằng tay nữa. Merge PR có sửa `Code.gs` là máy chủ tự cập nhật sau khoảng 1 phút.
+- **Không cần** dán Code.gs và tạo Phiên bản mới bằng tay nữa.
+- Anh **không phải sửa code trên GitHub**. Khi cần thay đổi, anh nhắn Claude như bình thường. Claude sửa code và gửi anh một đường link PR. Anh chỉ cần:
+  1. Bấm vào link PR.
+  2. Kéo xuống dưới, bấm nút xanh **Merge pull request** → **Confirm merge**.
+  3. Chờ khoảng 1 phút là máy chủ tự cập nhật. Giao diện app trên điện thoại cũng tự cập nhật như trước.
 - ⚠️ **Đừng sửa code trực tiếp trên trang Apps Script.** Lần cập nhật tự động sau sẽ ghi đè bằng bản trên GitHub, phần sửa tay sẽ mất. Muốn sửa thì sửa trên GitHub (hoặc nhờ Claude).
 - Lần cập nhật nào **có sheet hoặc cột mới** thì vẫn phải mở Apps Script và chạy `setup()` **một lần** bằng tay (GitHub không chạy hàm thay được).
 - Muốn đẩy lại bản hiện tại bất cứ lúc nào: làm như Bước 6.
