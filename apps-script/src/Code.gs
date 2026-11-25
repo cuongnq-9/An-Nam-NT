@@ -41,7 +41,7 @@ const TET_HEADERS  = ['Mã đơn', 'Thời gian gửi', 'Username', 'Nhân viên
 const ROLE_LABELS = {
   admin: 'Admin', manager: 'Manager', sale: 'Sale', deliveryman: 'Delivery man',
   storekeeper: 'Store keeper', customerservice: 'Customer service', accountant: 'Accountant',
-  printstation: 'Trạm in tem (máy cạnh máy in)'
+  tramin: 'Trạm in'
 };
 /* ---------- PHÂN NHÓM TÍNH NĂNG THEO VAI TRÒ ----------
  * COMMON_FEATURES : tính năng chung, ai đăng nhập cũng thấy.
@@ -59,7 +59,7 @@ const ROLE_FEATURES = {
   storekeeper:     ['scan', 'waiting', 'kiemke', 'huyhang', 'soanhang', 'bcsoan', 'intem', 'pallet'],
   customerservice: ['scan', 'tetnew', 'tetlist', 'bcsoan', 'intem'],
   accountant:      ['scan', 'congno', 'intem'],
-  printstation:    ['tramin']        // tài khoản riêng cho máy trạm in: chỉ màn hình Trạm in
+  tramin:          ['tramin']        // tài khoản riêng cho máy trạm in: chỉ màn hình Trạm in
 };
 // Danh sách tính năng riêng mà admin có thể gán cho từng user trên màn hình Quản trị
 const FEATURE_LABELS = {
@@ -93,7 +93,7 @@ const PERM = {
 };
 
 /* ================== WEB APP ================== */
-const CODE_VERSION = '2026-11-25c';
+const CODE_VERSION = '2026-11-25d';
 
 function doGet(e) {
   // Kiểm tra kết nối: mở <link /exec>?ping=1 trên trình duyệt để xem máy chủ có chạy không
@@ -138,14 +138,14 @@ function doPost(e) {
   return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
 }
 
-/* Tài khoản Trạm in (vai trò print station) chỉ được gọi các hàm của Trạm in và đăng nhập/đổi mật khẩu */
+/* Tài khoản Trạm in (vai trò tramin) chỉ được gọi các hàm của Trạm in và đăng nhập/đổi mật khẩu */
 const STATION_FUNCS = ['login', 'getSession', 'logout', 'changePassword', 'printNext', 'printDone'];
 function stationGuard_(req) {
   if (STATION_FUNCS.indexOf(req.fn) !== -1) return;
   const tk = req.args && req.args[0];
   if (typeof tk !== 'string' || !tk) return;
   const s = readSession_(tk);
-  if (s && s.u && s.u.role === 'printstation') throw new Error('Tài khoản Trạm in chỉ dùng được màn hình Trạm in.');
+  if (s && s.u && normRole_(s.u.role) === 'tramin') throw new Error('Tài khoản Trạm in chỉ dùng được màn hình Trạm in.');
 }
 
 /* ================== CÀI ĐẶT BAN ĐẦU (chạy 1 lần) ================== */
@@ -162,7 +162,7 @@ function setup() {
     u.getRange('E:F').setNumberFormat('@');
     u.getRange(2, 1, 1, 7).setValues([['admin', 'admin', 'Quản trị viên', '', '123456', '', 'Active']]);
     const roleRule = SpreadsheetApp.newDataValidation()
-      .requireValueInList(['admin', 'manager', 'sale', 'deliveryman', 'store keeper', 'customer service', 'accountant', 'print station'], true).build();
+      .requireValueInList(['admin', 'manager', 'sale', 'deliveryman', 'store keeper', 'customer service', 'accountant', 'tramin'], true).build();
     u.getRange('B2:B1000').setDataValidation(roleRule);
     const stRule = SpreadsheetApp.newDataValidation().requireValueInList(['Active', 'Khóa'], true).build();
     u.getRange('G2:G1000').setDataValidation(stRule);
@@ -176,12 +176,12 @@ function setup() {
   const curH = u.getRange(1, 1, 1, USER_HEADERS.length).getValues()[0];
   USER_HEADERS.forEach((h, i) => { if (String(curH[i]).trim() !== h) safe_(() => u.getRange(1, i + 1).setValue(h)); });
   safe_(() => u.getRange(1, 1, 1, USER_HEADERS.length).setFontWeight('bold'));
-  // Danh sách chọn vai trò ở cột B: thêm "print station" (tài khoản Trạm in) nếu ô đang dùng danh sách chọn
+  // Danh sách chọn vai trò ở cột B: thêm "tramin" (tài khoản Trạm in) nếu ô đang dùng danh sách chọn
   safe_(() => {
     const r = u.getRange('B2:B1000'), dv = r.getDataValidation();
     if (!dv || dv.getCriteriaType() !== SpreadsheetApp.DataValidationCriteria.VALUE_IN_LIST) return;
     const list = dv.getCriteriaValues()[0] || [];
-    if (list.indexOf('print station') === -1) r.setDataValidation(dv.copy().requireValueInList(list.concat(['print station']), dv.getCriteriaValues()[1]).build());
+    if (list.indexOf('tramin') === -1) r.setDataValidation(dv.copy().requireValueInList(list.concat(['tramin']), dv.getCriteriaValues()[1]).build());
   });
 
   // Luôn cập nhật danh sách vai trò (kể cả khi sheet User đã tồn tại)
@@ -376,7 +376,7 @@ function can_(u, perm) {
 function publicUser_(u) {
   return {
     username: u.username, name: u.name, role: u.role, email: u.email, mustChange: !!u.mustChange, ver: CODE_VERSION,
-    common: u.role === 'printstation' ? [] : COMMON_FEATURES.slice(),
+    common: u.role === 'tramin' ? [] : COMMON_FEATURES.slice(),
     features: featuresOf_(u),
     scanModes: scanModesOf_(u),
     scope: scopeOf_(u),
@@ -411,7 +411,7 @@ function findUser_(username) {
   return null;
 }
 
-function normRole_(r) { return String(r || '').toLowerCase().replace(/[\s_\-]/g, ''); }
+function normRole_(r) { const k = String(r || '').toLowerCase().replace(/[\s_\-]/g, ''); return k === 'printstation' ? 'tramin' : k; }
 function isActive_(s) { s = String(s || '').trim().toLowerCase(); return !s || s === 'active' || s === 'hoạt động'; }
 
 function checkPassword_(rec, pw) {
@@ -541,7 +541,7 @@ function requireAdmin_(token) {
   return u;
 }
 const ROLE_SHEET_VALUE = { admin: 'admin', manager: 'manager', sale: 'sale', deliveryman: 'deliveryman',
-  storekeeper: 'store keeper', customerservice: 'customer service', accountant: 'accountant', printstation: 'print station' };
+  storekeeper: 'store keeper', customerservice: 'customer service', accountant: 'accountant', tramin: 'tramin' };
 
 function adminListUsers(token) {
   requireAdmin_(token);
