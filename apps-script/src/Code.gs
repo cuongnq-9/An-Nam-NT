@@ -51,20 +51,21 @@ const ROLE_LABELS = {
  */
 const COMMON_FEATURES = ['bc', 'update', 'lookup', 'bank', 'schedule'];
 const ROLE_FEATURES = {
-  admin:           ['scan', 'waiting', 'mine', 'tetnew', 'tetlist', 'kiemke', 'huyhang', 'soanhang', 'bcsoan', 'congno'],
+  admin:           ['scan', 'waiting', 'mine', 'tetnew', 'tetlist', 'kiemke', 'huyhang', 'soanhang', 'bcsoan', 'congno', 'intem', 'tramin', 'pallet'],
   manager:         ['scan', 'tetnew', 'tetlist', 'congno'],
   sale:            ['scan', 'tetnew', 'tetlist', 'congno'],
   deliveryman:     ['scan', 'waiting', 'mine'],
-  storekeeper:     ['scan', 'waiting', 'kiemke', 'huyhang', 'soanhang', 'bcsoan'],
-  customerservice: ['scan', 'tetnew', 'tetlist', 'bcsoan'],
-  accountant:      ['scan', 'congno']
+  storekeeper:     ['scan', 'waiting', 'kiemke', 'huyhang', 'soanhang', 'bcsoan', 'intem', 'pallet'],
+  customerservice: ['scan', 'tetnew', 'tetlist', 'bcsoan', 'intem'],
+  accountant:      ['scan', 'congno', 'intem']
 };
 // Danh sách tính năng riêng mà admin có thể gán cho từng user trên màn hình Quản trị
 const FEATURE_LABELS = {
   scan: 'Quét mã QR', waiting: 'Đơn chờ giao', mine: 'Đơn của tôi (giao hàng)',
   tetnew: 'Lên đơn Tết', tetlist: 'Đơn Tết đã gửi',
   kiemke: 'Kiểm kê', huyhang: 'BC Hủy hàng', soanhang: 'Soạn hàng',
-  bcsoan: 'Báo cáo soạn hàng', congno: 'Công nợ'
+  bcsoan: 'Báo cáo soạn hàng', congno: 'Công nợ',
+  intem: 'In tem', tramin: 'Trạm in tem (máy tính cạnh máy in)', pallet: 'Quản lý pallet'
 };
 /* Phạm vi dữ liệu mặc định theo vai trò:
  *   own = chỉ xem đơn của chính mình, không có bộ lọc (Sale)
@@ -90,7 +91,7 @@ const PERM = {
 };
 
 /* ================== WEB APP ================== */
-const CODE_VERSION = '2026-11-25a';
+const CODE_VERSION = '2026-11-24b';
 
 function doGet(e) {
   // Kiểm tra kết nối: mở <link /exec>?ping=1 trên trình duyệt để xem máy chủ có chạy không
@@ -117,7 +118,9 @@ const API_FUNCS = {
   getOpsMaster, kkGetState, kkSave, kkSummary, kkFinish, adminImportStock, adminCreateCampaign, adminReopenCampaign, kkClaim, kkRelease,
   whSaveWriteOff, pickSearch, pickConfirm, pickOrders, pickComplete, pickHistory,
   listStaff, docsPending, adminSetPrioBy, bdHome, bdPost, bdWish, bdImage, setMyDob, getMyDob, msgInbox, msgSend, msgRead, debtReport, debtSetStatus, debtCustList, debtCustSave, debtCustDelete, debtOpenSave, debtSetAmount, debtExport, debtSaveRows, debtOrders, notifList, notifRead,
-  debtThread, debtPostMsg, debtSaveNote, debtUpload, debtFile, cctvList, adminSaveCctv, bcsUpload, bcsSave, bcsSearch, bcsPhoto
+  debtThread, debtPostMsg, debtSaveNote, debtUpload, debtFile, cctvList, adminSaveCctv, bcsUpload, bcsSave, bcsSearch, bcsPhoto,
+  printRequest, printList, printCancel, printNext, printDone,
+  plMap, plInfo, plPutaway, plMove, plPick
 };
 function doPost(e) {
   let out;
@@ -191,6 +194,12 @@ function setup() {
   DriveApp.getFolderById(QLCN_FOLDER_ID).getName();    // thư mục QL Cong no (tệp đính kèm công nợ)
   appSheet_(SH_BCS, BCS_HEADERS);
   DriveApp.getFolderById(BCS_FOLDER_ID).getName();     // thư mục ảnh soạn hàng
+  // In tem: hàng chờ lệnh in + danh sách mã tem pallet đã tạo
+  printSheet_();
+  appSheet_(SH_TEM, TEM_HEADERS);
+  // Quản lý pallet
+  plSheet_();
+  appSheet_(SH_PL_LOG, PL_LOG_HEADERS);
 
   let t = ss.getSheetByName(SHEET_TET);
   if (!t) {
@@ -1544,7 +1553,7 @@ const nowStr_ = () => Utilities.formatDate(new Date(), 'GMT+7', 'dd/MM/yyyy HH:m
 /* ---------- Danh mục hàng (Barcode) + batch tồn kho: tải 1 lần về điện thoại để tìm tức thì ---------- */
 function getOpsMaster(token) {
   const u = requireUser_(token);
-  if (!['kiemke', 'huyhang', 'soanhang'].some(f => hasFeature_(u, f))) throw new Error('Bạn không có quyền dùng chức năng kho.');
+  if (!['kiemke', 'huyhang', 'soanhang', 'pallet'].some(f => hasFeature_(u, f))) throw new Error('Bạn không có quyền dùng chức năng kho.');
   const sh = SpreadsheetApp.openById(OPS_BARCODE_SS).getSheetByName('Barcode');
   if (!sh) throw new Error('Không tìm thấy sheet Barcode.');
   const v = sh.getDataRange().getDisplayValues();
@@ -1752,8 +1761,7 @@ function kkSave(token, p) {
   (p.data || []).forEach(it => (it.entries || []).forEach(e => {
     const q = num_(e.qty);
     if ((q > 0 || (round === 2 && q === 0)) && String(e.batchNumber || '').trim()) {
-      // Quét liên tục gửi giờ quét riêng của từng lượt (entries[].ts) → mỗi dòng đúng thời điểm quét
-      rows.push([c.id, e.ts ? scanTime_(e.ts) : ts, u.username, u.name, loc || 'Đếm lại lần 2', round, String(it.barcode || ''), String(it.itemNumber || '').trim(),
+      rows.push([c.id, ts, u.username, u.name, loc || 'Đếm lại lần 2', round, String(it.barcode || ''), String(it.itemNumber || '').trim(),
                  String(it.productName || ''), String(e.batchNumber).trim(), q]);
     }
   }));
@@ -3501,4 +3509,378 @@ function msgRead(token, ids) {
     sh.getRange(sh.getLastRow() + 1, 1, add.length, 3).setValues(add.map(id => [id, u.username, now]));
   }
   return { ok: true, marked: add.length };
+}
+/* ================== IN TEM (hàng chờ lệnh in → máy trạm in cạnh máy in tem) ==================
+ * Người dùng (tính năng "intem") gửi lệnh → sheet "Lenh in" (Chờ in).
+ * Máy trạm (tính năng "tramin") hỏi printNext mỗi 5 giây, in, rồi báo printDone.
+ * Lệnh chờ quá 5 phút mà chưa in → "Đã hủy", không dồn lại.
+ * Loại tem:  thaw = Rã đông 35×22 mm, 3 tem/hàng · pal = Tem pallet 50×50, 2 tem/hàng · cus = Tùy chỉnh 50×50, 2 tem/hàng
+ */
+const SH_PRINT = 'Lenh in';
+const PRINT_HEADERS = ['Mã lệnh', 'Gửi lúc', 'Username', 'Người gửi', 'Loại tem', 'Khổ', 'Số tem', 'Nội dung',
+                       'Hạn in', 'Trạng thái', 'Trạm in', 'Nhận lúc', 'In lúc', 'Ghi chú'];
+const SH_TEM = 'Tem pallet';
+const TEM_HEADERS = ['Mã tem', 'Lệnh in', 'Ngày tạo', 'Trạng thái', 'Dùng lúc', 'Đóng lúc'];
+const PRINT_TYPES = {
+  thaw: { name: 'Rã đông',   size: '35×22', cols: 3 },
+  pal:  { name: 'Pallet',    size: '50×50', cols: 2 },
+  cus:  { name: 'Tùy chỉnh', size: '50×50', cols: 2 }
+};
+const PRINT_LIFE_MS = 5 * 60000;        // lệnh chỉ được in trong 5 phút kể từ lúc gửi
+const PRINT_STUCK_MS = 3 * 60000;       // "Đang in" quá 3 phút mà trạm không báo lại → "Lỗi"
+const PRINT_SCAN_ROWS = 400;            // chỉ đọc 400 dòng cuối của sheet Lenh in
+const TEM_ALPHA = 'ACDEFGHJKLMNPQRTUVWXY234679';   // bỏ ký tự dễ nhầm: 0/O, 1/I, 5/S, 8/B
+const PS_ = { WAIT: 'Chờ in', PRINTING: 'Đang in', DONE: 'Đã in', CANCEL: 'Đã hủy', ERR: 'Lỗi' };
+
+function printSheet_() {
+  const sh = appSheet_(SH_PRINT, PRINT_HEADERS);
+  safe_(() => { sh.getRange('A:A').setNumberFormat('@'); sh.getRange('H:H').setNumberFormat('@'); });
+  return sh;
+}
+function printCanUse_(u) { if (!hasFeature_(u, 'intem') && u.role !== 'admin') throw new Error('Bạn không có quyền dùng chức năng In tem.'); }
+function printIsStation_(u) { if (!hasFeature_(u, 'tramin') && u.role !== 'admin') throw new Error('Tài khoản này chưa được cấp quyền Trạm in tem.'); }
+const printTime_ = v => v instanceof Date ? v.getTime() : 0;
+
+/** Đọc các dòng cuối của sheet Lenh in: { sh, start, rows } (start = số dòng của rows[0]) */
+function printRows_() {
+  const sh = printSheet_(), last = sh.getLastRow();
+  if (last < 2) return { sh, start: 2, rows: [] };
+  const start = Math.max(2, last - PRINT_SCAN_ROWS + 1);
+  return { sh, start, rows: sh.getRange(start, 1, last - start + 1, PRINT_HEADERS.length).getValues() };
+}
+/** Hủy lệnh quá 5 phút, đánh dấu lỗi lệnh "Đang in" bị treo. Ghi lại các ô đã đổi. */
+function printExpire_(d) {
+  const now = Date.now();
+  d.rows.forEach((r, i) => {
+    let st = null, note = '';
+    if (r[9] === PS_.WAIT && now - printTime_(r[1]) > PRINT_LIFE_MS) { st = PS_.CANCEL; note = 'Quá 5 phút chưa in, tự hủy'; }
+    else if (r[9] === PS_.PRINTING && now - printTime_(r[11]) > PRINT_STUCK_MS) { st = PS_.ERR; note = 'Trạm in không báo kết quả, kiểm tra tem đã ra chưa'; }
+    if (!st) return;
+    r[9] = st; r[13] = note;
+    d.sh.getRange(d.start + i, 10).setValue(st);
+    d.sh.getRange(d.start + i, 14).setValue(note);
+    if (st === PS_.CANCEL) printVoidCodes_(r);
+  });
+}
+/** Lệnh tem pallet bị hủy (chưa in) → mã tem của lệnh đó chuyển "Đã hủy" để không bị dùng nhầm */
+function printVoidCodes_(r) {
+  if (String(r[4]) !== PRINT_TYPES.pal.name) return;
+  const sh = appSheet_(SH_TEM, TEM_HEADERS), n = sh.getLastRow() - 1;
+  if (n < 1) return;
+  const v = sh.getRange(2, 2, n, 3).getValues(), id = String(r[0]);
+  v.forEach((x, i) => { if (String(x[0]) === id && x[2] === 'Chưa dùng') sh.getRange(i + 2, 4).setValue('Đã hủy (không in)'); });
+}
+function printJobOut_(r) {
+  let content = {};
+  try { content = JSON.parse(String(r[7] || '{}')); } catch (e) {}
+  const fmt = v => v instanceof Date ? Utilities.formatDate(v, 'GMT+7', 'HH:mm:ss dd/MM') : '';
+  return { id: String(r[0]), t: printTime_(r[1]), time: fmt(r[1]), user: String(r[2]), by: String(r[3]),
+           type: String(r[4]), size: String(r[5]), qty: Number(r[6]) || 0, content: content,
+           expire: printTime_(r[8]), status: String(r[9]), station: String(r[10]), printedAt: fmt(r[12]), note: String(r[13] || '') };
+}
+function printStation_() {
+  try { return JSON.parse(CacheService.getScriptCache().get('print_station') || 'null'); } catch (e) { return null; }
+}
+function printNewCodes_(n) {
+  const sh = appSheet_(SH_TEM, TEM_HEADERS), used = {};
+  if (sh.getLastRow() >= 2) sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues().forEach(r => { used[String(r[0])] = 1; });
+  const out = [];
+  while (out.length < n) {
+    let c = 'P-';
+    for (let k = 0; k < 6; k++) c += TEM_ALPHA.charAt(Math.floor(Math.random() * TEM_ALPHA.length));
+    if (!used[c]) { used[c] = 1; out.push(c); }
+  }
+  return out;
+}
+/** iso yyyy-mm-dd hoặc dd/mm/yyyy → dd/mm/yyyy */
+function printDate_(v, label) {
+  const s = String(v || '').trim();
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return m[3] + '/' + m[2] + '/' + m[1];
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return ('0' + m[1]).slice(-2) + '/' + ('0' + m[2]).slice(-2) + '/' + m[3];
+  throw new Error('Chưa nhập ' + label + '.');
+}
+
+/** Gửi lệnh in. req = { type, qty, d1, d2, c1, c2, c3, reqId } */
+function printRequest(token, req) {
+  const u = requireUser_(token); printCanUse_(u);
+  req = req || {};
+  const T = PRINT_TYPES[req.type];
+  if (!T) throw new Error('Loại tem không hợp lệ.');
+  if (reqSeen_(req.reqId)) return { dup: true };
+  let qty = Math.floor(Number(req.qty) || 0);
+  if (qty < 1) throw new Error('Nhập số tem cần in.');
+  if (qty > 200) throw new Error('Mỗi lệnh in tối đa 200 tem.');
+  qty = Math.ceil(qty / T.cols) * T.cols;            // in đủ hàng (2 hoặc 3 tem/hàng)
+  let content;
+  if (req.type === 'thaw') content = { d1: printDate_(req.d1, 'Ngày rã đông'), d2: printDate_(req.d2, 'HSD sau rã đông') };
+  else if (req.type === 'cus') {
+    content = { c1: String(req.c1 || '').slice(0, 200), c2: String(req.c2 || '').slice(0, 120), c3: String(req.c3 || '').replace(/[\r\n]+/g, ' ').slice(0, 60) };
+    if (!(content.c1 + content.c2 + content.c3).trim()) throw new Error('Nhập nội dung tem.');
+  }
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    if (reqSeen_(req.reqId)) return { dup: true };
+    const now = new Date();
+    const id = 'IN-' + Utilities.formatDate(now, 'GMT+7', 'yyMMddHHmmss') + '-' + ('00' + Math.floor(Math.random() * 1000)).slice(-3);
+    if (req.type === 'pal') {
+      const codes = printNewCodes_(qty);
+      content = { codes: codes };
+      const sh = appSheet_(SH_TEM, TEM_HEADERS), st = sh.getLastRow() + 1;
+      safe_(() => sh.getRange(st, 1, codes.length, 2).setNumberFormat('@'));
+      sh.getRange(st, 1, codes.length, 4).setValues(codes.map(c => [c, id, now, 'Chưa dùng']));
+    }
+    const sh = printSheet_(), row = sh.getLastRow() + 1;
+    sh.getRange(row, 1, 1, PRINT_HEADERS.length).setValues([[id, now, u.username, u.name, T.name, T.size, qty, JSON.stringify(content),
+      new Date(now.getTime() + PRINT_LIFE_MS), PS_.WAIT, '', '', '', '']]);
+    safe_(() => sh.getRange(row, 2).setNumberFormat('dd/MM/yyyy HH:mm:ss'));
+    safe_(() => sh.getRange(row, 9).setNumberFormat('dd/MM/yyyy HH:mm:ss'));
+    CacheService.getScriptCache().put('print_pending', '1', 900);
+    reqMark_(req.reqId);
+    return { id: id, qty: qty, station: printStation_() };
+  } finally { lock.releaseLock(); }
+}
+
+/** Lệnh in của tôi trong 24 giờ (admin: all = true để xem của mọi người) + trạng thái trạm in */
+function printList(token, all) {
+  const u = requireUser_(token); printCanUse_(u);
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  let d;
+  try { d = printRows_(); printExpire_(d); } finally { lock.releaseLock(); }
+  const me = key_(u.username), since = Date.now() - 24 * 3600000, items = [];
+  for (let i = d.rows.length - 1; i >= 0 && items.length < 50; i--) {
+    const r = d.rows[i];
+    if (printTime_(r[1]) < since) break;
+    if (!(all && u.role === 'admin') && key_(r[2]) !== me) continue;
+    const j = printJobOut_(r);
+    if (j.type === 'Pallet') j.content = { codes: (j.content.codes || []).slice(0, 4), more: Math.max(0, (j.content.codes || []).length - 4) };
+    items.push(j);
+  }
+  return { now: Date.now(), station: printStation_(), items: items };
+}
+
+function printCancel(token, id) {
+  const u = requireUser_(token); printCanUse_(u);
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const d = printRows_(); printExpire_(d);
+    const i = d.rows.findIndex(r => String(r[0]) === String(id));
+    if (i === -1) throw new Error('Không tìm thấy lệnh in ' + id + '.');
+    const r = d.rows[i];
+    if (key_(r[2]) !== key_(u.username) && u.role !== 'admin') throw new Error('Bạn chỉ hủy được lệnh của mình.');
+    if (r[9] !== PS_.WAIT) throw new Error('Lệnh đang ở trạng thái "' + r[9] + '", không hủy được.');
+    d.sh.getRange(d.start + i, 10).setValue(PS_.CANCEL);
+    d.sh.getRange(d.start + i, 14).setValue('Người gửi hủy');
+    printVoidCodes_(r);
+    return true;
+  } finally { lock.releaseLock(); }
+}
+
+/** Máy trạm: báo đang chạy + nhận lệnh cũ nhất còn hạn (null nếu không có). Lệnh đọc cả sheet tối đa mỗi 60 giây khi không có lệnh mới. */
+function printNext(token, stationName) {
+  const u = requireUser_(token); printIsStation_(u);
+  const cache = CacheService.getScriptCache();
+  const name = String(stationName || u.name || u.username).slice(0, 40);
+  cache.put('print_station', JSON.stringify({ at: Date.now(), name: name }), 600);
+  if (!cache.get('print_pending') && cache.get('print_scan')) return null;
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const d = printRows_(); printExpire_(d);
+    cache.put('print_scan', '1', 60);
+    const now = Date.now();
+    const i = d.rows.findIndex(r => r[9] === PS_.WAIT && now - printTime_(r[1]) <= PRINT_LIFE_MS);
+    if (i === -1) { cache.remove('print_pending'); return null; }
+    const r = d.rows[i];
+    r[9] = PS_.PRINTING; r[10] = name; r[11] = new Date();
+    d.sh.getRange(d.start + i, 10, 1, 3).setValues([[r[9], r[10], r[11]]]);
+    safe_(() => d.sh.getRange(d.start + i, 12).setNumberFormat('dd/MM/yyyy HH:mm:ss'));
+    const job = printJobOut_(r);
+    job.kind = Object.keys(PRINT_TYPES).find(k => PRINT_TYPES[k].name === job.type) || '';
+    return job;
+  } finally { lock.releaseLock(); }
+}
+
+/** Máy trạm báo kết quả: ok = true → Đã in; false → Lỗi (kèm lý do) */
+function printDone(token, id, ok, err) {
+  const u = requireUser_(token); printIsStation_(u);
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const d = printRows_();
+    const i = d.rows.findIndex(r => String(r[0]) === String(id));
+    if (i === -1) return false;
+    const row = d.start + i;
+    if (ok) { d.sh.getRange(row, 10).setValue(PS_.DONE); d.sh.getRange(row, 13).setValue(new Date()); safe_(() => d.sh.getRange(row, 13).setNumberFormat('dd/MM/yyyy HH:mm:ss')); }
+    else { d.sh.getRange(row, 10).setValue(PS_.ERR); d.sh.getRange(row, 14).setValue(String(err || 'Lỗi khi in').slice(0, 300)); }
+    return true;
+  } finally { lock.releaseLock(); }
+}
+
+/* ================== QUẢN LÝ PALLET (tem QR dán 1 lần) ==================
+ * Vị trí: kệ R1–R4 × 8 cột × 4 tầng → "R2-05-T3" (tem trên kệ chỉ có "R2-05", nhân viên chọn tầng).
+ *         R0 = khu để hàng dưới sàn, 8 dãy → "R0-03" (không có tầng, 1 dãy chứa nhiều pallet).
+ * Mã tem pallet lấy từ sheet "Tem pallet" (do tính năng In tem tạo): Chưa dùng → Đang dùng → Đã đóng.
+ * Mỗi ô kệ (kệ-cột-tầng) chứa 1 pallet.
+ */
+const PL_RACKS = ['R1', 'R2', 'R3', 'R4'], PL_COLS = 8, PL_LEVELS = 4, PL_FLOOR = 'R0', PL_LANES = 8;
+const SH_PL = 'Pallet', SH_PL_LOG = 'Pallet Log';
+const PL_HEADERS = ['Mã tem', 'Mã hàng', 'Tên hàng', 'Batch', 'HSD', 'SL cất', 'SL còn', 'Kệ', 'Cột', 'Tầng', 'Vị trí',
+                    'Trạng thái', 'Cất lúc', 'Cất bởi', 'Cập nhật lúc', 'Đóng lúc', 'Ghi chú'];
+const PL_LOG_HEADERS = ['Thời gian', 'Username', 'Nhân viên', 'Thao tác', 'Mã tem', 'Mã hàng', 'Từ vị trí', 'Đến vị trí', 'SL thay đổi', 'SL còn', 'reqId'];
+const PL_ON = 'Trên kệ', PL_DONE = 'Đã lấy hết';
+
+function plSheet_() {
+  const sh = appSheet_(SH_PL, PL_HEADERS);
+  safe_(() => { sh.getRange('A:E').setNumberFormat('@'); sh.getRange('H:K').setNumberFormat('@'); });
+  return sh;
+}
+function plCanUse_(u) { if (!hasFeature_(u, 'pallet') && u.role !== 'admin') throw new Error('Bạn không có quyền dùng chức năng Quản lý pallet.'); }
+/** Chuẩn hóa vị trí: { rack, col, lv } → { code, rack, col, lv } hoặc báo lỗi */
+function plLoc_(rack, col, lv) {
+  rack = String(rack || '').trim().toUpperCase();
+  const c = parseInt(col, 10), l = parseInt(lv, 10);
+  if (rack === PL_FLOOR) {
+    if (!(c >= 1 && c <= PL_LANES)) throw new Error('Dãy R0 không hợp lệ (1–' + PL_LANES + ').');
+    return { code: PL_FLOOR + '-' + ('0' + c).slice(-2), rack: rack, col: c, lv: '' };
+  }
+  if (PL_RACKS.indexOf(rack) === -1) throw new Error('Kệ không hợp lệ: ' + rack + '.');
+  if (!(c >= 1 && c <= PL_COLS)) throw new Error('Cột không hợp lệ (1–' + PL_COLS + ').');
+  if (!(l >= 1 && l <= PL_LEVELS)) throw new Error('Chọn tầng (1–' + PL_LEVELS + ').');
+  return { code: rack + '-' + ('0' + c).slice(-2) + '-T' + l, rack: rack, col: c, lv: l };
+}
+function plRows_() {
+  const sh = plSheet_(), n = sh.getLastRow() - 1;
+  return { sh: sh, rows: n > 0 ? sh.getRange(2, 1, n, PL_HEADERS.length).getValues() : [] };
+}
+function plOut_(r) {
+  const t = v => v instanceof Date ? v.getTime() : 0;
+  return { tem: String(r[0]), item: String(r[1]), name: String(r[2]), batch: String(r[3]), exp: String(r[4]),
+           qty0: Number(r[5]) || 0, qty: Number(r[6]) || 0, rack: String(r[7]), col: Number(r[8]) || 0, lv: Number(r[9]) || 0,
+           loc: String(r[10]), status: String(r[11]), at: t(r[12]), by: String(r[13]), upd: t(r[14]) };
+}
+function plLog_(u, op, tem, item, from, to, dq, left, rid) {
+  const sh = appSheet_(SH_PL_LOG, PL_LOG_HEADERS), row = sh.getLastRow() + 1;
+  sh.getRange(row, 1, 1, PL_LOG_HEADERS.length).setValues([[new Date(), u.username, u.name, op, tem, item, from, to, dq, left, rid || '']]);
+  safe_(() => sh.getRange(row, 1).setNumberFormat('dd/MM/yyyy HH:mm:ss'));
+}
+function plTemRow_(code) {
+  const sh = appSheet_(SH_TEM, TEM_HEADERS), n = sh.getLastRow() - 1;
+  if (n < 1) return null;
+  const v = sh.getRange(2, 1, n, 4).getValues();
+  for (let i = 0; i < v.length; i++) if (String(v[i][0]).trim().toUpperCase() === code) return { sh: sh, row: i + 2, status: String(v[i][3]) };
+  return null;
+}
+function plFindOpen_(d, tem) {
+  const i = d.rows.findIndex(r => String(r[0]).toUpperCase() === tem && r[11] === PL_ON);
+  if (i === -1) throw new Error('Tem ' + tem + ' không có pallet nào đang trên kệ.');
+  return i;
+}
+function plCheckFree_(d, loc, selfTem) {
+  if (loc.rack === PL_FLOOR) return;
+  const r = d.rows.find(x => x[11] === PL_ON && String(x[10]) === loc.code && String(x[0]).toUpperCase() !== selfTem);
+  if (r) throw new Error('Ô ' + loc.code + ' đang có pallet ' + r[0] + ' (' + r[1] + '). Chọn ô khác.');
+}
+const plTem_ = v => String(v || '').trim().toUpperCase();
+
+/** Sơ đồ kệ: bố cục + các pallet đang trên kệ */
+function plMap(token) {
+  const u = requireUser_(token); plCanUse_(u);
+  const d = plRows_();
+  return { racks: PL_RACKS, cols: PL_COLS, levels: PL_LEVELS, floor: PL_FLOOR, lanes: PL_LANES, now: Date.now(),
+           items: d.rows.filter(r => r[11] === PL_ON).map(plOut_) };
+}
+/** Chi tiết 1 tem: pallet + lịch sử + trạng thái tem */
+function plInfo(token, tem) {
+  const u = requireUser_(token); plCanUse_(u);
+  tem = plTem_(tem);
+  const d = plRows_();
+  const rows = d.rows.filter(r => String(r[0]).toUpperCase() === tem);
+  const t = plTemRow_(tem);
+  const lg = appSheet_(SH_PL_LOG, PL_LOG_HEADERS), n = lg.getLastRow() - 1, hist = [];
+  if (n > 0) lg.getRange(2, 1, n, PL_LOG_HEADERS.length).getValues().forEach(r => {
+    if (String(r[4]).toUpperCase() !== tem) return;
+    hist.push({ time: r[0] instanceof Date ? Utilities.formatDate(r[0], 'GMT+7', 'dd/MM/yyyy HH:mm') : String(r[0]), by: String(r[2]),
+                op: String(r[3]), from: String(r[6]), to: String(r[7]), dq: r[8], left: r[9] });
+  });
+  return { tem: tem, temStatus: t ? t.status : '', pallet: rows.length ? plOut_(rows[rows.length - 1]) : null, hist: hist.reverse() };
+}
+/** Cất hàng: dùng tem mới, ghi hàng, đặt vào vị trí. p = { tem, item, name, batch, exp, qty, rack, col, lv, reqId } */
+function plPutaway(token, p) {
+  const u = requireUser_(token); plCanUse_(u);
+  p = p || {};
+  if (reqSeen_(p.reqId)) return { dup: true };
+  const tem = plTem_(p.tem);
+  if (!/^P-[A-Z0-9]{6}$/.test(tem)) throw new Error('Mã tem pallet không hợp lệ (dạng P-XXXXXX).');
+  const item = String(p.item || '').trim();
+  if (!item) throw new Error('Chưa chọn mặt hàng.');
+  const qty = Number(p.qty);
+  if (!(qty > 0)) throw new Error('Nhập số thùng trên pallet.');
+  const exp = p.exp ? printDate_(p.exp, 'HSD') : '';
+  const loc = plLoc_(p.rack, p.col, p.lv);
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    if (reqSeen_(p.reqId)) return { dup: true };
+    const t = plTemRow_(tem);
+    if (!t) throw new Error('Tem ' + tem + ' không có trong danh sách tem đã in.');
+    if (t.status !== 'Chưa dùng') throw new Error('Tem ' + tem + ' đang ở trạng thái "' + t.status + '", không dùng cho pallet mới được. Dán tem mới.');
+    const d = plRows_();
+    plCheckFree_(d, loc, tem);
+    const now = new Date(), row = d.sh.getLastRow() + 1;
+    d.sh.getRange(row, 1, 1, PL_HEADERS.length).setValues([[tem, item, String(p.name || '').slice(0, 200), String(p.batch || '').trim(), exp,
+      qty, qty, loc.rack, loc.col, loc.lv, loc.code, PL_ON, now, u.name, now, '', '']]);
+    safe_(() => d.sh.getRange(row, 13, 1, 3).setNumberFormat('dd/MM/yyyy HH:mm:ss'));
+    t.sh.getRange(t.row, 4, 1, 2).setValues([['Đang dùng', now]]);
+    safe_(() => t.sh.getRange(t.row, 5).setNumberFormat('dd/MM/yyyy HH:mm:ss'));
+    plLog_(u, 'CAT', tem, item, '', loc.code, qty, qty, p.reqId);
+    reqMark_(p.reqId);
+    return { tem: tem, loc: loc.code };
+  } finally { lock.releaseLock(); }
+}
+/** Chuyển vị trí. p = { tem, rack, col, lv, reqId } */
+function plMove(token, p) {
+  const u = requireUser_(token); plCanUse_(u);
+  p = p || {};
+  if (reqSeen_(p.reqId)) return { dup: true };
+  const tem = plTem_(p.tem), loc = plLoc_(p.rack, p.col, p.lv);
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    if (reqSeen_(p.reqId)) return { dup: true };
+    const d = plRows_(), i = plFindOpen_(d, tem), r = d.rows[i];
+    if (String(r[10]) === loc.code) throw new Error('Pallet đang ở ' + loc.code + ' rồi.');
+    plCheckFree_(d, loc, tem);
+    const from = String(r[10]);
+    d.sh.getRange(i + 2, 8, 1, 4).setValues([[loc.rack, loc.col, loc.lv, loc.code]]);
+    d.sh.getRange(i + 2, 15).setValue(new Date());
+    plLog_(u, 'CHUYEN', tem, String(r[1]), from, loc.code, '', Number(r[6]) || 0, p.reqId);
+    reqMark_(p.reqId);
+    return { tem: tem, from: from, loc: loc.code };
+  } finally { lock.releaseLock(); }
+}
+/** Lấy ra. p = { tem, qty, reqId }. Lấy hết → pallet "Đã lấy hết", tem "Đã đóng". */
+function plPick(token, p) {
+  const u = requireUser_(token); plCanUse_(u);
+  p = p || {};
+  if (reqSeen_(p.reqId)) return { dup: true };
+  const tem = plTem_(p.tem), q = Number(p.qty);
+  if (!(q > 0)) throw new Error('Nhập số thùng lấy ra.');
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    if (reqSeen_(p.reqId)) return { dup: true };
+    const d = plRows_(), i = plFindOpen_(d, tem), r = d.rows[i];
+    const have = Number(r[6]) || 0;
+    if (q > have) throw new Error('Pallet chỉ còn ' + have + ' thùng.');
+    const left = have - q, now = new Date();
+    d.sh.getRange(i + 2, 7).setValue(left);
+    d.sh.getRange(i + 2, 15).setValue(now);
+    if (left <= 0) {
+      d.sh.getRange(i + 2, 12).setValue(PL_DONE);
+      d.sh.getRange(i + 2, 16).setValue(now);
+      safe_(() => d.sh.getRange(i + 2, 16).setNumberFormat('dd/MM/yyyy HH:mm:ss'));
+      const t = plTemRow_(tem);
+      if (t) { t.sh.getRange(t.row, 4).setValue('Đã đóng'); t.sh.getRange(t.row, 6).setValue(now); safe_(() => t.sh.getRange(t.row, 6).setNumberFormat('dd/MM/yyyy HH:mm:ss')); }
+    }
+    plLog_(u, left <= 0 ? 'LAY_HET' : 'LAY', tem, String(r[1]), String(r[10]), '', -q, left, p.reqId);
+    reqMark_(p.reqId);
+    return { tem: tem, left: left, loc: String(r[10]), closed: left <= 0 };
+  } finally { lock.releaseLock(); }
 }
