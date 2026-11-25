@@ -1,6 +1,6 @@
 # HỆ THỐNG ÂN NAM NHA TRANG – TÀI LIỆU TỔNG HỢP
 
-> Cập nhật: 25/11/2026 · Phiên bản hiện tại: **giao diện 25/11/2026-b · máy chủ 2026-11-25b**
+> Cập nhật: 25/11/2026 · Phiên bản hiện tại: **giao diện 25/11/2026-c · máy chủ 2026-11-25b**
 >
 > File này là tài liệu gốc của hệ thống, Claude đọc đầu tiên mỗi phiên làm việc. Sửa hệ thống thì cập nhật file này luôn.
 
@@ -139,7 +139,7 @@ Web app nội bộ cho chi nhánh **Ân Nam Group – Nha Trang** (FMCG). App go
 | `bday` | **Sinh nhật** | Bài đăng sinh nhật, dòng thời gian lời chúc kèm ảnh, bảng tin 60 ngày |
 | `admin` | **Quản trị** | Người dùng (vai trò, tính năng riêng, phạm vi dữ liệu, ngày sinh, đặt lại mật khẩu), đợt kiểm kê, nhập tồn kho, CCTV |
 | `intem` | **In tem** | 3 loại tem: Rã đông 35×22 (3 tem/hàng), Tem pallet 50×50 (mã ngẫu nhiên → QR), Tùy chỉnh 50×50 (3 phần 50/20/30%). Xem trước, Lệnh in của tôi (đếm ngược 5 phút, Hủy) |
-| `tramin` | **Trạm in tem** | Mở trên máy tính cạnh máy in: hỏi lệnh mỗi 5 giây, in thẳng (Chrome `--kiosk-printing`), căn khổ giấy, In thử |
+| `tramin` | **Trạm in tem** | **Không có ô trên trang chủ** (từ giao diện `25/11/2026-c`), chỉ mở bằng link `<link app>#tramin` trên máy tính cạnh máy in: hỏi lệnh mỗi 5 giây, in thẳng (Chrome `--kiosk-printing`), căn khổ giấy, In thử |
 | `pallet` | **Quản lý pallet** | Sơ đồ kệ R1–R4 (8 cột × 4 tầng) và khu sàn R0 (8 dãy), tô màu theo mặt hàng, lọc bằng `*`. Cất hàng, Chuyển vị trí, Lấy ra theo FEFO. Tra mã tem xem lịch sử |
 | `settings` | **Cài đặt** | Tài khoản, đổi mật khẩu, ngày sinh của tôi, phiên bản giao diện và máy chủ, đăng xuất |
 

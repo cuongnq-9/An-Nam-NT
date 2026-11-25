@@ -1386,7 +1386,7 @@ async function api(fn, ...args){
 /* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
  * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
  * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
-const APP_VER = '25/11/2026-b';
+const APP_VER = '25/11/2026-c';
 const NEED_SERVER = '2026-11-25b';      // phiên bản Code.gs tương ứng
 async function checkUpdate(auto){
   if (location.protocol === 'file:') return;
@@ -1516,7 +1516,7 @@ function restoreView(){
   let v = '';
   try { v = decodeURIComponent((location.hash || '').slice(1)) || sessionStorage.getItem('annt_view') || ''; } catch (e) {}
   if (!v || v === 'home' || !VIEWS[v] || v === 'install') return 'home';
-  const ok = v === 'settings' || v === 'docs' || v === 'bday' || v === 'msg' || !!document.querySelector('#v-home [data-go="' + v + '"]');
+  const ok = v === 'settings' || v === 'docs' || v === 'bday' || v === 'msg' || (v === 'tramin' && (S.user.features || []).includes('tramin')) || !!document.querySelector('#v-home [data-go="' + v + '"]');
   return ok ? v : 'home';
 }
 function enterApp(){
@@ -1635,7 +1635,7 @@ function tile(k){ const v = VIEWS[k]; return `<button class="app-tile" data-go="
 function renderHome(){
   const u = S.user;
   const common = (u.common || []).filter(k => VIEWS[k]);
-  const mine = (u.features || []).filter(k => VIEWS[k]).concat(['docs']);   // Chứng từ chờ hoàn trả: mọi nhân viên
+  const mine = (u.features || []).filter(k => VIEWS[k] && k !== 'tramin').concat(['docs']);   // Trạm in: không có ô, mở bằng link <app>#tramin trên máy cạnh máy in   // Chứng từ chờ hoàn trả: mọi nhân viên
   $('apps-common').innerHTML = common.map(tile).join('');
   $('apps-mine').innerHTML = mine.map(tile).join('');
   $('sec-mine').classList.toggle('hidden', !mine.length);
