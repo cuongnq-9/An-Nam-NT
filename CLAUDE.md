@@ -1,6 +1,6 @@
 # HỆ THỐNG ÂN NAM NHA TRANG – TÀI LIỆU TỔNG HỢP
 
-> Cập nhật: 25/11/2026 · Phiên bản hiện tại: **giao diện 25/11/2026-g · máy chủ 2026-11-25d**
+> Cập nhật: 25/11/2026 · Phiên bản hiện tại: **giao diện 25/11/2026-h · máy chủ 2026-11-25d**
 >
 > File này là tài liệu gốc của hệ thống, Claude đọc đầu tiên mỗi phiên làm việc. Sửa hệ thống thì cập nhật file này luôn.
 
@@ -317,16 +317,18 @@ Máy trạm (tramin) ── printNext mỗi 5 giây ──▶ nhận lệnh cũ 
 ### 5.8 Quản lý pallet
 
 ```
-In tem pallet (5.7) → tem "Chưa dùng" → CẤT HÀNG (tem + mặt hàng + batch/HSD + số thùng + vị trí) → tem "Đang dùng", pallet "Trên kệ"
+In tem pallet (5.7) → tem "Chưa dùng" → CẤT HÀNG (tem + mặt hàng + batch + số lượng + vị trí) → tem "Đang dùng", pallet "Trên kệ"
                                      → CHUYỂN (quét tem → quét vị trí mới)
-                                     → LẤY RA (chọn hàng → gợi ý FEFO → quét tem → số thùng). Lấy hết → pallet "Đã lấy hết", tem "Đã đóng"
+                                     → LẤY RA (chọn hàng → gợi ý FEFO → quét tem → số lượng). Lấy hết → pallet "Đã lấy hết", tem "Đã đóng"
 ```
 
 - **Quyền:** tính năng `pallet` cho Thủ kho và Admin (gán thêm qua Tính năng riêng).
 - **Vị trí:** kệ R1–R4, mỗi kệ 8 cột × 4 tầng. Tem dán trên kệ chỉ có Kệ-Cột (`R2-05`), nhân viên bấm chọn tầng T1–T4, tầng đã có pallet bị khóa. Mỗi ô kệ chứa **1 pallet**. R0 là khu sàn 8 dãy (`R0-01`…`R0-08`), không có tầng, mỗi dãy nhiều pallet. Bố cục nằm trong hằng `PL_RACKS`, `PL_COLS`, `PL_LEVELS`, `PL_LANES` của `Code.gs`.
 - **Tem:** chỉ nhận tem có trong sheet `Tem pallet` ở trạng thái "Chưa dùng". Tem đã dùng hoặc đã đóng không dùng lại.
 - **Tìm hàng:** quét barcode, gõ mã, hoặc gõ tên có `*` (VD `*sua*hop`), không phân biệt dấu. Dùng danh mục `getOpsMaster`.
-- **FEFO:** danh sách pallet của mặt hàng xếp theo HSD gần nhất, pallet đầu có nhãn "Lấy trước". Quét tem khác mà có pallet HSD gần hơn thì app cảnh báo (vẫn cho lấy).
+- **Batch = HSD** (từ giao diện `25/11/2026-h`): màn hình Cất hàng chỉ có ô **Batch** (không còn ô HSD), nhãn **Số lượng** (không phải số thùng). Cột `HSD` trong sheet `Pallet` để trống với pallet mới.
+- **Quét tem pallet mới** ở Cất hàng thì xóa trống mặt hàng, batch, số lượng để nhân viên nhập lại từ đầu.
+- **FEFO:** danh sách pallet của mặt hàng xếp theo batch gần hết hạn nhất (`plBatchKey` đọc batch dạng dd/mm/yyyy, dd-mm-yy, yyyymmdd, ddmmyyyy, ddmmyy; batch không đọc được xếp sau), pallet đầu có nhãn "Lấy trước". Quét tem khác mà có pallet batch gần hơn thì app cảnh báo (vẫn cho lấy).
 - Máy chủ: `plMap`, `plInfo`, `plPutaway`, `plMove`, `plPick`. Mọi lệnh ghi có `reqId` chống ghi trùng và khóa `LockService`.
 
 ## 6. Phân quyền
