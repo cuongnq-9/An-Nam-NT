@@ -1384,8 +1384,8 @@ async function api(fn, ...args){
 /* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
  * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
  * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
-const APP_VER = '25/11/2026-h';
-const NEED_SERVER = '2026-11-25d';      // phiên bản Code.gs tương ứng
+const APP_VER = '27/11/2026-a';
+const NEED_SERVER = '2026-11-27a';      // phiên bản Code.gs tương ứng
 async function checkUpdate(auto){
   if (location.protocol === 'file:') return;
   try {
@@ -2347,7 +2347,7 @@ $('mn-man').addEventListener('change', () => loadMine());
 
 /* ========= KHO: DANH MỤC HÀNG (tải 1 lần, tìm tức thì trên máy) ========= */
 async function loadMaster(force){
-  if (S.master && !force) return S.master;
+  if (S.master && !force && S.master.fresh !== false) return S.master;   // fresh=false: bản lưu trên máy của màn hình Pallet
   loading(true);
   try { S.master = await api('getOpsMaster'); S.master.items.forEach(it => it.k = norm(it.n)); }
   finally { loading(false); }
@@ -5159,17 +5159,39 @@ const plBatch = p => p.batch || p.exp || '';   // pallet cũ chỉ có HSD thì 
 const plExpKey = p => plBatchKey(plBatch(p));
 const plShortItem = s => { s = String(s); return s.length > 7 ? '…' + s.slice(-6) : s; };
 
+/* Tốc độ: mở màn hình là vẽ ngay sơ đồ và danh mục đã lưu trên máy, rồi tải bản mới song song ở nền (không che màn hình).
+ * Cất/Chuyển/Lấy ra: máy chủ trả luôn sơ đồ mới trong cùng lệnh, không gọi plMap lần 2. */
+const PL_MS_KEY = 'annt_plmaster', PL_MS_HOURS = 12;
+const plKey = () => 'annt_plmap_' + (S.user ? S.user.username : '');
 async function initPallet(){
   [['pl-look-scan'], ['pa-tem-scan'], ['pa-scan'], ['mv-tem-scan'], ['pk2-scan'], ['pk2-tem-scan']].forEach(([id]) => $(id).innerHTML = ic('qr'));
+  if (!PL.map) { try { const m = JSON.parse(localStorage.getItem(plKey()) || 'null'); if (m && m.items) PL.map = m; } catch (e) {} }
   plTab(PL.tab);
-  await plLoad();
-  if (!S.master) { try { await loadMaster(); } catch (e) { $('pl-ms').textContent = e.message; } }
+  if (PL.map) plSetMap(PL.map, true);
+  if (!S.master) {   // danh mục hàng lưu trên máy (12 giờ) → tìm hàng được ngay, bản mới tải ở nền
+    try { const c = JSON.parse(localStorage.getItem(PL_MS_KEY) || 'null');
+      if (c && c.items && Date.now() - c.t < PL_MS_HOURS * 3600000) { c.items.forEach(it => it.k = norm(it.n)); c.fresh = false; S.master = c; } } catch (e) {}
+  }
   msNote('pl-ms');
+  await Promise.all([plLoad(), plMasterRefresh()]);
 }
-async function plLoad(){
-  try { PL.map = await api('plMap'); } catch (e) { toast(e.message); return; }
+async function plMasterRefresh(){
+  if (S.master && S.master.fresh !== false) return;
+  try {
+    const m = await api('getOpsMaster');
+    try { localStorage.setItem(PL_MS_KEY, JSON.stringify({ items: m.items, batches: m.batches, at: m.at, t: Date.now() })); } catch (e) {}
+    m.items.forEach(it => it.k = norm(it.n)); S.master = m;
+    msNote('pl-ms');
+  } catch (e) { if (!S.master) $('pl-ms').textContent = e.message; }
+}
+function plSetMap(m, cached){
+  PL.map = m;
+  if (!cached) try { localStorage.setItem(plKey(), JSON.stringify(m)); } catch (e) {}
   plRenderMap(); plRenderLoc('pa'); plRenderLoc('mv');
   if (PL.pk.item) plRenderPickList();
+}
+async function plLoad(){
+  try { plSetMap(await api('plMap')); } catch (e) { toast(e.message); }
 }
 function plTab(t){
   PL.tab = t;
@@ -5226,9 +5248,17 @@ $('pl-map').addEventListener('click', e => { const c = e.target.closest('[data-t
 /* ---- Tra cứu tem ---- */
 async function plShowInfo(tem){
   tem = plTemNorm(tem); if (!tem) return;
-  let d; loading(true);
-  try { d = await api('plInfo', tem); } catch (e) { toast(e.message); return; } finally { loading(false); }
-  const p = d.pallet, on = p && p.status === 'Trên kệ';
+  // Pallet đang trên sơ đồ → mở chi tiết ngay, lịch sử tải sau
+  const local = plFindTem(tem);
+  if (local) plInfoModal({ tem, temStatus: 'Đang dùng', pallet: local, hist: null });
+  let d; if (!local) loading(true);
+  try { d = await api('plInfo', tem); } catch (e) { if (local) { const h = $('pli-hist'); if (h) h.textContent = e.message; } else toast(e.message); return; }
+  finally { if (!local) loading(false); }
+  if (local && !$('pli-x')) return;   // người dùng đã đóng cửa sổ
+  plInfoModal(d);
+}
+function plInfoModal(d){
+  const tem = d.tem, p = d.pallet, on = p && p.status === 'Trên kệ';
   const opName = { CAT: 'Cất hàng', CHUYEN: 'Chuyển', LAY: 'Lấy ra', LAY_HET: 'Lấy hết' };
   const body = p ? `<div class="pl-kv">
       <span>Vị trí</span><b>${esc(on ? p.loc : '–')}</b>
@@ -5239,7 +5269,7 @@ async function plShowInfo(tem){
       <span>Cất bởi</span><span>${esc(p.by)}${p.at ? ' · ' + new Date(p.at).toLocaleString('vi-VN') : ''}</span></div>`
     : `<div class="muted">${d.temStatus ? 'Tem chưa gắn pallet nào. Trạng thái tem: <b>' + esc(d.temStatus) + '</b>' : 'Không tìm thấy tem này trong danh sách tem đã in.'}</div>`;
   modal(`<h3>Pallet ${esc(tem)}</h3>${body}
-    ${d.hist.length ? `<div class="pl-step">Lịch sử</div><div class="pl-hist">${d.hist.map(h => `<div><b>${esc(opName[h.op] || h.op)}</b> ${h.from ? esc(h.from) + ' → ' : ''}${esc(h.to || (h.op.startsWith('LAY') ? 'lấy ' + Math.abs(h.dq) + ', còn ' + h.left : ''))}<br><span class="muted">${esc(h.time)} · ${esc(h.by)}</span></div>`).join('')}</div>` : ''}
+    ${!d.hist ? '<div class="pl-step">Lịch sử</div><div class="pl-hist muted" id="pli-hist">Đang tải lịch sử…</div>' : d.hist.length ? `<div class="pl-step">Lịch sử</div><div class="pl-hist">${d.hist.map(h => `<div><b>${esc(opName[h.op] || h.op)}</b> ${h.from ? esc(h.from) + ' → ' : ''}${esc(h.to || (h.op.startsWith('LAY') ? 'lấy ' + Math.abs(h.dq) + ', còn ' + h.left : ''))}<br><span class="muted">${esc(h.time)} · ${esc(h.by)}</span></div>`).join('')}</div>` : ''}
     <div class="modal-actions">${on ? '<button class="btn ghost" id="pli-mv">Chuyển</button><button class="btn ghost" id="pli-pk">Lấy ra</button>' : (!p && d.temStatus === 'Chưa dùng' ? '<button class="btn ghost" id="pli-put">Cất hàng</button>' : '')}<button class="btn" id="pli-x">Đóng</button></div>`);
   $('pli-x').onclick = closeModal;
   if ($('pli-mv')) $('pli-mv').onclick = () => { closeModal(); $('mv-tem').value = tem; plTab('move'); plMvTem(); };
@@ -5352,7 +5382,7 @@ $('pa-go').addEventListener('click', async () => {
     beep('ok'); toast('Đã cất ' + tem + ' vào ' + (r.loc || plCode(l.rack, l.col, l.lv)) + '.', 3500);
     $('pa-tem').value = ''; paClearProd();
     PL.put.loc = null;
-    await plLoad();
+    if (r.map) plSetMap(r.map); else await plLoad();
   } catch (e) { beep('err'); toast(e.message, 4500); }
   finally { PL.busy = false; loading(false); }
 });
@@ -5381,7 +5411,8 @@ $('mv-go').addEventListener('click', async () => {
     const r = await api('plMove', { tem: p.tem, rack: l.rack, col: l.col, lv: l.lv, reqId: reqId('pl') });
     beep('ok'); toast('Đã chuyển ' + p.tem + ': ' + (r.from || p.loc) + ' → ' + (r.loc || '') + '.', 3500);
     $('mv-tem').value = ''; PL.mv = { p: null, loc: null };
-    await plLoad(); plRenderMvCur();
+    if (r.map) plSetMap(r.map); else await plLoad();
+    plRenderMvCur();
   } catch (e) { beep('err'); toast(e.message, 4500); }
   finally { PL.busy = false; loading(false); }
 });
@@ -5449,7 +5480,8 @@ $('pk2-go').addEventListener('click', async () => {
     const r = await api('plPick', { tem: p.tem, qty: q, reqId: reqId('pl') });
     beep('ok'); toast(r.closed ? 'Đã lấy hết pallet ' + p.tem + '. Bóc tem bỏ đi.' : 'Đã lấy ' + q + '. Pallet còn ' + r.left + '.', 4000);
     $('pk2-tem').value = ''; $('pk2-qty').value = ''; PL.pk.p = null;
-    await plLoad(); plRenderPickCur();
+    if (r.map) plSetMap(r.map); else await plLoad();
+    plRenderPickCur();
   } catch (e) { beep('err'); toast(e.message, 4500); }
   finally { PL.busy = false; loading(false); }
 });

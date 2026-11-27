@@ -1,6 +1,6 @@
 # HỆ THỐNG ÂN NAM NHA TRANG – TÀI LIỆU TỔNG HỢP
 
-> Cập nhật: 25/11/2026 · Phiên bản hiện tại: **giao diện 25/11/2026-h · máy chủ 2026-11-25d**
+> Cập nhật: 27/11/2026 · Phiên bản hiện tại: **giao diện 27/11/2026-a · máy chủ 2026-11-27a**
 >
 > File này là tài liệu gốc của hệ thống, Claude đọc đầu tiên mỗi phiên làm việc. Sửa hệ thống thì cập nhật file này luôn.
 
@@ -36,6 +36,15 @@ CLAUDE.md              ← tài liệu này
 - Hàm mới gọi từ giao diện phải được thêm vào `API_FUNCS` trong `Code.gs`.
 - **Không sửa phần nhận diện mã QR/barcode** ở màn hình quét (đang chạy ổn).
 - Chủ dự án (anh John Nguyen, quản lý logistics/vận hành) trao đổi bằng **tiếng Việt**.
+
+**Thay đổi ngày 27/11/2026**
+
+- **Tăng tốc Quản lý pallet** (giao diện `27/11/2026-a`, máy chủ `2026-11-27a`, không có sheet mới):
+  - Máy chủ lưu sơ đồ kệ vào CacheService (`pl_map_v1`, 10 phút), ghi lại ngay sau mỗi lần Cất/Chuyển/Lấy ra. Sửa tay sheet `Pallet` thì sơ đồ có thể chậm cập nhật tối đa 10 phút.
+  - `plPutaway`/`plMove`/`plPick` trả luôn sơ đồ mới (`map`), giao diện không gọi `plMap` lần hai.
+  - `plInfo` và `plTemRow_` tìm bằng TextFinder, không đọc cả sheet `Pallet Log` / `Tem pallet`. Lịch sử tối đa 50 dòng gần nhất.
+  - Bỏ định dạng cột sheet `Pallet` ở mỗi lệnh gọi (chỉ làm trong `setup()`). `appSheet_` mở file app 1 lần mỗi lệnh.
+  - Giao diện: vẽ ngay sơ đồ đã lưu trên máy (`annt_plmap_<user>`) và danh mục hàng đã lưu (`annt_plmaster`, 12 giờ), rồi tải bản mới song song ở nền, không che màn hình. Bấm vào pallet trên sơ đồ mở chi tiết ngay, lịch sử tải sau.
 
 **Thay đổi ngày 24/11/2026**
 
@@ -330,6 +339,7 @@ In tem pallet (5.7) → tem "Chưa dùng" → CẤT HÀNG (tem + mặt hàng + b
 - **Quét tem pallet mới** ở Cất hàng thì xóa trống mặt hàng, batch, số lượng để nhân viên nhập lại từ đầu.
 - **FEFO:** danh sách pallet của mặt hàng xếp theo batch gần hết hạn nhất (`plBatchKey` đọc batch dạng dd/mm/yyyy, dd-mm-yy, yyyymmdd, ddmmyyyy, ddmmyy; batch không đọc được xếp sau), pallet đầu có nhãn "Lấy trước". Quét tem khác mà có pallet batch gần hơn thì app cảnh báo (vẫn cho lấy).
 - Máy chủ: `plMap`, `plInfo`, `plPutaway`, `plMove`, `plPick`. Mọi lệnh ghi có `reqId` chống ghi trùng và khóa `LockService`.
+- Tốc độ: sơ đồ kệ lấy từ cache máy chủ (`pl_map_v1`) và bản lưu trên máy (`annt_plmap_<user>`). Lệnh ghi trả sơ đồ mới trong cùng lệnh. Xem thay đổi 27/11/2026.
 
 ## 6. Phân quyền
 

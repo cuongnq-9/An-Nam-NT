@@ -93,7 +93,7 @@ const PERM = {
 };
 
 /* ================== WEB APP ================== */
-const CODE_VERSION = '2026-11-25d';
+const CODE_VERSION = '2026-11-27a';
 
 function doGet(e) {
   // Kiểm tra kết nối: mở <link /exec>?ping=1 trên trình duyệt để xem máy chủ có chạy không
@@ -218,7 +218,7 @@ function setup() {
   printSheet_();
   appSheet_(SH_TEM, TEM_HEADERS);
   // Quản lý pallet
-  plSheet_();
+  plSheet_(true);
   appSheet_(SH_PL_LOG, PL_LOG_HEADERS);
 
   let t = ss.getSheetByName(SHEET_TET);
@@ -1539,8 +1539,9 @@ function requireFeature_(token, f) {
   if (!hasFeature_(u, f)) throw new Error('Bạn không có quyền dùng chức năng này.');
   return u;
 }
+let APP_SS_MEMO_ = null;   // mở file app 1 lần cho mỗi lệnh gọi
 function appSheet_(name, headers) {
-  const ss = SpreadsheetApp.openById(APP_SS_ID);
+  const ss = APP_SS_MEMO_ || (APP_SS_MEMO_ = SpreadsheetApp.openById(APP_SS_ID));
   let sh = ss.getSheetByName(name);
   if (!sh) {
     sh = newSheet_(ss, name);
@@ -3750,10 +3751,27 @@ const PL_HEADERS = ['Mã tem', 'Mã hàng', 'Tên hàng', 'Batch', 'HSD', 'SL c�
 const PL_LOG_HEADERS = ['Thời gian', 'Username', 'Nhân viên', 'Thao tác', 'Mã tem', 'Mã hàng', 'Từ vị trí', 'Đến vị trí', 'SL thay đổi', 'SL còn', 'reqId'];
 const PL_ON = 'Trên kệ', PL_DONE = 'Đã lấy hết';
 
-function plSheet_() {
+function plSheet_(fmt) {
   const sh = appSheet_(SH_PL, PL_HEADERS);
-  safe_(() => { sh.getRange('A:E').setNumberFormat('@'); sh.getRange('H:K').setNumberFormat('@'); });
+  if (fmt) safe_(() => { sh.getRange('A:E').setNumberFormat('@'); sh.getRange('H:K').setNumberFormat('@'); });   // chỉ định dạng khi chạy setup()
   return sh;
+}
+/* Bộ nhớ tạm sơ đồ kệ: đọc sheet Pallet 1 lần, các lần mở sau lấy từ cache (xóa/ghi lại mỗi khi cất/chuyển/lấy) */
+const PL_CACHE_KEY = 'pl_map_v1', PL_CACHE_SEC = 600;
+function plMapData_(rows) {
+  return { racks: PL_RACKS, cols: PL_COLS, levels: PL_LEVELS, floor: PL_FLOOR, lanes: PL_LANES, now: Date.now(),
+           items: rows.filter(r => r[11] === PL_ON).map(plOut_) };
+}
+function plCachePut_(m) {
+  try { const j = JSON.stringify(m); if (j.length < 95000) CacheService.getScriptCache().put(PL_CACHE_KEY, j, PL_CACHE_SEC); else CacheService.getScriptCache().remove(PL_CACHE_KEY); }
+  catch (e) { try { CacheService.getScriptCache().remove(PL_CACHE_KEY); } catch (x) {} }
+}
+/** Sau khi ghi: dựng lại sơ đồ từ dữ liệu vừa đọc (đã sửa trong bộ nhớ) → lưu cache và trả về cho giao diện, khỏi gọi plMap lần nữa */
+function plAfterWrite_(rows) { const m = plMapData_(rows); plCachePut_(m); return m; }
+/** Tìm dòng theo mã (khớp nguyên ô) trong 1 cột, không đọc cả sheet */
+function plFindRows_(sh, col, code) {
+  const n = sh.getLastRow() - 1; if (n < 1) return [];
+  return sh.getRange(2, col, n, 1).createTextFinder(code).matchEntireCell(true).findAll().map(r => r.getRow());
 }
 function plCanUse_(u) { if (!hasFeature_(u, 'pallet') && u.role !== 'admin') throw new Error('Bạn không có quyền dùng chức năng Quản lý pallet.'); }
 /** Chuẩn hóa vị trí: { rack, col, lv } → { code, rack, col, lv } hoặc báo lỗi */
@@ -3785,11 +3803,10 @@ function plLog_(u, op, tem, item, from, to, dq, left, rid) {
   safe_(() => sh.getRange(row, 1).setNumberFormat('dd/MM/yyyy HH:mm:ss'));
 }
 function plTemRow_(code) {
-  const sh = appSheet_(SH_TEM, TEM_HEADERS), n = sh.getLastRow() - 1;
-  if (n < 1) return null;
-  const v = sh.getRange(2, 1, n, 4).getValues();
-  for (let i = 0; i < v.length; i++) if (String(v[i][0]).trim().toUpperCase() === code) return { sh: sh, row: i + 2, status: String(v[i][3]) };
-  return null;
+  const sh = appSheet_(SH_TEM, TEM_HEADERS), rows = plFindRows_(sh, 1, code);
+  if (!rows.length) return null;
+  const row = rows[rows.length - 1];
+  return { sh: sh, row: row, status: String(sh.getRange(row, 4).getValue()) };
 }
 function plFindOpen_(d, tem) {
   const i = d.rows.findIndex(r => String(r[0]).toUpperCase() === tem && r[11] === PL_ON);
@@ -3806,24 +3823,28 @@ const plTem_ = v => String(v || '').trim().toUpperCase();
 /** Sơ đồ kệ: bố cục + các pallet đang trên kệ */
 function plMap(token) {
   const u = requireUser_(token); plCanUse_(u);
-  const d = plRows_();
-  return { racks: PL_RACKS, cols: PL_COLS, levels: PL_LEVELS, floor: PL_FLOOR, lanes: PL_LANES, now: Date.now(),
-           items: d.rows.filter(r => r[11] === PL_ON).map(plOut_) };
+  const c = CacheService.getScriptCache().get(PL_CACHE_KEY);
+  if (c) { try { const m = JSON.parse(c); m.now = Date.now(); return m; } catch (e) {} }
+  const m = plMapData_(plRows_().rows);
+  plCachePut_(m);
+  return m;
 }
 /** Chi tiết 1 tem: pallet + lịch sử + trạng thái tem */
 function plInfo(token, tem) {
   const u = requireUser_(token); plCanUse_(u);
   tem = plTem_(tem);
-  const d = plRows_();
-  const rows = d.rows.filter(r => String(r[0]).toUpperCase() === tem);
+  if (!tem) throw new Error('Nhập mã tem.');
+  // Chỉ đọc đúng các dòng có mã tem này (TextFinder), không đọc cả sheet Pallet / Pallet Log
+  const sh = plSheet_(), pr = plFindRows_(sh, 1, tem);
+  const pallet = pr.length ? plOut_(sh.getRange(pr[pr.length - 1], 1, 1, PL_HEADERS.length).getValues()[0]) : null;
   const t = plTemRow_(tem);
-  const lg = appSheet_(SH_PL_LOG, PL_LOG_HEADERS), n = lg.getLastRow() - 1, hist = [];
-  if (n > 0) lg.getRange(2, 1, n, PL_LOG_HEADERS.length).getValues().forEach(r => {
-    if (String(r[4]).toUpperCase() !== tem) return;
+  const lg = appSheet_(SH_PL_LOG, PL_LOG_HEADERS), hist = [];
+  plFindRows_(lg, 5, tem).slice(-50).forEach(row => {
+    const r = lg.getRange(row, 1, 1, PL_LOG_HEADERS.length).getValues()[0];
     hist.push({ time: r[0] instanceof Date ? Utilities.formatDate(r[0], 'GMT+7', 'dd/MM/yyyy HH:mm') : String(r[0]), by: String(r[2]),
                 op: String(r[3]), from: String(r[6]), to: String(r[7]), dq: r[8], left: r[9] });
   });
-  return { tem: tem, temStatus: t ? t.status : '', pallet: rows.length ? plOut_(rows[rows.length - 1]) : null, hist: hist.reverse() };
+  return { tem: tem, temStatus: t ? t.status : '', pallet: pallet, hist: hist.reverse() };
 }
 /** Cất hàng: dùng tem mới, ghi hàng, đặt vào vị trí. p = { tem, item, name, batch, exp, qty, rack, col, lv, reqId } */
 function plPutaway(token, p) {
@@ -3854,7 +3875,8 @@ function plPutaway(token, p) {
     safe_(() => t.sh.getRange(t.row, 5).setNumberFormat('dd/MM/yyyy HH:mm:ss'));
     plLog_(u, 'CAT', tem, item, '', loc.code, qty, qty, p.reqId);
     reqMark_(p.reqId);
-    return { tem: tem, loc: loc.code };
+    d.rows.push([tem, item, String(p.name || '').slice(0, 200), String(p.batch || '').trim(), exp, qty, qty, loc.rack, loc.col, loc.lv, loc.code, PL_ON, now, u.name, now, '', '']);
+    return { tem: tem, loc: loc.code, map: plAfterWrite_(d.rows) };
   } finally { lock.releaseLock(); }
 }
 /** Chuyển vị trí. p = { tem, rack, col, lv, reqId } */
@@ -3869,12 +3891,12 @@ function plMove(token, p) {
     const d = plRows_(), i = plFindOpen_(d, tem), r = d.rows[i];
     if (String(r[10]) === loc.code) throw new Error('Pallet đang ở ' + loc.code + ' rồi.');
     plCheckFree_(d, loc, tem);
-    const from = String(r[10]);
-    d.sh.getRange(i + 2, 8, 1, 4).setValues([[loc.rack, loc.col, loc.lv, loc.code]]);
-    d.sh.getRange(i + 2, 15).setValue(new Date());
+    const from = String(r[10]), now = new Date();
+    r[7] = loc.rack; r[8] = loc.col; r[9] = loc.lv; r[10] = loc.code; r[14] = now;
+    d.sh.getRange(i + 2, 8, 1, 8).setValues([r.slice(7, 15)]);   // ghi 1 lần các cột Kệ → Cập nhật lúc
     plLog_(u, 'CHUYEN', tem, String(r[1]), from, loc.code, '', Number(r[6]) || 0, p.reqId);
     reqMark_(p.reqId);
-    return { tem: tem, from: from, loc: loc.code };
+    return { tem: tem, from: from, loc: loc.code, map: plAfterWrite_(d.rows) };
   } finally { lock.releaseLock(); }
 }
 /** Lấy ra. p = { tem, qty, reqId }. Lấy hết → pallet "Đã lấy hết", tem "Đã đóng". */
@@ -3891,17 +3913,16 @@ function plPick(token, p) {
     const have = Number(r[6]) || 0;
     if (q > have) throw new Error('Pallet chỉ còn ' + have + ' thùng.');
     const left = have - q, now = new Date();
-    d.sh.getRange(i + 2, 7).setValue(left);
-    d.sh.getRange(i + 2, 15).setValue(now);
+    r[6] = left; r[14] = now;
+    if (left <= 0) { r[11] = PL_DONE; r[15] = now; }
+    d.sh.getRange(i + 2, 7, 1, 10).setValues([r.slice(6, 16)]);   // ghi 1 lần các cột SL còn → Đóng lúc
     if (left <= 0) {
-      d.sh.getRange(i + 2, 12).setValue(PL_DONE);
-      d.sh.getRange(i + 2, 16).setValue(now);
       safe_(() => d.sh.getRange(i + 2, 16).setNumberFormat('dd/MM/yyyy HH:mm:ss'));
       const t = plTemRow_(tem);
       if (t) { t.sh.getRange(t.row, 4).setValue('Đã đóng'); t.sh.getRange(t.row, 6).setValue(now); safe_(() => t.sh.getRange(t.row, 6).setNumberFormat('dd/MM/yyyy HH:mm:ss')); }
     }
     plLog_(u, left <= 0 ? 'LAY_HET' : 'LAY', tem, String(r[1]), String(r[10]), '', -q, left, p.reqId);
     reqMark_(p.reqId);
-    return { tem: tem, left: left, loc: String(r[10]), closed: left <= 0 };
+    return { tem: tem, left: left, loc: String(r[10]), closed: left <= 0, map: plAfterWrite_(d.rows) };
   } finally { lock.releaseLock(); }
 }
