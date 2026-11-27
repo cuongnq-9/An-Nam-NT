@@ -1,6 +1,6 @@
 # HỆ THỐNG ÂN NAM NHA TRANG – TÀI LIỆU TỔNG HỢP
 
-> Cập nhật: 25/11/2026 · Phiên bản hiện tại: **giao diện 25/11/2026-h · máy chủ 2026-11-25d**
+> Cập nhật: 25/11/2026 · Phiên bản hiện tại: **giao diện 27/11/2026-a · máy chủ 2026-11-27a**
 >
 > File này là tài liệu gốc của hệ thống, Claude đọc đầu tiên mỗi phiên làm việc. Sửa hệ thống thì cập nhật file này luôn.
 
@@ -229,6 +229,7 @@ Web app nội bộ cho chi nhánh **Ân Nam Group – Nha Trang** (FMCG). App go
 1. **Admin tạo đợt**: nhập tồn kho → `Ton kho Kiem ke` (cột Mã đợt). Hai đợt tạo trong cùng giây được thêm hậu tố `-2`.
 2. Nhân viên thấy **mọi đợt đang mở** và tự chọn đợt.
 3. Bắt buộc **quét hoặc nhập vị trí** trước khi đếm.
+   - **Batch khi đếm** (từ 27/11/2026) chỉ lấy từ **tồn kho kiểm kê của đợt** (file mục 2 lúc tạo đợt, sheet `Ton kho Kiem ke` theo Mã đợt) qua hàm `kkBatches`, **không** lấy từ tồn kho tổng (mục 1, sheet `Stock`). Mục 1 vẫn dùng cho Hủy hàng. Mã không có trong tồn kiểm kê của đợt thì nhập batch tay.
 4. **Nhận** vị trí hoặc mã hàng để đếm: giữ 15 phút, tự nhả khi thoát. Mã đang có người khác đếm sẽ bị ẩn với người còn lại.
 5. Lưu số đếm vào **hàng đợi trên máy** (`annt_kkq_<user>`), app tự gửi lên lại khi mạng có trở lại. Danh sách tự làm mới mỗi 20 giây.
 6. Đếm lại: danh sách chỉ ghi số lượng, dùng dữ liệu tạm cho nhanh. Mã người khác đã đếm lại thì tự ẩn.

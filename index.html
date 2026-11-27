@@ -1384,8 +1384,8 @@ async function api(fn, ...args){
 /* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
  * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
  * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
-const APP_VER = '25/11/2026-h';
-const NEED_SERVER = '2026-11-25d';      // phiên bản Code.gs tương ứng
+const APP_VER = '27/11/2026-a';
+const NEED_SERVER = '2026-11-27a';      // phiên bản Code.gs tương ứng
 async function checkUpdate(auto){
   if (location.protocol === 'file:') return;
   try {
@@ -2386,12 +2386,12 @@ document.addEventListener('click', async e => {
 /* Thẻ sản phẩm có ô nhập số lượng theo từng batch + ô nhập batch khác */
 function prodCards(list, cls){
   return list.map((p, i) => {
-    const bs = batchesOf(p.i);
+    const bs = cls === 'kk' ? kkBatchesOf(p.i) : batchesOf(p.i);     // Kiểm kê: batch theo tồn kho kiểm kê của đợt
     return `<div class="card pc ${cls}" data-i="${i}">
       <div class="line-code">${esc(p.i)}</div><div class="line-desc">${esc(p.n || '')}</div>
       ${p.b.length ? `<div class="muted" style="font-size:12px">Barcode: ${esc(p.b.slice(0, 3).join(', '))}${p.b.length > 3 ? '…' : ''}</div>` : ''}
       <div style="margin-top:6px">${bs.length ? bs.map(b => `<div class="bt-row"><span>${esc(b)}</span>
-        <input class="qty-in" inputmode="decimal" data-bn="${esc(b)}" placeholder="0"></div>`).join('') : '<div class="muted" style="font-size:13px;padding:6px 0">Không có batch trong tồn kho – nhập batch bên dưới</div>'}</div>
+        <input class="qty-in" inputmode="decimal" data-bn="${esc(b)}" placeholder="0"></div>`).join('') : `<div class="muted" style="font-size:13px;padding:6px 0">Không có batch trong ${cls === 'kk' ? 'tồn kho kiểm kê của đợt' : 'tồn kho'} – nhập batch bên dưới</div>`}</div>
       <div class="manual-box"><input class="inp m-bn" placeholder="Batch khác"><input class="inp qty-in m-qty" inputmode="decimal" placeholder="SL"></div>
     </div>`;
   }).join('');
@@ -2410,6 +2410,19 @@ function collectEntries(box, list){
 const reqId = p => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 /* ========= KIỂM KÊ ========= */
+/* Batch khi đếm: lấy từ tồn kho kiểm kê của ĐỢT đang chọn (file mục 2), không lấy từ tồn kho tổng (mục 1).
+   Tải 1 lần cho mỗi đợt, giữ trong bộ nhớ. Máy chủ cũ chưa có kkBatches → tạm dùng danh mục chung như trước. */
+const KKB = {};
+async function kkLoadBatches(force){
+  const cid = KK.cid; if (!cid || (KKB[cid] && !force)) return;
+  try { KKB[cid] = (await api('kkBatches', cid)).batches || {}; }
+  catch (e) { if (!isNetErr(e.message)) console.warn('kkBatches:', e.message); return; }
+  if (KK.cid === cid && KK.list.length && !$('kk-list').classList.contains('hidden')) kkSearch();   // đang mở kết quả tìm → vẽ lại batch đúng đợt
+}
+function kkBatchesOf(item){
+  const m = KKB[KK.cid];
+  return m ? (m[String(item || '').trim().toUpperCase()] || []) : batchesOf(item);
+}
 const KK = { list: [], round: 1, state: null, summary: null, cid: '' };
 async function initKiemke(){
   try {
@@ -2418,7 +2431,7 @@ async function initKiemke(){
     const saved = store.get('annt_kk_cid');
     KK.cid = KK.viewDone && list.some(x => x.id === KK.cid) ? KK.cid       // admin mở xem kết quả đợt đã hoàn tất
       : (opens.find(x => x.id === KK.cid) || opens.find(x => x.id === saved) || opens[0] || {}).id || '';
-    KK.summary = null; renderKkBanner(); kkLoadQ();
+    KK.summary = null; renderKkBanner(); kkLoadQ(); kkLoadBatches();
     if (!$('kk-result').classList.contains('hidden') && KK.cid) kkSummary();
     await loadMaster(); msNote('kk-ms');
     try { $('kk-loc').value = store.get('annt_kk_loc') || ''; } catch (e) {}
@@ -2438,7 +2451,7 @@ function renderKkBanner(){
         ${c.status === 'done' ? `<br>Hoàn tất ${esc(c.doneAt)} bởi ${esc(c.doneBy)}` : ''}${c.reopenedAt ? `<br>Mở lại ${esc(c.reopenedAt)} bởi ${esc(c.reopenedBy)}` : ''}</div>
         <span class="badge ${c.status === 'open' ? 'st-done' : 'st-other'}">${c.status === 'open' ? 'Đang kiểm kê' : 'Đã hoàn tất'}</span></div>` : ''}`;
   if ($('kk-cid')) $('kk-cid').onchange = e => {
-    KK.cid = e.target.value; KK.viewDone = false; store.set('annt_kk_cid', KK.cid); KK.summary = null; renderKkBanner();
+    KK.cid = e.target.value; KK.viewDone = false; store.set('annt_kk_cid', KK.cid); KK.summary = null; renderKkBanner(); kkLoadBatches();
     $('kk-kpis').innerHTML = ''; $('kk-mis').innerHTML = '';
     if (!$('kk-result').classList.contains('hidden')) kkSummary();
   };
@@ -3061,13 +3074,13 @@ async function initAdminKK(){
 function renderAdminKK(st){
   const m = st.stock, list = st.campaigns || [];
   $('akk-box').innerHTML = `<div class="card"><h4>1. Tồn kho (tra cứu batch)</h4>
-      <div class="muted" style="font-size:12.5px;margin-top:2px">Toàn bộ tồn kho – dùng để hiện danh sách batch khi tìm hàng ở Kiểm kê, Hủy hàng.</div>
+      <div class="muted" style="font-size:12.5px;margin-top:2px">Toàn bộ tồn kho – dùng để hiện danh sách batch khi tìm hàng ở Hủy hàng. (Kiểm kê lấy batch từ file tồn kho kiểm kê của từng đợt ở mục 2.)</div>
       ${m ? `<div style="font-size:14px;margin:8px 0 2px"><b>${esc(m.fileName)}</b> · ${fmt(m.rows)} dòng${m.items ? ' · ' + fmt(m.items) + ' mã' : ''}</div>
         <div class="muted" style="font-size:12.5px">Import ${esc(m.at)} bởi ${esc(m.by)}${m.fileUrl ? ` · <a href="${esc(m.fileUrl)}" target="_blank">Mở file trên Drive</a>` : ''}</div>` : '<div class="muted" style="font-size:14px;margin-top:8px">Chưa import.</div>'}
       <input type="file" class="inp" id="akk-file-stock" accept=".xlsx,.xls,.csv" style="margin-top:10px">
       <button class="btn block" id="akk-imp-stock">Import & lưu vào thư mục Drive</button></div>
     <div class="card"><h4>2. Tạo đợt kiểm kê mới</h4>
-      <div class="muted" style="font-size:12.5px;margin-top:2px">Mỗi đợt có file tồn kho kiểm kê riêng (chỉ phần kho cần kiểm của đợt đó). Có thể mở nhiều đợt cùng lúc – nhân viên chọn đợt để đếm.</div>
+      <div class="muted" style="font-size:12.5px;margin-top:2px">Mỗi đợt có file tồn kho kiểm kê riêng (chỉ phần kho cần kiểm của đợt đó) – dùng để đối chiếu và làm danh sách batch khi đếm. Có thể mở nhiều đợt cùng lúc – nhân viên chọn đợt để đếm.</div>
       <label class="f">Tên đợt (nên ghi rõ khu vực / người phụ trách)</label><input class="inp" id="akk-name" placeholder="VD: Khu A – Thủy · 11/2026">
       <label class="f">File tồn kho kiểm kê của đợt</label><input type="file" class="inp" id="akk-file-kk" accept=".xlsx,.xls,.csv">
       <button class="btn block" id="akk-create">Tạo đợt kiểm kê</button></div>
