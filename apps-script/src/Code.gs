@@ -93,7 +93,7 @@ const PERM = {
 };
 
 /* ================== WEB APP ================== */
-const CODE_VERSION = '2026-11-27b';
+const CODE_VERSION = '2026-11-27c';
 
 function doGet(e) {
   // Kiểm tra kết nối: mở <link /exec>?ping=1 trên trình duyệt để xem máy chủ có chạy không
@@ -2291,7 +2291,8 @@ const DEBT_HEADERS = ['Mã đơn', 'Mã KH', 'Tên KH', 'Sale phụ trách', 'Pa
                       'Hạn thu', 'Ngày nhắc', 'Trạng thái', 'Cập nhật bởi', 'Cập nhật lúc', 'Ghi chú', 'Đã thu'];
 // Số tiền "chính xác" = kế toán nhập (Thực tế) hoặc lấy từ DS nợ phải thu do kế toán import. Sales amount chỉ để tham khảo.
 const debtExact_ = r => r[7] === 'Thực tế' || r[7] === 'File nợ phải thu';
-const debtPaid_ = r => String(r[10]) === 'Hoàn thành' ? num_(r[6]) : num_(r[14]);
+// Hoàn thành = thu ít nhất đủ Số tiền; nếu khách trả dư thì giữ số Đã thu thật (Còn lại âm = trả dư)
+const debtPaid_ = r => String(r[10]) === 'Hoàn thành' ? Math.max(num_(r[6]), num_(r[14])) : num_(r[14]);
 const DEBT_GROUPS = ['COD', 'TBD', 'N7', 'N15', 'N20'];
 const DEBT_DAYS = { COD: 0, TBD: 0, N7: 7, N15: 15, N20: 20 };
 const DEBT_REMIND_BEFORE = 2;
@@ -3035,7 +3036,7 @@ function debtSetStatus(token, sos, action) {
     v.forEach((r, i) => {
       if (!want[key_(r[0])]) return;
       sh.getRange(i + 2, 11, 1, 3).setValues([[st, u.name, now]]);
-      if (st === DEBT_ST.DONE) sh.getRange(i + 2, 15).setValue(num_(r[6]));
+      if (st === DEBT_ST.DONE) sh.getRange(i + 2, 15).setValue(Math.max(num_(r[6]), num_(r[14])));   // giữ số trả dư nếu có
       n++;
     });
     debtWriteBalances_(debtLedger_());
@@ -3045,6 +3046,7 @@ function debtSetStatus(token, sos, action) {
 }
 
 /** Lưu thay đổi trên bảng: [{ so, amount?, paid? }]. Số tiền nhập = số chính xác. "Đã thu" chỉ nhập được khi đơn có số tiền chính xác.
+ *  Đã thu được phép LỚN HƠN Số tiền (khách trả dư): Còn lại âm, giao diện hiện "Trả dư …".
  *  Đã thu = Số tiền → tự chuyển Hoàn thành. Có lỗi → không lưu gì. */
 function debtSaveRows(token, list) {
   const u = requireDebtEdit_(token);
@@ -3067,7 +3069,6 @@ function debtSaveRows(token, list) {
       if (hasPaid) {
         if (!hasAmt && !debtExact_(r)) { errors.push(x.so + ': chưa có số tiền chính xác – nhập Số tiền trước khi nhập Đã thu'); return; }
         if (paid < 0) { errors.push(x.so + ': Đã thu không hợp lệ'); return; }
-        if (paid > amt) { errors.push(x.so + ': Đã thu (' + paid.toLocaleString('vi-VN') + ') lớn hơn Số tiền (' + amt.toLocaleString('vi-VN') + ')'); return; }
       }
       plan.push({ i: i, so: String(r[0]).trim(), amt: hasAmt ? amt : null, paid: paid });
     });
@@ -3075,7 +3076,7 @@ function debtSaveRows(token, list) {
     const sa = appSheet_(SH_DEBT_AMT, AMT_HEADERS);
     const av = sa.getLastRow() >= 2 ? sa.getRange(2, 1, sa.getLastRow() - 1, 1).getValues() : [];
     const now = new Date();
-    let done = 0;
+    let done = 0, over = 0;
     plan.forEach(p => {
       const r = v[p.i];
       if (p.amt !== null) {
@@ -3085,12 +3086,13 @@ function debtSaveRows(token, list) {
         r[6] = p.amt; r[7] = 'Thực tế';
       }
       if (p.paid !== null) r[14] = p.paid;
+      if (p.paid !== null && p.paid > num_(r[6]) && num_(r[6]) > 0) over++;      // khách trả dư (cho phép)
       if (p.paid !== null && p.paid >= num_(r[6]) && num_(r[6]) > 0 && String(r[10]) !== DEBT_ST.DONE) { r[10] = DEBT_ST.DONE; done++; }
       r[11] = u.name; r[12] = now;
       sh.getRange(p.i + 2, 1, 1, DEBT_HEADERS.length).setValues([r]);
     });
     debtWriteBalances_(v);
-    return { ok: true, saved: plan.length, done: done };
+    return { ok: true, saved: plan.length, done: done, over: over };
   } finally { lock.releaseLock(); }
 }
 

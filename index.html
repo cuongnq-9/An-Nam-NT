@@ -1342,6 +1342,8 @@ const ic = (n, cls) => `<svg class="i ${cls||''}" viewBox="0 0 24 24">${ICON[n]}
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = n => Number(n || 0).toLocaleString('vi-VN');
+/* Còn lại < 0 = khách trả dư → hiện chữ xanh "Trả dư …" */
+const remainHtml = (n, w) => n < 0 ? `<span style="color:var(--green);font-weight:${w || 700}">Trả dư ${fmt(-n)}</span>` : `<span style="font-weight:${w || 700}">${fmt(n)}</span>`;
 const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
 const store = {
   get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } },
@@ -1384,8 +1386,8 @@ async function api(fn, ...args){
 /* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
  * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
  * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
-const APP_VER = '27/11/2026-b';
-const NEED_SERVER = '2026-11-27b';      // phiên bản Code.gs tương ứng
+const APP_VER = '27/11/2026-c';
+const NEED_SERVER = '2026-11-27c';      // phiên bản Code.gs tương ứng
 async function checkUpdate(auto){
   if (location.protocol === 'file:') return;
   try {
@@ -3242,7 +3244,7 @@ function renderDebt(){
         ed ? `<input class="amt-in ${dA ? 'dirty' : ''} ${exact ? '' : 'ref'}" data-amt="${i}" inputmode="numeric" value="${fmt(amt)}"><div style="font-size:11px" class="${exact ? 'muted' : 'tag-od'}" title="${exact ? '' : 'Cần nhập số chính xác'}">${exact ? '✔ chính xác' : '⚠ tham khảo'}</div>`
            : `<b>${fmt(x.amount)}</b>${x.exact ? '' : '<div class="muted" style="font-size:11px">tham khảo</div>'}`,
         ed ? `<input class="amt-in ${dP ? 'dirty' : ''}" data-paid="${i}" inputmode="numeric" value="${paid ? fmt(paid) : ''}" placeholder="0">` : fmt(x.paid),
-        `<b>${fmt(amt - (paid || 0))}</b>`,
+        remainHtml(amt - (paid || 0), 800),
         st(x.status) + (x.by ? `<div class="dbt-sub">${esc(x.by)}<br>${esc(x.at)}</div>` : ''),
         ico(i, 'files', x.files, x.files),
         `<div class="inl-cell">${x.lastMsg ? `<div class="lm"><span class="lm-t">${esc(x.lastMsg)}</span><button class="db-clock" data-th="${i}" data-k="msgs" title="Xem lịch sử trao đổi">🕘 ${x.msgs}</button></div>` : ''}
@@ -3318,7 +3320,7 @@ async function dbSaveEdits(silent){
   try {
     const r = await api('debtSaveRows', list.map(x => ({ so: x.so, amount: x.amount, paid: x.paid })));
     if (!r.ok) { modal(`<h3>Chưa lưu – có ${r.errors.length} lỗi</h3><div class="err">${r.errors.map(esc).join('<br>')}</div><div class="modal-actions"><button class="btn" onclick="closeModal()">Sửa lại</button></div>`); return false; }
-    toast(`✔ Đã lưu ${r.saved} đơn` + (r.done ? ` · ${r.done} đơn đã thu đủ → Hoàn thành` : ''), 4000);
+    toast(`✔ Đã lưu ${r.saved} đơn` + (r.done ? ` · ${r.done} đơn đã thu đủ → Hoàn thành` : '') + (r.over ? ` · ${r.over} đơn khách trả dư` : ''), 5000);
     await loadDebt(); return true;
   } catch (e) { toast(e.message, 5000); return false; }
   finally { loading(false); }
@@ -3453,7 +3455,7 @@ function renderOrders(){
   const v = dxView(), s = DB.orders.sum;
   $('dx-count').textContent = `${fmt(DB.orders.rows.length)} đơn` + ($('dx-by').value === 'customer' ? ` · ${fmt(v.rows.length)} khách hàng` : '');
   if (!v.rows.length) { $('dx-list').innerHTML = '<div class="empty">Không có đơn phù hợp</div>'; return; }
-  const cells = v.rows.slice(0, 1000).map((r, i) => r.map((x, j) => v.num.indexOf(j) !== -1 ? `<span style="font-weight:${j === r.length - 1 ? 800 : 600}">${fmt(x)}</span>`
+  const cells = v.rows.slice(0, 1000).map((r, i) => r.map((x, j) => v.num.indexOf(j) !== -1 ? (j === r.length - 1 ? remainHtml(x, 800) : `<span style="font-weight:600">${fmt(x)}</span>`)
     : j === 3 && v.src ? `<b>${esc(x)}</b>${v.src[i].status === 'Hoàn thành' ? ' <span class="badge st-done">Hoàn thành</span>' : ''}` : esc(x)));
   const pad = v.head.length - 3;
   cells.push([`<b>TỔNG CỘNG</b>`].concat(Array(pad - 1).fill('')).concat([`<b>${fmt(s.total)}</b>`, `<b>${fmt(s.paid)}</b>`, `<b style="color:var(--red)">${fmt(s.remain)}</b>`]));
