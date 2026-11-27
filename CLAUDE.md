@@ -1,6 +1,6 @@
 # HỆ THỐNG ÂN NAM NHA TRANG – TÀI LIỆU TỔNG HỢP
 
-> Cập nhật: 27/11/2026 · Phiên bản hiện tại: **giao diện 27/11/2026-b · máy chủ 2026-11-27b**
+> Cập nhật: 27/11/2026 · Phiên bản hiện tại: **giao diện 27/11/2026-c · máy chủ 2026-11-27c**
 >
 > File này là tài liệu gốc của hệ thống, Claude đọc đầu tiên mỗi phiên làm việc. Sửa hệ thống thì cập nhật file này luôn.
 
@@ -39,6 +39,7 @@ CLAUDE.md              ← tài liệu này
 
 **Thay đổi ngày 27/11/2026**
 
+- **Công nợ cho phép khách trả dư** (giao diện `27/11/2026-c`, máy chủ `2026-11-27c`): Đã thu được nhập lớn hơn Số tiền, sheet giữ đúng số Đã thu. **Không tự chuyển Hoàn thành** (kể cả thu đủ, thu thiếu hay trả dư): đơn vẫn mở để theo dõi, chỉ Hoàn thành khi kế toán tick chọn và bấm Hoàn thành. Cột Còn lại hiện chữ xanh "Trả dư …" (số âm trong Excel). Bấm Hoàn thành không ghi đè số trả dư.
 - **Tăng tốc Quản lý pallet** (giao diện `27/11/2026-b`, máy chủ `2026-11-27b`, cùng bản với sửa batch kiểm kê, không có sheet mới):
   - Máy chủ lưu sơ đồ kệ vào CacheService (`pl_map_v1`, 10 phút), ghi lại ngay sau mỗi lần Cất/Chuyển/Lấy ra. Sửa tay sheet `Pallet` thì sơ đồ có thể chậm cập nhật tối đa 10 phút.
   - `plPutaway`/`plMove`/`plPick` trả luôn sơ đồ mới (`map`), giao diện không gọi `plMap` lần hai.
@@ -263,7 +264,7 @@ Web app nội bộ cho chi nhánh **Ân Nam Group – Nha Trang** (FMCG). App go
 2. **Danh sách nợ phải thu**: kế toán import.
 3. **Sales amount × 1.08**: số tham khảo. **Không dùng Total amount** vì số trong báo cáo không đúng.
 
-Đơn chỉ có số tham khảo thì phải nhập số chính xác trước khi nhập "Đã thu".
+Đơn chỉ có số tham khảo thì phải nhập số chính xác trước khi nhập "Đã thu". Đã thu **được phép lớn hơn** Số tiền (khách trả dư): Còn lại âm, hiện "Trả dư …".
 
 **Hạn thu** = ngày giao + Payment term (COD, TBD, N7, N15, N20).
 
