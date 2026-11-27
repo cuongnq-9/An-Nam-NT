@@ -1386,8 +1386,8 @@ async function api(fn, ...args){
 /* ========= TỰ CẬP NHẬT PHIÊN BẢN =========
  * Mỗi lần sửa app chỉ cần đổi 2 dòng dưới. Máy người dùng tự so với file index.html mới nhất trên GitHub,
  * thấy khác thì tự tải lại (khi mở app / quay lại app ở trang chủ) hoặc hiện thanh "Cập nhật". */
-const APP_VER = '27/11/2026-c';
-const NEED_SERVER = '2026-11-27c';      // phiên bản Code.gs tương ứng
+const APP_VER = '27/11/2026-d';
+const NEED_SERVER = '2026-11-27d';      // phiên bản Code.gs tương ứng
 async function checkUpdate(auto){
   if (location.protocol === 'file:') return;
   try {
@@ -2349,7 +2349,7 @@ $('mn-man').addEventListener('change', () => loadMine());
 
 /* ========= KHO: DANH MỤC HÀNG (tải 1 lần, tìm tức thì trên máy) ========= */
 async function loadMaster(force){
-  if (S.master && !force && S.master.fresh !== false) return S.master;   // fresh=false: bản lưu trên máy của màn hình Pallet
+  if (S.master && !force) return S.master;
   loading(true);
   try { S.master = await api('getOpsMaster'); S.master.items.forEach(it => it.k = norm(it.n)); }
   finally { loading(false); }
@@ -2382,7 +2382,7 @@ function msNote(id){ $(id).innerHTML = S.master ? `Danh mục: ${S.master.items.
 document.addEventListener('click', async e => {
   const a = e.target.closest('[data-reload-master]'); if (!a) return;
   e.preventDefault();
-  try { await loadMaster(true); ['kk-ms', 'wo-ms', 'pk-ms', 'pl-ms'].forEach(msNote); toast('Đã tải lại danh mục hàng.'); } catch (x) { toast(x.message); }
+  try { await loadMaster(true); ['kk-ms', 'wo-ms', 'pk-ms'].forEach(msNote); toast('Đã tải lại danh mục hàng.'); } catch (x) { toast(x.message); }
 });
 
 /* Thẻ sản phẩm có ô nhập số lượng theo từng batch + ô nhập batch khác */
@@ -5146,11 +5146,24 @@ function plMatcher(q){
   }
   return (item, name) => norm(item).includes(q) || norm(name).includes(q);
 }
+// Danh mục tên hàng của Pallet lấy từ sheet Barcode (plProducts), không lấy từ tồn kho
 function plFindProd(q){
-  q = String(q || '').trim(); if (!q || !S.master) return [];
-  if (q.indexOf('*') === -1) return findProducts(q);
-  const f = plMatcher(q), out = [];
-  for (const it of S.master.items) { if (f(it.i, it.n) || it.b.some(b => f(b, ''))) out.push(it); if (out.length >= 30) break; }
+  q = String(q || '').trim(); if (!q || !PL.cat) return [];
+  const items = PL.cat.items, ql = q.toLowerCase();
+  const exact = items.filter(it => it.i.toLowerCase() === ql || it.b.some(b => b.toLowerCase() === ql));
+  if (exact.length) return exact;
+  const out = [];
+  if (q.indexOf('*') !== -1) {
+    const f = plMatcher(q);
+    for (const it of items) { if (f(it.i, it.n) || it.b.some(b => f(b, ''))) out.push(it); if (out.length >= 30) break; }
+    return out;
+  }
+  const qn = norm(q);
+  for (const it of items) {
+    const il = it.i.toLowerCase();
+    if (il.endsWith(ql) || it.b.some(b => b.toLowerCase().endsWith(ql)) || (q.length >= 3 && (il.includes(ql) || it.k.includes(qn)))) out.push(it);
+    if (out.length >= 30) break;
+  }
   return out;
 }
 // Batch = hạn sử dụng (theo anh John 25/11/2026). Đổi batch thành khóa yyyymmdd để xếp FEFO:
@@ -5175,39 +5188,67 @@ const plExpKey = p => plBatchKey(plBatch(p));
 const plShortItem = s => { s = String(s); return s.length > 7 ? '…' + s.slice(-6) : s; };
 
 /* Tốc độ: mở màn hình là vẽ ngay sơ đồ và danh mục đã lưu trên máy, rồi tải bản mới song song ở nền (không che màn hình).
- * Cất/Chuyển/Lấy ra: máy chủ trả luôn sơ đồ mới trong cùng lệnh, không gọi plMap lần 2. */
-const PL_MS_KEY = 'annt_plmaster', PL_MS_HOURS = 12;
+ * Cất/Chuyển/Lấy ra: máy chủ trả luôn sơ đồ mới trong cùng lệnh, không gọi plMap lần 2.
+ * Đồng bộ giữa nhiều người: khi đang mở màn hình Pallet, app hỏi plPoll mỗi PL_POLL_SEC giây (chỉ so mã phiên bản sơ đồ,
+ * rất nhẹ); người khác vừa thay đổi thì nhận sơ đồ mới và vẽ lại ngay. */
+const PL_CAT_KEY = 'annt_plcat', PL_CAT_HOURS = 12, PL_POLL_SEC = 8;
 const plKey = () => 'annt_plmap_' + (S.user ? S.user.username : '');
+function plCatNote(){
+  const c = PL.cat;
+  $('pl-ms').innerHTML = c ? `Danh mục (sheet Barcode): ${c.items.length.toLocaleString('vi-VN')} mã · tải lúc ${esc(c.at)} · <a href="#" id="pl-cat-reload">Tải lại</a>` : '';
+  const a = $('pl-cat-reload'); if (a) a.onclick = e => { e.preventDefault(); plCatRefresh(true); };
+}
 async function initPallet(){
   [['pl-look-scan'], ['pa-tem-scan'], ['pa-scan'], ['mv-tem-scan'], ['pk2-scan'], ['pk2-tem-scan']].forEach(([id]) => $(id).innerHTML = ic('qr'));
   if (!PL.map) { try { const m = JSON.parse(localStorage.getItem(plKey()) || 'null'); if (m && m.items) PL.map = m; } catch (e) {} }
   plTab(PL.tab);
   if (PL.map) plSetMap(PL.map, true);
-  if (!S.master) {   // danh mục hàng lưu trên máy (12 giờ) → tìm hàng được ngay, bản mới tải ở nền
-    try { const c = JSON.parse(localStorage.getItem(PL_MS_KEY) || 'null');
-      if (c && c.items && Date.now() - c.t < PL_MS_HOURS * 3600000) { c.items.forEach(it => it.k = norm(it.n)); c.fresh = false; S.master = c; } } catch (e) {}
+  if (!PL.cat) {   // danh mục lưu trên máy (12 giờ) → tìm hàng được ngay, bản mới tải ở nền
+    try { const c = JSON.parse(localStorage.getItem(PL_CAT_KEY) || 'null');
+      if (c && c.items && Date.now() - c.t < PL_CAT_HOURS * 3600000) { c.items.forEach(it => it.k = norm(it.n)); c.old = true; PL.cat = c; } } catch (e) {}
   }
-  msNote('pl-ms');
-  await Promise.all([plLoad(), plMasterRefresh()]);
+  plCatNote();
+  plPollStart();
+  await Promise.all([plLoad(), plCatRefresh(false)]);
 }
-async function plMasterRefresh(){
-  if (S.master && S.master.fresh !== false) return;
+async function plCatRefresh(force){
+  if (!force && PL.cat && !PL.cat.old) return;
   try {
-    const m = await api('getOpsMaster');
-    try { localStorage.setItem(PL_MS_KEY, JSON.stringify({ items: m.items, batches: m.batches, at: m.at, t: Date.now() })); } catch (e) {}
-    m.items.forEach(it => it.k = norm(it.n)); S.master = m;
-    msNote('pl-ms');
-  } catch (e) { if (!S.master) $('pl-ms').textContent = e.message; }
+    const c = await api('plProducts', !!force);
+    try { localStorage.setItem(PL_CAT_KEY, JSON.stringify({ items: c.items, at: c.at, t: Date.now() })); } catch (e) {}
+    c.items.forEach(it => it.k = norm(it.n)); PL.cat = c;
+    plCatNote(); if (force) toast('Đã tải lại danh mục hàng.');
+  } catch (e) { if (!PL.cat) $('pl-ms').textContent = e.message; else if (force) toast(e.message); }
 }
 function plSetMap(m, cached){
   PL.map = m;
   if (!cached) try { localStorage.setItem(plKey(), JSON.stringify(m)); } catch (e) {}
+  // pallet đang chọn ở Chuyển / Lấy ra: lấy lại số liệu mới nhất (người khác có thể vừa đổi)
+  const upd = p => p ? (m.items.find(x => x.tem === p.tem) || null) : null;
+  if (PL.mv.p) { PL.mv.p = upd(PL.mv.p); plRenderMvCur(); }
+  if (PL.pk.p) { PL.pk.p = upd(PL.pk.p); }
   plRenderMap(); plRenderLoc('pa'); plRenderLoc('mv');
   if (PL.pk.item) plRenderPickList();
+  if (PL.pk.p !== undefined) plRenderPickCur();
 }
 async function plLoad(){
   try { plSetMap(await api('plMap')); } catch (e) { toast(e.message); }
 }
+let plPollT = null, plPolling = false;
+function plPollStart(){
+  if (plPollT) return;
+  plPollT = setInterval(async () => {
+    if (S.view !== 'pallet' || document.hidden || PL.busy || plPolling || !PL.map) return;
+    plPolling = true;
+    try { const r = await run('plPoll', S.token, PL.map.ver || ''); if (r && !r.same && S.view === 'pallet' && !PL.busy) plSetMap(r); }
+    catch (e) {}   // lỗi mạng khi hỏi ngầm: bỏ qua, lần sau hỏi lại
+    finally { plPolling = false; }
+  }, PL_POLL_SEC * 1000);
+}
+// Quay lại app (mở khóa màn hình, chuyển tab) → hỏi ngay, không chờ hết chu kỳ
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && S.view === 'pallet' && PL.map && !PL.busy) run('plPoll', S.token, PL.map.ver || '').then(r => { if (r && !r.same) plSetMap(r); }).catch(() => {});
+});
 function plTab(t){
   PL.tab = t;
   $('pl-tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
@@ -5353,7 +5394,9 @@ function plRenderProd(){
   $('pa-qrow').classList.toggle('hidden', !!p);
   if (p) {
     $('pa-prod-x').onclick = () => { PL.put.prod = null; $('pa-q').value = ''; plRenderProd(); $('pa-q').focus(); };
-    $('pa-batches').innerHTML = (batchesOf(p.i) || []).map(b => `<option value="${esc(b)}">`).join('');
+    // gợi ý batch từ các pallet cùng mã đang trên kệ
+    const bs = [...new Set((PL.map ? PL.map.items : []).filter(x => x.item === p.i).map(plBatch).filter(Boolean))];
+    $('pa-batches').innerHTML = bs.map(b => `<option value="${esc(b)}">`).join('');
   }
 }
 function plSugList(boxId, list, onPick){
@@ -5363,7 +5406,7 @@ function plSugList(boxId, list, onPick){
   box.querySelectorAll('[data-i]').forEach(d => d.onclick = () => { box.innerHTML = ''; onPick(list[+d.dataset.i]); });
 }
 function paSearch(fromScan){
-  if (!S.master) { toast('Đang tải danh mục hàng…'); return; }
+  if (!PL.cat) { toast('Đang tải danh mục hàng…'); return; }
   const list = plFindProd($('pa-q').value);
   if (fromScan && list.length === 1) { $('pa-sug').innerHTML = ''; paPick(list[0]); return; }
   plSugList('pa-sug', list, paPick);
@@ -5447,7 +5490,7 @@ function plRenderPickList(){
   box.querySelectorAll('[data-tem]').forEach(d => d.onclick = () => { $('pk2-tem').value = d.dataset.tem; plPkTem(); });
 }
 function pkSearch2(fromScan){
-  if (!S.master) { toast('Đang tải danh mục hàng…'); return; }
+  if (!PL.cat) { toast('Đang tải danh mục hàng…'); return; }
   const q = $('pk2-q').value.trim(); if (!q) return;
   let list = plFindProd(q);
   // Gợi ý thêm mã đang có trên kệ mà danh mục chưa có

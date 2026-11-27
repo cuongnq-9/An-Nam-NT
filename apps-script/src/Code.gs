@@ -93,7 +93,7 @@ const PERM = {
 };
 
 /* ================== WEB APP ================== */
-const CODE_VERSION = '2026-11-27c';
+const CODE_VERSION = '2026-11-27d';
 
 function doGet(e) {
   // Kiểm tra kết nối: mở <link /exec>?ping=1 trên trình duyệt để xem máy chủ có chạy không
@@ -122,7 +122,7 @@ const API_FUNCS = {
   listStaff, docsPending, adminSetPrioBy, bdHome, bdPost, bdWish, bdImage, setMyDob, getMyDob, msgInbox, msgSend, msgRead, debtReport, debtSetStatus, debtCustList, debtCustSave, debtCustDelete, debtOpenSave, debtSetAmount, debtExport, debtSaveRows, debtOrders, notifList, notifRead,
   debtThread, debtPostMsg, debtSaveNote, debtUpload, debtFile, cctvList, adminSaveCctv, bcsUpload, bcsSave, bcsSearch, bcsPhoto,
   printRequest, printList, printCancel, printNext, printDone,
-  plMap, plInfo, plPutaway, plMove, plPick
+  plMap, plInfo, plPutaway, plMove, plPick, plPoll, plProducts
 };
 function doPost(e) {
   let out;
@@ -3773,7 +3773,15 @@ function plSheet_(fmt) {
   return sh;
 }
 /* Bộ nhớ tạm sơ đồ kệ: đọc sheet Pallet 1 lần, các lần mở sau lấy từ cache (xóa/ghi lại mỗi khi cất/chuyển/lấy) */
-const PL_CACHE_KEY = 'pl_map_v1', PL_CACHE_SEC = 600;
+const PL_CACHE_KEY = 'pl_map_v1', PL_CACHE_SEC = 600, PL_VER_KEY = 'pl_ver';
+/* Mã phiên bản sơ đồ: đổi mỗi lần Cất/Chuyển/Lấy ra. Máy đang mở sơ đồ hỏi plPoll vài giây một lần,
+ * chỉ khi mã đổi mới nhận sơ đồ mới → mọi người thấy thay đổi gần như ngay, mà lệnh hỏi rất nhẹ (chỉ đọc cache). */
+function plVer_(bump) {
+  const c = CacheService.getScriptCache();
+  let v = bump ? '' : c.get(PL_VER_KEY);
+  if (!v) { v = String(Date.now()); c.put(PL_VER_KEY, v, 21600); }
+  return v;
+}
 function plMapData_(rows) {
   return { racks: PL_RACKS, cols: PL_COLS, levels: PL_LEVELS, floor: PL_FLOOR, lanes: PL_LANES, now: Date.now(),
            items: rows.filter(r => r[11] === PL_ON).map(plOut_) };
@@ -3783,7 +3791,7 @@ function plCachePut_(m) {
   catch (e) { try { CacheService.getScriptCache().remove(PL_CACHE_KEY); } catch (x) {} }
 }
 /** Sau khi ghi: dựng lại sơ đồ từ dữ liệu vừa đọc (đã sửa trong bộ nhớ) → lưu cache và trả về cho giao diện, khỏi gọi plMap lần nữa */
-function plAfterWrite_(rows) { const m = plMapData_(rows); plCachePut_(m); return m; }
+function plAfterWrite_(rows) { const m = plMapData_(rows); plCachePut_(m); m.ver = plVer_(true); return m; }
 /** Tìm dòng theo mã (khớp nguyên ô) trong 1 cột, không đọc cả sheet */
 function plFindRows_(sh, col, code) {
   const n = sh.getLastRow() - 1; if (n < 1) return [];
@@ -3839,11 +3847,69 @@ const plTem_ = v => String(v || '').trim().toUpperCase();
 /** Sơ đồ kệ: bố cục + các pallet đang trên kệ */
 function plMap(token) {
   const u = requireUser_(token); plCanUse_(u);
+  return plMapGet_();
+}
+function plMapGet_() {
+  const ver = plVer_(false);
   const c = CacheService.getScriptCache().get(PL_CACHE_KEY);
-  if (c) { try { const m = JSON.parse(c); m.now = Date.now(); return m; } catch (e) {} }
+  if (c) { try { const m = JSON.parse(c); m.now = Date.now(); m.ver = ver; return m; } catch (e) {} }
   const m = plMapData_(plRows_().rows);
   plCachePut_(m);
+  m.ver = ver;
   return m;
+}
+/** Hỏi nhẹ: sơ đồ có thay đổi so với mã ver máy đang có không. Không đổi → { same: true }; đổi → sơ đồ mới. */
+function plPoll(token, ver) {
+  const u = requireUser_(token); plCanUse_(u);
+  if (ver && String(ver) === plVer_(false)) return { same: true };
+  return plMapGet_();
+}
+/** Danh mục tên hàng cho Pallet: chỉ lấy từ sheet Barcode (file TRỢ LÝ CS), không lấy từ tồn kho.
+ *  Chỉ đọc 3 cột cần dùng; lưu cache 30 phút (chia nhỏ vì cache giới hạn 100KB/khóa). */
+const PL_PROD_KEY = 'pl_prod_v1', PL_PROD_SEC = 1800;
+function plProducts(token, force) {
+  const u = requireUser_(token); plCanUse_(u);
+  const cache = CacheService.getScriptCache();
+  if (!force) {
+    const head = cache.get(PL_PROD_KEY);
+    if (head) {
+      try {
+        const h = JSON.parse(head), keys = []; for (let i = 0; i < h.n; i++) keys.push(PL_PROD_KEY + '_' + i);
+        const parts = cache.getAll(keys);
+        if (keys.every(k => parts[k] != null)) return { items: JSON.parse(keys.map(k => parts[k]).join('')), at: h.at };
+      } catch (e) {}
+    }
+  }
+  const sh = SpreadsheetApp.openById(OPS_BARCODE_SS).getSheetByName('Barcode');
+  if (!sh) throw new Error('Không tìm thấy sheet Barcode.');
+  const lc = sh.getLastColumn(), lr = sh.getLastRow();
+  const top = sh.getRange(1, 1, Math.min(6, lr), lc).getDisplayValues();
+  let hr = -1, cItem = -1, cBar = -1, cName = -1;
+  for (let r = 0; r < top.length && hr === -1; r++) {
+    cItem = headerIndex_(top[r], ['item number', 'item code']);
+    cBar = headerIndex_(top[r], ['bar code', 'barcode']);
+    if (cItem !== -1 && cBar !== -1) { hr = r; cName = headerIndex_(top[r], ['description', 'product name', 'item name']); }
+  }
+  if (hr === -1) throw new Error('Sheet Barcode thiếu cột Item number / Bar code.');
+  const n = lr - hr - 1, col = c => c === -1 || n < 1 ? [] : sh.getRange(hr + 2, c + 1, n, 1).getDisplayValues();
+  const vI = col(cItem), vB = col(cBar), vN = col(cName);
+  const map = {}, order = [];
+  for (let r = 0; r < n; r++) {
+    const it = String(vI[r][0]).trim();
+    if (!it || it.length < 3) continue;
+    let o = map[it];
+    if (!o) { o = map[it] = { i: it, n: '', b: [] }; order.push(it); }
+    const bc = String(vB[r][0]).trim();
+    if (bc && o.b.indexOf(bc) === -1) o.b.push(bc);
+    if (!o.n && vN.length) o.n = String(vN[r][0]).trim();
+  }
+  const items = order.map(k => map[k]), at = nowStr_();
+  try {
+    const j = JSON.stringify(items), size = 90000, put = {}; let i = 0;
+    for (let p = 0; p < j.length; p += size) put[PL_PROD_KEY + '_' + (i++)] = j.slice(p, p + size);
+    if (i <= 50) { put[PL_PROD_KEY] = JSON.stringify({ n: i, at: at }); cache.putAll(put, PL_PROD_SEC); }
+  } catch (e) {}
+  return { items: items, at: at };
 }
 /** Chi tiết 1 tem: pallet + lịch sử + trạng thái tem */
 function plInfo(token, tem) {

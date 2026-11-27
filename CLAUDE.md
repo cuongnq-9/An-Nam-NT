@@ -1,6 +1,6 @@
 # HỆ THỐNG ÂN NAM NHA TRANG – TÀI LIỆU TỔNG HỢP
 
-> Cập nhật: 27/11/2026 · Phiên bản hiện tại: **giao diện 27/11/2026-c · máy chủ 2026-11-27c**
+> Cập nhật: 27/11/2026 · Phiên bản hiện tại: **giao diện 27/11/2026-d · máy chủ 2026-11-27d**
 >
 > File này là tài liệu gốc của hệ thống, Claude đọc đầu tiên mỗi phiên làm việc. Sửa hệ thống thì cập nhật file này luôn.
 
@@ -39,6 +39,9 @@ CLAUDE.md              ← tài liệu này
 
 **Thay đổi ngày 27/11/2026**
 
+- **Pallet: đồng bộ sơ đồ ngay cho mọi người, tên hàng lấy từ sheet Barcode** (giao diện `27/11/2026-d`, máy chủ `2026-11-27d`, không có sheet mới):
+  - Mỗi lần Cất/Chuyển/Lấy ra, máy chủ đổi **mã phiên bản sơ đồ** (`pl_ver` trong CacheService). Máy đang mở màn hình Pallet hỏi `plPoll(ver)` mỗi 8 giây (và ngay khi quay lại app): mã không đổi thì chỉ nhận `{same:true}`, có đổi thì nhận sơ đồ mới và vẽ lại. Lệnh hỏi chỉ đọc cache, không đọc sheet.
+  - Danh mục tên hàng của Pallet lấy bằng hàm mới `plProducts`: **chỉ sheet Barcode** (đọc 3 cột Item number / Bar code / Description), không gộp mã từ tồn kho. Máy chủ lưu cache 30 phút (`pl_prod_v1`, chia nhỏ), máy người dùng lưu `annt_plcat` 12 giờ. Màn hình Pallet không còn gọi `getOpsMaster`. Gợi ý batch khi Cất hàng lấy từ các pallet cùng mã đang trên kệ.
 - **Công nợ cho phép khách trả dư** (giao diện `27/11/2026-c`, máy chủ `2026-11-27c`): Đã thu được nhập lớn hơn Số tiền, sheet giữ đúng số Đã thu. **Không tự chuyển Hoàn thành** (kể cả thu đủ, thu thiếu hay trả dư): đơn vẫn mở để theo dõi, chỉ Hoàn thành khi kế toán tick chọn và bấm Hoàn thành. Cột Còn lại hiện chữ xanh "Trả dư …" (số âm trong Excel). Bấm Hoàn thành không ghi đè số trả dư.
 - **Tăng tốc Quản lý pallet** (giao diện `27/11/2026-b`, máy chủ `2026-11-27b`, cùng bản với sửa batch kiểm kê, không có sheet mới):
   - Máy chủ lưu sơ đồ kệ vào CacheService (`pl_map_v1`, 10 phút), ghi lại ngay sau mỗi lần Cất/Chuyển/Lấy ra. Sửa tay sheet `Pallet` thì sơ đồ có thể chậm cập nhật tối đa 10 phút.
@@ -336,12 +339,12 @@ In tem pallet (5.7) → tem "Chưa dùng" → CẤT HÀNG (tem + mặt hàng + b
 - **Quyền:** tính năng `pallet` cho Thủ kho và Admin (gán thêm qua Tính năng riêng).
 - **Vị trí:** kệ R1–R4, mỗi kệ 8 cột × 4 tầng. Tem dán trên kệ chỉ có Kệ-Cột (`R2-05`), nhân viên bấm chọn tầng T1–T4, tầng đã có pallet bị khóa. Mỗi ô kệ chứa **1 pallet**. R0 là khu sàn 8 dãy (`R0-01`…`R0-08`), không có tầng, mỗi dãy nhiều pallet. Bố cục nằm trong hằng `PL_RACKS`, `PL_COLS`, `PL_LEVELS`, `PL_LANES` của `Code.gs`.
 - **Tem:** chỉ nhận tem có trong sheet `Tem pallet` ở trạng thái "Chưa dùng". Tem đã dùng hoặc đã đóng không dùng lại.
-- **Tìm hàng:** quét barcode, gõ mã, hoặc gõ tên có `*` (VD `*sua*hop`), không phân biệt dấu. Dùng danh mục `getOpsMaster`.
+- **Tìm hàng:** quét barcode, gõ mã, hoặc gõ tên có `*` (VD `*sua*hop`), không phân biệt dấu. Danh mục lấy từ **sheet Barcode** qua `plProducts` (không lấy từ tồn kho).
 - **Batch = HSD** (từ giao diện `25/11/2026-h`): màn hình Cất hàng chỉ có ô **Batch** (không còn ô HSD), nhãn **Số lượng** (không phải số thùng). Cột `HSD` trong sheet `Pallet` để trống với pallet mới.
 - **Quét tem pallet mới** ở Cất hàng thì xóa trống mặt hàng, batch, số lượng để nhân viên nhập lại từ đầu.
 - **FEFO:** danh sách pallet của mặt hàng xếp theo batch gần hết hạn nhất (`plBatchKey` đọc batch dạng dd/mm/yyyy, dd-mm-yy, yyyymmdd, ddmmyyyy, ddmmyy; batch không đọc được xếp sau), pallet đầu có nhãn "Lấy trước". Quét tem khác mà có pallet batch gần hơn thì app cảnh báo (vẫn cho lấy).
 - Máy chủ: `plMap`, `plInfo`, `plPutaway`, `plMove`, `plPick`. Mọi lệnh ghi có `reqId` chống ghi trùng và khóa `LockService`.
-- Tốc độ: sơ đồ kệ lấy từ cache máy chủ (`pl_map_v1`) và bản lưu trên máy (`annt_plmap_<user>`). Lệnh ghi trả sơ đồ mới trong cùng lệnh. Xem thay đổi 27/11/2026.
+- Tốc độ: sơ đồ kệ lấy từ cache máy chủ (`pl_map_v1`) và bản lưu trên máy (`annt_plmap_<user>`). Lệnh ghi trả sơ đồ mới trong cùng lệnh. Máy khác đang mở sơ đồ tự cập nhật trong khoảng 8 giây nhờ `plPoll`. Sửa tay sheet `Pallet` thì có thể chậm tối đa 10 phút. Xem thay đổi 27/11/2026.
 
 ## 6. Phân quyền
 
