@@ -93,7 +93,7 @@ const PERM = {
 };
 
 /* ================== WEB APP ================== */
-const CODE_VERSION = '2026-11-27a';
+const CODE_VERSION = '2026-11-27b';
 
 function doGet(e) {
   // Kiểm tra kết nối: mở <link /exec>?ping=1 trên trình duyệt để xem máy chủ có chạy không
@@ -117,7 +117,7 @@ const API_FUNCS = {
   getUpdateRequests, checkOrderData, getTetInit, submitTetOrder, getTetOrders,
   scanBatch, getWaitingOrders, getMyDelivery, getSchedule,
   adminListUsers, adminSaveUser, adminResetPassword, adminSaveSchedule,
-  getOpsMaster, kkGetState, kkSave, kkSummary, kkFinish, adminImportStock, adminCreateCampaign, adminReopenCampaign, kkClaim, kkRelease,
+  getOpsMaster, kkGetState, kkSave, kkSummary, kkFinish, adminImportStock, adminCreateCampaign, adminReopenCampaign, kkClaim, kkRelease, kkBatches,
   whSaveWriteOff, pickSearch, pickConfirm, pickOrders, pickComplete, pickHistory,
   listStaff, docsPending, adminSetPrioBy, bdHome, bdPost, bdWish, bdImage, setMyDob, getMyDob, msgInbox, msgSend, msgRead, debtReport, debtSetStatus, debtCustList, debtCustSave, debtCustDelete, debtOpenSave, debtSetAmount, debtExport, debtSaveRows, debtOrders, notifList, notifRead,
   debtThread, debtPostMsg, debtSaveNote, debtUpload, debtFile, cctvList, adminSaveCctv, bcsUpload, bcsSave, bcsSearch, bcsPhoto,
@@ -1900,6 +1900,20 @@ function kkSummary(token, id, force) {
   res.mismatches = res.mismatches.filter(m => busy.indexOf(m) === -1);
   res.busy = busy.map(m => ({ item: m.item, by: cl[key_(m.item)].name }));
   return res;
+}
+
+/** Batch dùng khi đếm ở Kiểm kê: CHỈ lấy từ tồn kho kiểm kê của đúng đợt (mục 2 – file của đợt),
+ *  không lấy từ tồn kho tổng (mục 1). Trả về { 'MÃ HÀNG (key_)': [batch, ...] } */
+function kkBatches(token, cid) {
+  const u = requireUser_(token); kkCanUse_(u);
+  const c = kkGet_(cid);
+  const st = c.stockSheet === SH_KK_STOCK_ALL ? readStock_(SH_KK_STOCK_ALL, c.id) : readStock_(c.stockSheet || SH_STOCK_KK);
+  const out = {};
+  Object.keys(st.items).forEach(k => {
+    const s = st.items[k];
+    out[k] = Object.keys(s.batches).map(b => s.batches[b].label).filter(b => b);
+  });
+  return { cid: c.id, batches: out, at: nowStr_() };
 }
 
 function kkBuildReport_(c) {

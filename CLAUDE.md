@@ -1,6 +1,6 @@
 # HỆ THỐNG ÂN NAM NHA TRANG – TÀI LIỆU TỔNG HỢP
 
-> Cập nhật: 27/11/2026 · Phiên bản hiện tại: **giao diện 27/11/2026-a · máy chủ 2026-11-27a**
+> Cập nhật: 27/11/2026 · Phiên bản hiện tại: **giao diện 27/11/2026-b · máy chủ 2026-11-27b**
 >
 > File này là tài liệu gốc của hệ thống, Claude đọc đầu tiên mỗi phiên làm việc. Sửa hệ thống thì cập nhật file này luôn.
 
@@ -39,7 +39,7 @@ CLAUDE.md              ← tài liệu này
 
 **Thay đổi ngày 27/11/2026**
 
-- **Tăng tốc Quản lý pallet** (giao diện `27/11/2026-a`, máy chủ `2026-11-27a`, không có sheet mới):
+- **Tăng tốc Quản lý pallet** (giao diện `27/11/2026-b`, máy chủ `2026-11-27b`, cùng bản với sửa batch kiểm kê, không có sheet mới):
   - Máy chủ lưu sơ đồ kệ vào CacheService (`pl_map_v1`, 10 phút), ghi lại ngay sau mỗi lần Cất/Chuyển/Lấy ra. Sửa tay sheet `Pallet` thì sơ đồ có thể chậm cập nhật tối đa 10 phút.
   - `plPutaway`/`plMove`/`plPick` trả luôn sơ đồ mới (`map`), giao diện không gọi `plMap` lần hai.
   - `plInfo` và `plTemRow_` tìm bằng TextFinder, không đọc cả sheet `Pallet Log` / `Tem pallet`. Lịch sử tối đa 50 dòng gần nhất.
@@ -238,6 +238,7 @@ Web app nội bộ cho chi nhánh **Ân Nam Group – Nha Trang** (FMCG). App go
 1. **Admin tạo đợt**: nhập tồn kho → `Ton kho Kiem ke` (cột Mã đợt). Hai đợt tạo trong cùng giây được thêm hậu tố `-2`.
 2. Nhân viên thấy **mọi đợt đang mở** và tự chọn đợt.
 3. Bắt buộc **quét hoặc nhập vị trí** trước khi đếm.
+   - **Batch khi đếm** (từ 27/11/2026) chỉ lấy từ **tồn kho kiểm kê của đợt** (file mục 2 lúc tạo đợt, sheet `Ton kho Kiem ke` theo Mã đợt) qua hàm `kkBatches`, **không** lấy từ tồn kho tổng (mục 1, sheet `Stock`). Mục 1 vẫn dùng cho Hủy hàng. Mã không có trong tồn kiểm kê của đợt thì nhập batch tay.
 4. **Nhận** vị trí hoặc mã hàng để đếm: giữ 15 phút, tự nhả khi thoát. Mã đang có người khác đếm sẽ bị ẩn với người còn lại.
 5. Lưu số đếm vào **hàng đợi trên máy** (`annt_kkq_<user>`), app tự gửi lên lại khi mạng có trở lại. Danh sách tự làm mới mỗi 20 giây.
 6. Đếm lại: danh sách chỉ ghi số lượng, dùng dữ liệu tạm cho nhanh. Mã người khác đã đếm lại thì tự ẩn.
