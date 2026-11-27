@@ -3320,7 +3320,7 @@ async function dbSaveEdits(silent){
   try {
     const r = await api('debtSaveRows', list.map(x => ({ so: x.so, amount: x.amount, paid: x.paid })));
     if (!r.ok) { modal(`<h3>Chưa lưu – có ${r.errors.length} lỗi</h3><div class="err">${r.errors.map(esc).join('<br>')}</div><div class="modal-actions"><button class="btn" onclick="closeModal()">Sửa lại</button></div>`); return false; }
-    toast(`✔ Đã lưu ${r.saved} đơn` + (r.done ? ` · ${r.done} đơn đã thu đủ → Hoàn thành` : '') + (r.over ? ` · ${r.over} đơn khách trả dư` : ''), 5000);
+    toast(`✔ Đã lưu ${r.saved} đơn` + (r.over ? ` · ${r.over} đơn khách trả dư` : ''), 5000);
     await loadDebt(); return true;
   } catch (e) { toast(e.message, 5000); return false; }
   finally { loading(false); }

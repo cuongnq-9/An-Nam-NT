@@ -3047,7 +3047,7 @@ function debtSetStatus(token, sos, action) {
 
 /** Lưu thay đổi trên bảng: [{ so, amount?, paid? }]. Số tiền nhập = số chính xác. "Đã thu" chỉ nhập được khi đơn có số tiền chính xác.
  *  Đã thu được phép LỚN HƠN Số tiền (khách trả dư): Còn lại âm, giao diện hiện "Trả dư …".
- *  Đã thu = Số tiền → tự chuyển Hoàn thành. Có lỗi → không lưu gì. */
+ *  Không tự chuyển Hoàn thành: còn thiếu hay trả dư đều vẫn mở, chỉ Hoàn thành khi kế toán bấm. Có lỗi → không lưu gì. */
 function debtSaveRows(token, list) {
   const u = requireDebtEdit_(token);
   list = (Array.isArray(list) ? list : []).filter(x => x && x.so);
@@ -3076,7 +3076,7 @@ function debtSaveRows(token, list) {
     const sa = appSheet_(SH_DEBT_AMT, AMT_HEADERS);
     const av = sa.getLastRow() >= 2 ? sa.getRange(2, 1, sa.getLastRow() - 1, 1).getValues() : [];
     const now = new Date();
-    let done = 0, over = 0;
+    let over = 0;
     plan.forEach(p => {
       const r = v[p.i];
       if (p.amt !== null) {
@@ -3087,12 +3087,12 @@ function debtSaveRows(token, list) {
       }
       if (p.paid !== null) r[14] = p.paid;
       if (p.paid !== null && p.paid > num_(r[6]) && num_(r[6]) > 0) over++;      // khách trả dư (cho phép)
-      if (p.paid !== null && p.paid >= num_(r[6]) && num_(r[6]) > 0 && String(r[10]) !== DEBT_ST.DONE) { r[10] = DEBT_ST.DONE; done++; }
+      // Không tự chuyển Hoàn thành (kể cả thu đủ / thu dư): kế toán tick chọn và bấm Hoàn thành để chốt đơn
       r[11] = u.name; r[12] = now;
       sh.getRange(p.i + 2, 1, 1, DEBT_HEADERS.length).setValues([r]);
     });
     debtWriteBalances_(v);
-    return { ok: true, saved: plan.length, done: done, over: over };
+    return { ok: true, saved: plan.length, over: over };
   } finally { lock.releaseLock(); }
 }
 

@@ -39,7 +39,7 @@ CLAUDE.md              ← tài liệu này
 
 **Thay đổi ngày 27/11/2026**
 
-- **Công nợ cho phép khách trả dư** (giao diện `27/11/2026-c`, máy chủ `2026-11-27c`): Đã thu được nhập lớn hơn Số tiền. Đơn tự chuyển Hoàn thành, sheet giữ đúng số Đã thu, cột Còn lại hiện chữ xanh "Trả dư …" (số âm trong Excel). Bấm Hoàn thành không ghi đè số trả dư.
+- **Công nợ cho phép khách trả dư** (giao diện `27/11/2026-c`, máy chủ `2026-11-27c`): Đã thu được nhập lớn hơn Số tiền, sheet giữ đúng số Đã thu. **Không tự chuyển Hoàn thành** (kể cả thu đủ, thu thiếu hay trả dư): đơn vẫn mở để theo dõi, chỉ Hoàn thành khi kế toán tick chọn và bấm Hoàn thành. Cột Còn lại hiện chữ xanh "Trả dư …" (số âm trong Excel). Bấm Hoàn thành không ghi đè số trả dư.
 - **Tăng tốc Quản lý pallet** (giao diện `27/11/2026-b`, máy chủ `2026-11-27b`, cùng bản với sửa batch kiểm kê, không có sheet mới):
   - Máy chủ lưu sơ đồ kệ vào CacheService (`pl_map_v1`, 10 phút), ghi lại ngay sau mỗi lần Cất/Chuyển/Lấy ra. Sửa tay sheet `Pallet` thì sơ đồ có thể chậm cập nhật tối đa 10 phút.
   - `plPutaway`/`plMove`/`plPick` trả luôn sơ đồ mới (`map`), giao diện không gọi `plMap` lần hai.
